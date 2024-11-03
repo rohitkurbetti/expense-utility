@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+
+
+    <EditText
+        android:id="@+id/etArea"
+        android:hint="Enter area (In sq.ft)"
+        android:layout_marginTop="20dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="10dp"
+        android:inputType="numberDecimal"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        />
+
+    <Spinner
+        android:id="@+id/locationSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_centerInParent="true"/>
+
+    <Spinner
+        android:id="@+id/cityTypeSpinner"
+        android:hint="Enter City Type"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_centerInParent="true"
+        />
+
+
+
+</LinearLayout>

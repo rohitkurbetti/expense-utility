@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/suggActi"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".SuggestionActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ListView
+        android:id="@+id/suggestionsListView"
+        android:layout_width="match_parent"
+        android:layout_height="450dp"
+        android:dividerHeight="1dp"
+        android:layout_margin="5dp"
+        android:padding="8dp"
+        />
+
+    <EditText
+        android:layout_marginHorizontal="20dp"
+        android:id="@+id/etAddSuggestion"
+        android:hint="Enter suggestion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+    />
+
+    <Button
+        android:layout_marginTop="5dp"
+        android:layout_marginHorizontal="20dp"
+        android:id="@+id/btnAddSuggestion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Suggestion"
+    />
+
+    <Button
+        android:visibility="gone"
+        android:layout_marginTop="5dp"
+        android:layout_marginHorizontal="20dp"
+        android:id="@+id/delSelectedBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete Selected"
+        />
+
+</LinearLayout>

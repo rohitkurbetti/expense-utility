@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <CheckBox
+        android:id="@+id/chkBoxDay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+    />
+
+    <TextView
+        android:layout_weight="1"
+        android:id="@+id/nestedItemTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:layout_gravity="start|center_vertical" />
+
+    <TextView
+        android:id="@+id/nestedItemExpense"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:layout_gravity="right|center_vertical" />
+
+    <TextView
+        android:id="@+id/nestedItemExpensePer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:layout_gravity="right|center_vertical" />
+
+
+    <ImageButton
+        android:id="@+id/btnDeleteDateEntry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:visibility="gone"
+        android:background="@android:color/transparent"
+        android:src="@drawable/baseline_delete_forever_24"
+        android:layout_gravity="center_vertical"
+        android:contentDescription="Delete selected"
+        android:tooltipText="Delete selected"
+        />
+
+
+</LinearLayout>

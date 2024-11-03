@@ -1,0 +1,71 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.expenseutility.MainActivity">
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_setGlobalIncome"
+        android:orderInCategory="100"
+        android:title="@string/action_setGlobalIncome"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_schedule_notif"
+        android:orderInCategory="100"
+        android:title="Schedule notification"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_trig_notif"
+        android:orderInCategory="100"
+        android:title="Trigger Notification"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_exportcsv"
+        android:orderInCategory="100"
+        android:title="Backup Expenses"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_restoreExpenses"
+        android:orderInCategory="100"
+        android:title="Restore Expenses"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_firebaseload"
+        android:orderInCategory="100"
+        android:title="Fetch from Firebase"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_flashConfig"
+        android:orderInCategory="100"
+        android:title="Flash Light Configuration"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_load_particulars"
+        android:orderInCategory="100"
+        android:title="Fetch Particulars list from file"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/suggestionsConfig"
+        android:orderInCategory="100"
+        android:title="Configurations"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/sendBkpMail"
+        android:orderInCategory="100"
+        android:title="Send backup mail"
+        app:showAsAction="never" />
+
+</menu>

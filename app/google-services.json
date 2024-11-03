@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1038905022701",
+    "project_id": "expense-saver-ee659",
+    "storage_bucket": "expense-saver-ee659.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1038905022701:android:a13d374df5e889715214e4",
+        "android_client_info": {
+          "package_name": "com.example.expenseutility"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3EJN5-qS6xlSPFuIpxVCxZLjSPNFy5QU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

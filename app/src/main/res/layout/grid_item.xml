@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="150dp"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:id="@+id/configGridItemCardView"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/configThreeDotsBtn"
+            android:layout_gravity="right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/interface_ui_dots_menu_svgrepo_com"
+        />
+
+        <ImageView
+            android:id="@+id/gridItemImage"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/list_svgrepo_com"
+            android:contentDescription="@string/app_name"/>
+
+        <TextView
+            android:id="@+id/gridItemTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Suggestions List"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginVertical="8dp"/>
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

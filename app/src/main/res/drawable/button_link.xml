@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/button_link_selector.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#854CAF50" /> <!-- Light gray when pressed -->
+            <stroke android:width="2dp" android:color="#8BC34A" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+<!--    <item>-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <solid android:color="@android:color/transparent" />-->
+<!--            <stroke android:width="2dp" android:color="#4CAF50" />-->
+<!--            <corners android:radius="8dp" />-->
+<!--        </shape>-->
+<!--    </item>-->
+</selector>

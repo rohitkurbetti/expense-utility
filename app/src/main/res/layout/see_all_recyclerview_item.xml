@@ -14,7 +14,18 @@
         app:cardElevation="4dp"
         app:cardCornerRadius="28dp"
         app:cardUseCompatPadding="true">
-        
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/seeAllImageView"
+                android:layout_marginLeft="15dp"
+                android:layout_marginVertical="10dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+            />
+        </LinearLayout>
         
         <LinearLayout
             android:layout_width="wrap_content"
@@ -22,7 +33,7 @@
             android:weightSum="5.5"
             android:gravity="left"
             android:layout_marginVertical="5dp"
-            android:layout_marginLeft="25dp"
+            android:layout_marginLeft="55dp"
             android:orientation="vertical">
 
             <TextView

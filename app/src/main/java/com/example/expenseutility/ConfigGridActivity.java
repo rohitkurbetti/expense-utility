@@ -31,9 +31,11 @@ public class ConfigGridActivity extends AppCompatActivity {
         // Prepare Data
         List<String> titles = new ArrayList<>();
         titles.add("Suggestion");
+        titles.add("Flash");
 
         List<Integer> images = new ArrayList<>();
         images.add(R.drawable.list_svgrepo_com);
+        images.add(R.drawable.baseline_flash_on_24);
 
         // Set Adapter
         adapter = new GridAdapter(this, titles, images);

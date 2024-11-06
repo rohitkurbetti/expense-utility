@@ -24,6 +24,7 @@ import com.example.expenseutility.databinding.FragmentSecondBinding;
 import com.example.expenseutility.databinding.FragmentThirdBinding;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.utility.ExpenseAdapter;
+import com.example.expenseutility.utility.SpinnerItem;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.datepicker.CalendarConstraints;
@@ -193,6 +194,10 @@ public class ThirdFragment extends Fragment {
 
 
     private void loadExpenseList() {
+
+
+
+
         Cursor expenseData = db.getAllExpenseData();
         if(expenseData.getCount() > 0){
             expenseItems.clear();
@@ -208,8 +213,40 @@ public class ThirdFragment extends Fragment {
                         expenseData.getBlob(7))
                 );
             }
+
+            updateImageDrawableInExpenseItems(expenseItems);
+
         } else {
             Toast.makeText(getContext(), "Expense List is empty !", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void updateImageDrawableInExpenseItems(List<ExpenseItem> expenseItems) {
+
+        List<SpinnerItem> items = new ArrayList<>();
+        items.add(new SpinnerItem("Select Options", 0));
+        items.add(new SpinnerItem("Housing Expenses", R.drawable.house_to_rent_svgrepo_com));
+        items.add(new SpinnerItem("Transportation", R.drawable.ground_transportation_svgrepo_com));
+        items.add(new SpinnerItem("Food", R.drawable.meal_easter_svgrepo_com));
+        items.add(new SpinnerItem("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
+        items.add(new SpinnerItem("Fuel", R.drawable.fuel_station));
+        items.add(new SpinnerItem("Debt Payments", R.drawable.money_svgrepo_com__1_));
+        items.add(new SpinnerItem("Entertainment", R.drawable.entertainment_svgrepo_com));
+        items.add(new SpinnerItem("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com));
+        items.add(new SpinnerItem("Grocery", R.drawable.shopping_basket));
+        items.add(new SpinnerItem("Clothing and Personal Care", R.drawable.clothes_clothing_formal_wear_svgrepo_com));
+        items.add(new SpinnerItem("Education", R.drawable.education_graduation_learning_school_study_svgrepo_com));
+        items.add(new SpinnerItem("Charity and Gifts", R.drawable.loving_charity_svgrepo_com));
+        items.add(new SpinnerItem("Travel", R.drawable.travel_svgrepo_com__1_));
+        items.add(new SpinnerItem("Insurance", R.drawable.employee_svgrepo_com));
+        items.add(new SpinnerItem("Childcare and Education", R.drawable.woman_pushing_stroller_svgrepo_com));
+        items.add(new SpinnerItem("Miscellaneous", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
+
+
+        expenseItems.forEach(e -> {
+            List<SpinnerItem> items1 = items.stream().filter(i -> i.getText().equalsIgnoreCase(e.getExpenseCategory())).collect(Collectors.toList());
+            e.setImageDrawableId(items1.get(0).getImageResourceId());
+        });
+
     }
 }

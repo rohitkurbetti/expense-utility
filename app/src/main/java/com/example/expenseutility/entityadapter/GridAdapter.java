@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.expenseutility.FirstFragment;
 import com.example.expenseutility.R;
 import com.example.expenseutility.SuggestionActivity;
 import com.google.firebase.database.DatabaseReference;
@@ -56,12 +57,23 @@ public class GridAdapter extends RecyclerView.Adapter<GridAdapter.ViewHolder> {
             // Attempt to launch the activity dynamically based on the item name
             try {
                 // Convert itemName to a fully qualified class name
-                String className = context.getPackageName() + "." + itemName + "Activity"; // Example: "com.example.app.Item1Activity"
-                Class<?> activityClass = Class.forName(className);
 
-                // Create an Intent to start the resolved activity
-                Intent intent = new Intent(context, activityClass);
-                context.startActivity(intent);
+                if(itemName.equalsIgnoreCase("Flash")) {
+                    FirstFragment.binding.flashLightBtn.setVisibility(
+                            View.VISIBLE == FirstFragment.binding.flashLightBtn.getVisibility() ? View.INVISIBLE : View.VISIBLE);
+                    if(FirstFragment.binding.flashLightBtn.getVisibility() == View.VISIBLE) {
+                        Toast.makeText(context, "Flash button enabled", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Flash button disabled", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    String className = context.getPackageName() + "." + itemName + "Activity"; // Example: "com.example.app.Item1Activity"
+                    Class<?> activityClass = Class.forName(className);
+
+                    // Create an Intent to start the resolved activity
+                    Intent intent = new Intent(context, activityClass);
+                    context.startActivity(intent);
+                }
             } catch (ClassNotFoundException e) {
                 // Show an error message if the class is not found
                 Toast.makeText(context, "Activity for " + itemName + " not found!", Toast.LENGTH_SHORT).show();

@@ -154,7 +154,25 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            deleteAllData();
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Delete all data?");
+            builder.setMessage("Are you sure to delete all data?");
+            builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    deleteAllData();
+                }
+            });
+            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.setCancelable(false);
+            AlertDialog dialog = builder.create();
+            dialog.show();
             return true;
         }
 

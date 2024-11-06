@@ -19,6 +19,8 @@ public class ExpenseItem implements Serializable {
     private String fileName;
     private byte[] fileBytes;
 
+    private Integer imageDrawableId;
+
     public ExpenseItem () {
 
     }
@@ -103,6 +105,14 @@ public class ExpenseItem implements Serializable {
 
     public void setExpenseDateTime(String expenseDateTime) {
         this.expenseDateTime = expenseDateTime;
+    }
+
+    public Integer getImageDrawableId() {
+        return imageDrawableId;
+    }
+
+    public void setImageDrawableId(Integer imageDrawableId) {
+        this.imageDrawableId = imageDrawableId;
     }
 
     public ExpenseItem(Integer id, String expenseParticulars, Long expenseAmount, String expenseDate, String expenseCategory, String fileName, byte[] fileBytes) {

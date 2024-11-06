@@ -49,6 +49,7 @@ import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.Suggestion;
 import com.example.expenseutility.utility.CustomSpinnerAdapter;
 import com.example.expenseutility.utility.SpinnerItem;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -75,7 +76,8 @@ import java.util.regex.Pattern;
 
 public class FirstFragment extends Fragment {
 
-    private FragmentFirstBinding binding;
+    public static FragmentFirstBinding binding;
+
     private String dateVal;
     private String dateTimeVal;
     private static final int PICK_PDF_REQUEST = 1;
@@ -163,6 +165,19 @@ public class FirstFragment extends Fragment {
         });
 
 
+        binding.btnGetAllData.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                // Show the Snackbar with details
+
+                double todaysExp = db.getTotalExpenseForToday();
+                double todPer = (todaysExp/2000)*100;
+                Snackbar.make(v, "Todays expense ", 4000)
+                        .setAction("\u20B9"+(int) todaysExp +" ("+todPer+"%)", v1 -> {})
+                        .show();
+                return true;
+            }
+        });
 
 
 

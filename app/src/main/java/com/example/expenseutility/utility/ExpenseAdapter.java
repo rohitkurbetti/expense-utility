@@ -1,9 +1,12 @@
 package com.example.expenseutility.utility;
 
+import static androidx.appcompat.content.res.AppCompatResources.getDrawable;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,6 +75,8 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseViewHolder> {
 //        }
     }
 
+
+
     @NonNull
     @Override
     public ExpenseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -82,6 +87,7 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ExpenseViewHolder holder, int position) {
 
+        holder.seeAllImageView.setImageDrawable(context.getDrawable(expenseItems.get(position).getImageDrawableId()));
         holder.particulars.setText(expenseItems.get(position).getExpenseParticulars());
         holder.amount.setText(String.valueOf(expenseItems.get(position).getExpenseAmount()));
         holder.date.setText(expenseItems.get(position).getExpenseDate());
@@ -104,6 +110,7 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseViewHolder> {
 class ExpenseViewHolder extends RecyclerView.ViewHolder {
 
     TextView particulars,amount,date,category;
+    ImageView seeAllImageView;
     CardView recCard;
 
 
@@ -111,6 +118,7 @@ class ExpenseViewHolder extends RecyclerView.ViewHolder {
     public ExpenseViewHolder(@NonNull View itemView) {
         super(itemView);
 
+        seeAllImageView = itemView.findViewById(R.id.seeAllImageView);
         recCard = itemView.findViewById(R.id.recCard);
         particulars = itemView.findViewById(R.id.particularsTxt);
         amount = itemView.findViewById(R.id.amountTxt);

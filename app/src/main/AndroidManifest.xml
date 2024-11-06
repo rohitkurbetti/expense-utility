@@ -28,6 +28,7 @@
         android:roundIcon="@mipmap/ic_launcher_new"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExpenseUtility"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
         <activity
             android:name=".RealtimeFirebaseActivity"

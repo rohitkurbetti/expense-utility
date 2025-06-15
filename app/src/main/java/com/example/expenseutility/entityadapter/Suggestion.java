@@ -23,4 +23,16 @@ public class Suggestion implements Serializable {
         this.description = description;
     }
 
+    public Suggestion(int id, String description) {
+        this.id = id;
+        this.description = description;
+    }
+
+    public Suggestion() {
+
+    }
+
+    public Suggestion(String description) {
+        this.description = description;
+    }
 }

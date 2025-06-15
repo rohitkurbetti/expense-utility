@@ -64,7 +64,6 @@ public class NestedItemAdapter extends ArrayAdapter<ExpenseItem> {
         delNestedItemCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                checkedStates.set(position, isChecked);
                 currentItem.setChecked(isChecked);
 
 

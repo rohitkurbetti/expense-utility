@@ -13,6 +13,7 @@
         android:padding="16dp">
 
         <TextView
+            android:visibility="gone"
             android:layout_marginTop="20dp"
             android:id="@+id/tvHeading"
             android:layout_width="wrap_content"
@@ -25,7 +26,7 @@
 
         <TextView
             android:id="@+id/textViewAllData"
-            android:visibility="invisible"
+            android:visibility="gone"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -109,38 +110,49 @@
             app:layout_constraintTop_toBottomOf="@+id/ml_layout">
 
             <LinearLayout
-                android:gravity="right"
-                android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvHeading1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="10dp"
+                    android:layout_weight="1"
+                    android:text="Total expense"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageButton
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:clickable="true"
                     android:id="@+id/pieChartBtn"
-                    android:layout_gravity="right"
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_gravity="right"
                     android:layout_marginRight="5dp"
-                    android:tooltipText="Show pie chart"
+                    android:clickable="true"
                     android:src="@drawable/pie_chart_svgrepo_com__1_"
-                    />
+                    android:tooltipText="Show pie chart" />
 
                 <ImageButton
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:clickable="true"
                     android:id="@+id/barChartBtn"
-                    android:layout_gravity="right"
+                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:tooltipText="Show bar chart"
+                    android:clickable="true"
                     android:src="@drawable/bar_chart_graph_svgrepo_com"
+                    android:tooltipText="Show bar chart"
 
                     />
 
             </LinearLayout>
 
             <ScrollView
+                android:visibility="gone"
                 android:id="@+id/hrznScrlview"
                 android:layout_width="match_parent"
                 android:layout_height="450dp">
@@ -215,15 +227,24 @@
             </HorizontalScrollView>
             </ScrollView>
 
+
+            <ListView
+                android:background="@drawable/gray_bg"
+                android:layout_marginTop="10dp"
+                android:id="@+id/expenseDetailsListView"
+                android:layout_width="match_parent"
+                android:layout_height="495dp"
+
+                />
+
         </LinearLayout>
 
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:orientation="vertical"
             android:gravity="center"
+            android:layout_marginTop="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linearLayout">

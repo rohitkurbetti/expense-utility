@@ -22,7 +22,7 @@ public class NotificationUtils {
                 .setSmallIcon(android.R.drawable.ic_dialog_email)
                 .setContentTitle(title)
                 .setContentText(message)
-                .setAutoCancel(true);
+                .setAutoCancel(false);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setChannelId("email_sent_channel");

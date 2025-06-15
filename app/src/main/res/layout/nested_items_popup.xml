@@ -70,12 +70,13 @@
 
     <ImageButton
         android:id="@+id/btnDeletePopup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:scaleType="centerInside"
         android:text="Delete"
         android:visibility="gone"
         android:background="@android:color/transparent"
-        android:src="@drawable/baseline_delete_forever_24"
+        android:src="@drawable/delete_trash_svgrepo_com"
         android:layout_gravity="right"
         android:contentDescription="Delete selected"
         android:tooltipText="Delete selected"

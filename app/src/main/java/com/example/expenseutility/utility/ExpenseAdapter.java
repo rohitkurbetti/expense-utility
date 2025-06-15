@@ -19,8 +19,12 @@ import com.example.expenseutility.BottomSheetFragment;
 import com.example.expenseutility.R;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseViewHolder> {
 
@@ -49,9 +53,19 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseViewHolder> {
             bannerTxt.setText("");
             bannerTxt.setVisibility(View.GONE);
         } else {
-            for (ExpenseItem expense : expenseItemsBkp) {
-                if (selectedCategories.contains(expense.getExpenseCategory())) {
-                    filteredList.add(expense);
+            if (selectedCategories.equalsIgnoreCase("Today's expenses")) {
+                String dateFmtted = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                expenseItemsBkp.stream().filter(e -> e.getExpenseDate().equalsIgnoreCase(dateFmtted)).collect(Collectors.toList());
+                for (ExpenseItem expense : expenseItemsBkp) {
+                    if (dateFmtted.contains(expense.getExpenseDate())) {
+                        filteredList.add(expense);
+                    }
+                }
+            } else {
+                for (ExpenseItem expense : expenseItemsBkp) {
+                    if (selectedCategories.contains(expense.getExpenseCategory())) {
+                        filteredList.add(expense);
+                    }
                 }
             }
             updateRecyclerView(filteredList, bannerTxt);
@@ -59,20 +73,22 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseViewHolder> {
     }
 
     public void updateRecyclerView(List<ExpenseItem> filteredExpenses, TextView bannerTxt) {
-//        if(filteredExpenses.size() == 0){
-//            expenseItems.clear();
-//            expenseItems.addAll(expenseItemsBkp);
-//            notifyDataSetChanged();
-//        } else {
-            int sum = filteredExpenses.stream().mapToInt(i -> i.getExpenseAmount().intValue()).sum();
-            double val = ((double) sum/60000)*100;
+        int sum = filteredExpenses.stream().mapToInt(i -> i.getExpenseAmount().intValue()).sum();
+
+        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+
+
+        double val = ((double) sum/income)*100;
+        if(sum != 0) {
             bannerTxt.setVisibility(View.VISIBLE);
             bannerTxt.setText("Total: \u20b9" + sum + "              Monthly exp: " + String.format("%.2f",val)+"%");
-//            Toast.makeText(context, , Toast.LENGTH_LONG).show();
-            expenseItems.clear();
-            expenseItems.addAll(filteredExpenses);
-            notifyDataSetChanged();
-//        }
+        } else {
+            bannerTxt.setVisibility(View.VISIBLE);
+            bannerTxt.setText("No records found");
+        }
+        expenseItems.clear();
+        expenseItems.addAll(filteredExpenses);
+        notifyDataSetChanged();
     }
 
 

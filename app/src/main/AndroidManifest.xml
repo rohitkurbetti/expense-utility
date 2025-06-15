@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
 
     <uses-feature android:name="android.hardware.camera.flash" />
     <uses-feature android:name="android.hardware.camera.any" />
@@ -20,6 +22,7 @@
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher_new"
         android:label="@string/app_name"
@@ -28,8 +31,11 @@
         android:roundIcon="@mipmap/ic_launcher_new"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExpenseUtility"
-        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
+        <activity
+            android:name=".ExpenseInputActivity"
+            android:exported="false"
+            android:theme="@style/OverlayTheme" />
         <activity
             android:name=".RealtimeFirebaseActivity"
             android:exported="false" />
@@ -67,6 +73,17 @@
 
         <receiver android:name=".notification.NotificationReceiver" />
         <receiver android:name=".notification.DismissNotificationReceiver" />
+        <receiver
+            android:name=".notification.SaveExpenseReceiver"
+            android:exported="true" />
+        <receiver
+            android:name=".notification.SmsReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".notification.NotificationActionReceiver"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -77,6 +94,9 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+
+
     </application>
 
 </manifest>

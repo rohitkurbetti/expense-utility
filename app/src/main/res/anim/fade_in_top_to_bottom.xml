@@ -1,0 +1,17 @@
+<!-- res/anim/fade_in_top_to_bottom.xml -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator">
+
+    <!-- Slide from top -->
+    <translate
+        android:fromYDelta="-50%"
+        android:toYDelta="0%"
+        android:duration="300"/>
+
+    <!-- Fade in -->
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="300"/>
+
+</set>

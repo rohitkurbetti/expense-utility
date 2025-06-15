@@ -56,6 +56,9 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         map.put("Transportation", R.drawable.ground_transportation_svgrepo_com);
         map.put("Food", R.drawable.meal_easter_svgrepo_com);
         map.put("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com);
+        map.put("Recharge", R.drawable.mobile_phone_recharge_svgrepo_com);
+        map.put("Shopping", R.drawable.shopping_cart_svgrepo_com);
+        map.put("Subscriptions", R.drawable.youtube_svgrepo_com);
         map.put("Debt Payments", R.drawable.money_svgrepo_com__1_);
         map.put("Entertainment", R.drawable.entertainment_svgrepo_com);
         map.put("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com);
@@ -73,8 +76,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
             ExpenseItem expenseItem = (ExpenseItem) getArguments().getSerializable(ARG_OBJECT);
             if (expenseItem != null) {
                 binding.expAmountTxt.setText(String.valueOf("\u20B9"+expenseItem.getExpenseAmount()));
-                binding.dailyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/(sharedPreferences.getFloat("monthlyIncome",60000f)/30))*100)+"%");
-                binding.monthlyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/sharedPreferences.getFloat("monthlyIncome",60000f))*100)+"%");
+                binding.dailyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/(sharedPreferences.getFloat("monthlyIncome",87000f)/30))*100)+"%");
+                binding.monthlyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/sharedPreferences.getFloat("monthlyIncome",87000f))*100)+"%");
                 binding.imageViewCategory.setImageDrawable(getResources().getDrawable(map.get(expenseItem.getExpenseCategory())));
 
                 if(expenseItem.getFileBytes() != null){

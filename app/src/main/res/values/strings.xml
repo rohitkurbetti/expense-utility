@@ -4,7 +4,7 @@
     <string name="action_setGlobalIncome">Set Income</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">Expense Utility</string>
-    <string name="second_fragment_label"></string>
+    <string name="second_fragment_label">Expense Details</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 

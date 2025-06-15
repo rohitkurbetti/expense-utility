@@ -1,5 +1,7 @@
 package com.example.expenseutility;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,9 +19,11 @@ import com.example.expenseutility.entityadapter.SuggestionAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class SuggestionActivity extends AppCompatActivity {
 
@@ -29,6 +33,7 @@ public class SuggestionActivity extends AppCompatActivity {
     private EditText etAddSugg;
     public static List<Suggestion> suggestionsList;
     private SuggestionAdapter adapter;
+    private SharedPreferences sharedPreferences;
 
     private DatabaseReference database;
 
@@ -57,11 +62,22 @@ public class SuggestionActivity extends AppCompatActivity {
         btnAddSugg = findViewById(R.id.btnAddSuggestion);
         delSelectedBtn = findViewById(R.id.delSelectedBtn);
         db = new DatabaseHelper(this);
+        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
 
 
 
         // Retrieve data from database and display it in ListView
         suggestionsList = db.getAllSuggestions();
+
+        if(suggestionsList.isEmpty()) {
+            Set<String> suggList = sharedPreferences.getStringSet("partSuggestionsList", new HashSet<>());
+
+            suggList.forEach(s -> {
+                db.addSuggestion(s);
+            });
+            suggestionsList = db.getAllSuggestions();
+
+        }
 
         adapter = new SuggestionAdapter(this, suggestionsList);
         listView.setAdapter(adapter);

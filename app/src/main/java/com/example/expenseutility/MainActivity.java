@@ -1,5 +1,9 @@
 package com.example.expenseutility;
 
+import static com.example.expenseutility.ExpenseInputActivity.getFormatted;
+import static com.example.expenseutility.utility.SmsNotificationUtils.parseAmount;
+import static com.example.expenseutility.utility.SmsNotificationUtils.parseDateTime;
+
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.NotificationChannel;
@@ -18,14 +22,18 @@ import android.os.Build;
 import android.os.Bundle;
 
 import com.example.expenseutility.database.DatabaseHelper;
+import com.example.expenseutility.dto.Transaction;
 import com.example.expenseutility.emailutility.EmailSender;
 import com.example.expenseutility.emailutility.NotificationUtils;
 import com.example.expenseutility.entityadapter.CustomListAdapter;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.Expenses;
 import com.example.expenseutility.entityadapter.FirebaseExpenseAdapter;
+import com.example.expenseutility.entityadapter.TransactionAdapter;
 import com.example.expenseutility.notification.DismissNotificationReceiver;
 import com.example.expenseutility.notification.NotificationReceiver;
+import com.example.expenseutility.utility.CsvImportWorker;
+import com.example.expenseutility.utility.SmsNotificationUtils;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
@@ -41,12 +49,17 @@ import android.view.View;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.view.MenuItemCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.example.expenseutility.databinding.ActivityMainBinding;
 import com.google.firebase.database.DataSnapshot;
@@ -59,6 +72,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -82,7 +96,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkRequest;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -94,13 +111,121 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_MANAGE_STORAGE = 123;
     private static final int REQUEST_WRITE_STORAGE = 112;
     SharedPreferences sharedPreferences;
+    private static final int REQUEST_CODE_NOTIFICATION = 2001;
+    private static final int SMS_PERMISSION_CODE = 101;
+    private DatabaseHelper db;
+    private List<Transaction> transactionList;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void requestSmsPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS},
+                    SMS_PERMISSION_CODE);
+        } else {
+            readExistingSms();
+        }
+    }
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void readExistingSms() {
+
+        long currentTimeMillis = System.currentTimeMillis();
+        long threeDaysAgoMillis = currentTimeMillis - (3L * 24 * 60 * 60 * 1000); // 3 days in millis
+
+
+        Uri uriSms = Uri.parse("content://sms/inbox");
+        String selection = "date >= ?";
+        String[] selectionArgs = { String.valueOf(threeDaysAgoMillis) };
+        Cursor cursor = getContentResolver().query(uriSms, null, selection, selectionArgs, "date DESC");
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+//                String address = cursor.getString(cursor.getColumnIndexOrThrow("address"));
+//                long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("date"));
+//                String type = cursor.getString(cursor.getColumnIndexOrThrow("type"));
+//                String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
+//                String seen = cursor.getString(cursor.getColumnIndexOrThrow("seen"));
+//                String read = cursor.getString(cursor.getColumnIndexOrThrow("read"));
+//                String date_sent = cursor.getString(cursor.getColumnIndexOrThrow("date_sent"));
+//                String person = cursor.getString(cursor.getColumnIndexOrThrow("creator"));
+
+//                if (body.contains("Debit INR")
+//                        || body.contains("Debited INR") || body.contains("XX7794")
+//                ) {
+//                    if (!TransactionQueue.getInstance(this).getMessages().contains(body)) {
+//                        TransactionQueue.getInstance(this).getMessages().add(body);
+                        // Show/update reminder notification
+
+
+                    double amount = parseAmount(body); // e.g., extract "100.00"
+                    String dateTime = parseDateTime(body); // extract date and time
+                    int notificationId = (amount + dateTime).hashCode(); // consistent ID
+
+                    if(amount>0.0d && !dateTime.isEmpty()) {
+
+                        if(db==null) {
+                            db = new DatabaseHelper(this);
+                        }
+
+                        if (!db.isTransactionIgnored(amount, dateTime)) {
+                            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss");
+                            DateTimeFormatter outputDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+                            LocalDateTime parsedDateTime = LocalDateTime.parse(dateTime, dateTimeFormatter);
+
+                            StringBuilder dateTimeStr = new StringBuilder();
+
+
+                            String month = getFormatted(parsedDateTime.getMonthValue());
+                            String day = getFormatted(parsedDateTime.getDayOfMonth());
+                            String hour = getFormatted(parsedDateTime.getHour());
+                            String minute = getFormatted(parsedDateTime.getMinute());
+                            String second = getFormatted(parsedDateTime.getSecond());
+
+                            dateTimeStr.append(parsedDateTime.getYear());
+                            dateTimeStr.append("-");
+                            dateTimeStr.append(month);
+                            dateTimeStr.append("-");
+                            dateTimeStr.append(day);
+                            dateTimeStr.append(" ");
+                            dateTimeStr.append(hour);
+                            dateTimeStr.append(":");
+                            dateTimeStr.append(minute);
+
+                            String dateStr = parsedDateTime.getYear()+"-"+month+"-"+day;
+
+
+
+                            //check if record exists in db
+                            boolean isExists = db.checkIfExistsMinPossibleParams((int) amount, dateTimeStr.toString(), dateStr);
+
+                            if(!isExists) {
+                                SmsNotificationUtils.showInputNotification(this, body, (int) notificationId);
+                            }
+                        }
+
+
+
+                    }
+//                    }
+//                }
+
+            }
+            cursor.close();
+
+
+        }
+    }
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestSmsPermission();
          sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        db = new DatabaseHelper(this);
         // Initialize Firebase Database
         database = FirebaseDatabase.getInstance().getReference();
 
@@ -113,13 +238,67 @@ public class MainActivity extends AppCompatActivity {
         } else {
             checkStoragePermission();
         }
+
+//        createNotificationChannelBkgrndImport();
+        requestNotificationPermission();
+
+        float income = sharedPreferences.getFloat("monthlyIncome", 87000.0f);
+
+        if(income==0.0f) {
+            setGlobalIncome();
+        }
+
+
+//        Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+//                .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+//        startActivity(intent);
+
+
+
+//        scheduleCsvImport(this);
+
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
     }
 
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_CODE_NOTIFICATION);
+                Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                startActivity(intent);
+            }
+        }
+    }
 
+    private void createNotificationChannelBkgrndImport() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelId = "CSV_IMPORT_CHANNEL";
+            CharSequence name = "CSV Import Notifications";
+            String description = "Notifies when CSV import starts and finishes";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(channelId, name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == SMS_PERMISSION_CODE && grantResults.length > 0 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            readExistingSms();
+        }
+    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.R)
@@ -145,6 +324,19 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        MenuItem item = menu.findItem(R.id.action_notifications);
+        View actionView = MenuItemCompat.getActionView(item);
+        TextView badge = actionView.findViewById(R.id.badge_text_view);
+
+        int count = TransactionQueue.getInstance(this).getCount();
+        if (count > 0) {
+            badge.setText(String.valueOf(count));
+            badge.setVisibility(View.VISIBLE);
+        } else {
+            badge.setVisibility(View.GONE);
+        }
+
         return true;
     }
 
@@ -229,7 +421,61 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.csvStatementImport) {
+            importCsvStatement();
+            return true;
+        }
+
+
         return super.onOptionsItemSelected(item);
+    }
+
+    private void importCsvStatement() {
+
+        transactionList = new ArrayList<>();
+        try {
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Account_stmt.csv");
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            boolean isHeader = true;
+
+            while ((line = reader.readLine()) != null) {
+                if (isHeader) { isHeader = false; continue; }
+                String[] columns = line.split(",", -1);
+                if (columns.length >= 3) {
+                    String date = columns[0].trim();
+                    String particulars = columns[1].trim();
+                    String debit = columns[2].trim();
+                    if(debit.isEmpty()) {
+                        continue;
+                    } else {
+                        Transaction tr = new Transaction(date, particulars, debit);
+                        transactionList.add(tr);
+                    }
+                }
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to load CSV", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_transaction_list, null);
+
+        ListView listView = dialogView.findViewById(R.id.dialogListView);
+        TransactionAdapter adapter = new TransactionAdapter(this, transactionList);
+        listView.setAdapter(adapter);
+
+        builder.setView(dialogView)
+            .setTitle("Transactions List")
+            .setPositiveButton("OK", (dialog, which) -> {
+                long selectedTtems = transactionList.stream().filter(Transaction::isSelected).count();
+                Toast.makeText(this, "Selected "+selectedTtems+" items", Toast.LENGTH_SHORT).show();
+            })
+            .show();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -342,7 +588,7 @@ public class MainActivity extends AppCompatActivity {
                 String expDateTime = tokens[4];
                 String expDate = tokens[5];
 
-                if(!db.checkIfExists(expCategory, expPart, expAmt, expDateTime, expDate)) {
+                if(!db.checkIfExists(expCategory, expAmt, expDateTime, expDate)) {
                     db.insertExpense(expCategory, expPart, expAmt, expDateTime, expDate, null, null, null);
                     rowsCount++;
                 }
@@ -372,8 +618,7 @@ public class MainActivity extends AppCompatActivity {
                             boolean dataExists = false;
                             for (DataSnapshot d3 : snapshot.getChildren()) {
                                 ExpenseItem expenseItem = d3.getValue(ExpenseItem.class);
-                                if(expenseItem.getExpenseParticulars().equalsIgnoreCase(expPart) &&
-                                        expenseItem.getExpenseCategory().equalsIgnoreCase(expCategory) &&
+                                if(expenseItem.getExpenseCategory().equalsIgnoreCase(expCategory) &&
                                         expenseItem.getExpenseAmount().toString().equals(expAmt) &&
                                         expenseItem.getExpenseDateTime().equalsIgnoreCase(expDateTime) &&
                                         expenseItem.getExpenseDate().equalsIgnoreCase(expDate)
@@ -420,7 +665,7 @@ public class MainActivity extends AppCompatActivity {
     private void loadParticularsFileFromDownloads() {
         // Specify the file name and path in the Downloads directory
         File downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        File file = new File(downloadsFolder, "data.txt");
+        File file = new File(downloadsFolder, "particulars_data.txt");
 
         if (!file.exists()) {
             Toast.makeText(this, "File not found in Downloads folder", Toast.LENGTH_SHORT).show();
@@ -531,11 +776,12 @@ public class MainActivity extends AppCompatActivity {
                 dismissIntent,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_IMMUTABLE : 0
         );
+        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
 
         String dateFrmt = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         String dataTxt = "Total Expense: \u20B9" + totalExpense+"\n" +
-                "Average spent (day income) "+String.format("%.2f",(totalExpense/(60000/30))*100)+"%\n"+
-                "Average spent (monthly income) "+String.format("%.2f",(totalExpense/60000)*100)+"%";
+                "Average spent (day income) "+String.format("%.2f",(totalExpense/(income/30))*100)+"%\n"+
+                "Average spent (monthly income) "+String.format("%.2f",(totalExpense/income)*100)+"%";
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.drawable.money_svgrepo_com__1_) // Add your own icon here
                 .setContentTitle("Today's Total Expense")
@@ -643,10 +889,11 @@ public class MainActivity extends AppCompatActivity {
         View dialogView = inflater.inflate(R.layout.popup_with_edittext, null);
 
         EditText editText = dialogView.findViewById(R.id.editTextPopup);
-        Float monthlyIncome = sharedPreferences.getFloat("monthlyIncome", 0f);
+        Float monthlyIncome = sharedPreferences.getFloat("monthlyIncome", 87000f);
         editText.setText(String.valueOf(monthlyIncome));
         // Create the AlertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setIcon(R.drawable.calculator_finance_income_svgrepo_com);
         builder.setView(dialogView)
                 .setTitle("Set income")
                 .setPositiveButton("Save", (dialog, which) -> {

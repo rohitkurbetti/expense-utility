@@ -66,6 +66,14 @@ public class GridAdapter extends RecyclerView.Adapter<GridAdapter.ViewHolder> {
                     } else {
                         Toast.makeText(context, "Flash button disabled", Toast.LENGTH_SHORT).show();
                     }
+                } else if(itemName.equalsIgnoreCase("Data Import")) {
+                    FirstFragment.binding.triggerImport.setVisibility(
+                            View.VISIBLE == FirstFragment.binding.triggerImport.getVisibility() ? View.INVISIBLE : View.VISIBLE);
+                    if(FirstFragment.binding.triggerImport.getVisibility() == View.VISIBLE) {
+                        Toast.makeText(context, "Data import button enabled", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Data import disabled", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     String className = context.getPackageName() + "." + itemName + "Activity"; // Example: "com.example.app.Item1Activity"
                     Class<?> activityClass = Class.forName(className);

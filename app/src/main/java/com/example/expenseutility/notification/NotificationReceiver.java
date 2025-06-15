@@ -45,10 +45,13 @@ public class NotificationReceiver extends BroadcastReceiver {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_IMMUTABLE : 0
         );
 
+        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+
+
         String dateFrmt = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         String dataTxt = "Total Expense: \u20B9" + totalExpense+"\n" +
-                "Average spent (day income) "+String.format("%.2f",(totalExpense/(60000/30))*100)+"%\n"+
-                "Average spent (monthly income) "+String.format("%.2f",(totalExpense/60000)*100)+"%";
+                "Average spent (day income) "+String.format("%.2f",(totalExpense/(income/30))*100)+"%\n"+
+                "Average spent (monthly income) "+String.format("%.2f",(totalExpense/income)*100)+"%";
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.money_svgrepo_com__1_) // Add your own icon here
                 .setContentTitle("Today's Total Expense")

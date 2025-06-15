@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="8dp">
+
+    <TextView
+        android:layout_gravity="right|center"
+        android:textAlignment="gravity"
+        android:id="@+id/expenseIdTxt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ID"
+        android:gravity="center"
+        android:layout_margin="5dp"
+        />
+
+
+
+    <!-- Circular background with initials -->
+    <TextView
+        android:id="@+id/textInitials"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:layout_marginHorizontal="4dp"
+        android:layout_gravity="right"
+        android:background="@drawable/circle_bg"
+        android:textSize="15sp" />
+
+
+
+
+
+
+    <TextView
+        android:layout_weight=".7"
+        android:id="@+id/expenseParticularsTxt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Particulars"
+        android:layout_gravity="center|right"
+        android:gravity="start"
+        android:layout_margin="5dp"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        />
+
+    <TextView
+        android:layout_weight=".3"
+        android:gravity="right"
+        android:id="@+id/expenseAmountTxt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:text="Amount"
+        />
+
+    <TextView
+        android:id="@+id/expenseDateTxt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date"
+        android:layout_margin="5dp"
+        />
+
+    <ImageView
+        android:id="@+id/expenseDeleteBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/delete_svgrepo_com"
+        android:layout_margin="5dp"
+        />
+
+
+
+</LinearLayout>

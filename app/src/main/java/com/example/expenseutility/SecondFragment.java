@@ -6,7 +6,6 @@ import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.app.UiModeManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,17 +15,14 @@ import android.database.CursorWindow;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.OpenableColumns;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -38,6 +34,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TableLayout;
@@ -48,21 +45,27 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.FragmentSecondBinding;
-import com.example.expenseutility.notification.DismissNotificationReceiver;
-import com.example.expenseutility.notification.NotificationReceiver;
+import com.example.expenseutility.entityadapter.ExpenseDetailsAdapter;
+import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.python.TFLiteModel;
 import com.example.expenseutility.utility.CustomSpinnerAdapter;
 import com.example.expenseutility.utility.SpinnerItem;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -71,23 +74,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.logging.Logger;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SecondFragment extends Fragment {
 
     private static final int PICK_PDF_REQUEST = 312;
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
-
     private byte[] pdfBytes;
     private String fileName;
-
     private FragmentSecondBinding binding;
-    private DatabaseHelper db;
+    private static DatabaseHelper db;
     private TFLiteModel tfliteModel;
     private float[] binaryArray;
     private float[] binaryArrayForCityType;
@@ -99,8 +102,99 @@ public class SecondFragment extends Fragment {
     private String dateVal;
     private String dateTimeVal;
     private EditText chooseFileTextEdit;
-
     ProgressBar progressBar;
+    private ListView expenseDetailsListView;
+    private static CopyOnWriteArrayList<ExpenseItem> expenseItems = new CopyOnWriteArrayList<>();
+    private static ExpenseDetailsAdapter expenseDetailsAdapter;
+    private ListView listViewTest;
+
+    public static void callOnClickListener(Context context, String delId, int position, ExpenseItem expenseItem) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Delete "+ delId);
+        builder.setMessage("Proceed for delete ? ");
+        builder.setIcon(R.drawable.file_delete_svgrepo_com);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int count = db.deleteRow(Integer.parseInt(""+delId));
+                if(count > 0){
+                    Toast.makeText(context, "Deleted ID "+ delId, Toast.LENGTH_SHORT).show();
+
+                    deleteRecordFromCloud(expenseItem);
+
+                    expenseItems.remove(position);
+                    expenseDetailsAdapter.notifyDataSetChanged();
+
+
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private static void deleteRecordFromCloud(ExpenseItem expenseItemObj) {
+
+        // Reference to the Firebase Realtime Database
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference databaseReference = database.getReference("expenses");
+
+        String childPath = "";
+        String expDate = expenseItemObj.getExpenseDate();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate date = LocalDate.parse(expDate, formatter);
+
+        int year = date.getYear();
+
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM"); // "MMM" gives abbreviated month
+        String month = monthFormatter.format(date);
+
+        childPath = "/"+year +"/"+(month+"-"+year)+"/"+expDate;
+
+
+        String finalChildPath = childPath;
+        databaseReference.child(childPath).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.hasChildren()) {
+                    boolean dataExists = false;
+                    for (DataSnapshot d3 : snapshot.getChildren()) {
+                        ExpenseItem expenseItem = d3.getValue(ExpenseItem.class);
+                        if (expenseItem.getExpenseParticulars().equalsIgnoreCase(expenseItemObj.getExpenseParticulars()) &&
+                                expenseItem.getExpenseCategory().equalsIgnoreCase(expenseItemObj.getExpenseCategory()) &&
+                                expenseItem.getExpenseAmount().toString().equals(expenseItemObj.getExpenseAmount().toString()) &&
+                                expenseItem.getExpenseDateTime().equalsIgnoreCase(expenseItemObj.getExpenseDateTime()) &&
+                                expenseItem.getExpenseDate().equalsIgnoreCase(expenseItemObj.getExpenseDate())
+                        ) {
+                            dataExists = true;
+                            databaseReference.child(finalChildPath +"/"+d3.getKey()).removeValue();
+//                            Toast.makeText(this, "Deleted "+i.getExpenseParticulars() +" "+i.getExpenseDateTime()+" "+i.getExpenseAmount(),
+//                                    Toast.LENGTH_LONG).show();
+
+                            
+                            break;
+                        } else {
+                            dataExists = false;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
 
     @Override
     public View onCreateView(
@@ -121,9 +215,11 @@ public class SecondFragment extends Fragment {
         layout = view.findViewById(R.id.layout);
         linearLayout = view.findViewById(R.id.linearLayout);
         expenseDetailsLayout = view.findViewById(R.id.expenseDetailsLayout);
+        expenseDetailsListView = view.findViewById(R.id.expenseDetailsListView);
+
         progressBar = new ProgressBar(getContext());
         try {
-            populateTable();
+            populateTable1();
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
@@ -297,6 +393,80 @@ public class SecondFragment extends Fragment {
 
     }
 
+
+    private void populateTable1() throws NoSuchFieldException, IllegalAccessException {
+        Cursor data = db.getAllExpenseData();
+        Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
+        field.setAccessible(true);
+        field.set(null, 100 * 1024 * 1024); //100 MB is the new size
+        if(data.getCount()>0) {
+            expenseItems.clear();
+            total = 0;
+            while (data.moveToNext()) {
+                Integer id = data.getInt(0);
+                String date = data.getString(5);
+                String particulars = data.getString(2);
+                Float amount = data.getFloat(3);
+                String expDateTime = data.getString(4);
+                String category = data.getString(1);
+
+                ExpenseItem expenseItem = new ExpenseItem();
+                expenseItem.setId(id);
+                expenseItem.setExpenseAmount((long) Double.parseDouble(String.valueOf(amount)));
+                expenseItem.setExpenseDate(date);
+                expenseItem.setExpenseParticulars(particulars);
+                expenseItem.setExpenseDateTime(expDateTime);
+                expenseItem.setExpenseCategory(category);
+                expenseItems.add(expenseItem);
+                total += amount;
+
+            }
+            binding.tvHeading1.setText("Total  \u20B9"+ total);
+
+//            Map<String, List<ExpenseItem>> map = processExpenseItems(expenseItems);
+//
+//            List<Object> groupedTransactions = new ArrayList<>();
+//            for(Map.Entry<String, List<ExpenseItem>> entry : map.entrySet()) {
+//                groupedTransactions.add(entry.getKey());
+//                groupedTransactions.addAll(entry.getValue());
+//            }
+            
+
+
+            // Set the ListView adapter
+            expenseDetailsAdapter = new ExpenseDetailsAdapter(getContext(), expenseItems);
+            expenseDetailsListView.setAdapter(expenseDetailsAdapter);
+
+        }
+    }
+
+    private Map<String, List<ExpenseItem>> processExpenseItems(CopyOnWriteArrayList<ExpenseItem> expenseItems) {
+        Map<String, List<ExpenseItem>> mapItems = new LinkedHashMap<>();
+        List<ExpenseItem> expenseItemList = new ArrayList<>();
+        int counter = 12;
+        for (int i=counter;i>0;i--) {
+            if(expenseItems.size()>0) {
+                for (ExpenseItem ex : expenseItems) {
+                    if(ex.getExpenseDate().contains("2024-"+counter)) {
+                        expenseItemList.add(ex);
+                    }
+                }
+                mapItems.put("2024-"+counter,expenseItemList);
+                expenseItems.removeAll(expenseItemList);
+                counter--;
+            }
+//            expenseItemList.clear();
+
+        }
+        Log.i("mapp", mapItems.toString());
+
+        return mapItems;
+
+
+
+
+    }
+
 //    private class LoadDataTask extends AsyncTask<Void, Void, Void> {
 //
 //        @Override
@@ -413,7 +583,7 @@ public class SecondFragment extends Fragment {
         Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
         field.setAccessible(true);
         field.set(null, 100 * 1024 * 1024); //100 MB is the new size
-        if(data.getCount()>0){
+        if(data.getCount()>0) {
 
             total=0;
                     while(data.moveToNext()){
@@ -458,40 +628,42 @@ public class SecondFragment extends Fragment {
                         particularsView.setFocusable(true);
                         particularsView.setTypeface(particularsView.getTypeface(), Typeface.BOLD);
 
-                        particularsView.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-//                        Toast.makeText(getContext(), "Me dislo "+ particularsView.getText(), Toast.LENGTH_SHORT).show();
 
-                                //show popup menu
-
-                                PopupMenu popupMenu = new PopupMenu(getContext(), particularsView);
-                                popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
-//                        MenuItem menuItem = popupMenu.getMenu().getItem(0);
-//                        menuItem.setTitle("Edit " + particularsView.getText());
-                                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                                    @Override
-                                    public boolean onMenuItemClick(MenuItem menuItem) {
-
-                                        String menuItemTitle = menuItem.getTitle().toString();
-
-                                        if ("Edit".equalsIgnoreCase(menuItemTitle)) {
-
-                                            openEditAlertDialog(particularsView, id);
-
-                                            return true;
-                                        }
-                                        return false;
-                                    }
-                                });
-
-                                // Show the PopupMenu
-                                popupMenu.show();
-
-
-
-                            }
-                        });
+                        // commented the EDIT functionality on saved expenses
+//                        particularsView.setOnClickListener(new View.OnClickListener() {
+//                            @Override
+//                            public void onClick(View v) {
+////                        Toast.makeText(getContext(), "Me dislo "+ particularsView.getText(), Toast.LENGTH_SHORT).show();
+//
+//                                //show popup menu
+//
+//                                PopupMenu popupMenu = new PopupMenu(getContext(), particularsView);
+//                                popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+////                        MenuItem menuItem = popupMenu.getMenu().getItem(0);
+////                        menuItem.setTitle("Edit " + particularsView.getText());
+//                                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+//                                    @Override
+//                                    public boolean onMenuItemClick(MenuItem menuItem) {
+//
+//                                        String menuItemTitle = menuItem.getTitle().toString();
+//
+//                                        if ("Edit".equalsIgnoreCase(menuItemTitle)) {
+//
+//                                            openEditAlertDialog(particularsView, id);
+//
+//                                            return true;
+//                                        }
+//                                        return false;
+//                                    }
+//                                });
+//
+//                                // Show the PopupMenu
+//                                popupMenu.show();
+//
+//
+//
+//                            }
+//                        });
 
 
                         TextView amountView = new TextView(getContext());
@@ -514,8 +686,7 @@ public class SecondFragment extends Fragment {
 
 
                     }
-                    binding.tvHeading.setText("Expense Details (Total "+ total+")");
-
+                    binding.tvHeading1.setText("Expense Details (Total "+ total+")");
 
 
         }
@@ -527,7 +698,7 @@ public class SecondFragment extends Fragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Edit "+particularsView.getText());
-        builder.setMessage("ID " +id+ " Please edit this record ");
+        builder.setMessage("ID " +id+ " is now editable ");
         builder.setCancelable(false);
 
         View view = getLayoutInflater().inflate(R.layout.edit_layout, null, false);
@@ -598,7 +769,7 @@ public class SecondFragment extends Fragment {
 //                    tableRows.remove(4);
                     expenseDetailsLayout.removeViews(1,expenseDetailsLayout.getChildCount()-1);
                     try {
-                        populateTable();
+                        populateTable1();
                     } catch (NoSuchFieldException e) {
                         throw new RuntimeException(e);
                     } catch (IllegalAccessException e) {
@@ -797,23 +968,8 @@ public class SecondFragment extends Fragment {
     private void getAllSpinnerOptions(Spinner spinnerEdit, String spinnerItem) {
 
         List<SpinnerItem> items = new ArrayList<>();
-        items.add(new SpinnerItem("Select Options", 0));
-        items.add(new SpinnerItem("Housing Expenses", R.drawable.house_to_rent_svgrepo_com));
-        items.add(new SpinnerItem("Transportation", R.drawable.ground_transportation_svgrepo_com));
-        items.add(new SpinnerItem("Food", R.drawable.meal_easter_svgrepo_com));
-        items.add(new SpinnerItem("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
-        items.add(new SpinnerItem("Fuel", R.drawable.fuel_station));
-        items.add(new SpinnerItem("Debt Payments", R.drawable.money_svgrepo_com__1_));
-        items.add(new SpinnerItem("Entertainment", R.drawable.entertainment_svgrepo_com));
-        items.add(new SpinnerItem("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com));
-        items.add(new SpinnerItem("Grocery", R.drawable.shopping_basket));
-        items.add(new SpinnerItem("Clothing and Personal Care", R.drawable.clothes_clothing_formal_wear_svgrepo_com));
-        items.add(new SpinnerItem("Education", R.drawable.education_graduation_learning_school_study_svgrepo_com));
-        items.add(new SpinnerItem("Charity and Gifts", R.drawable.loving_charity_svgrepo_com));
-        items.add(new SpinnerItem("Travel", R.drawable.travel_svgrepo_com__1_));
-        items.add(new SpinnerItem("Insurance", R.drawable.employee_svgrepo_com));
-        items.add(new SpinnerItem("Childcare and Education", R.drawable.woman_pushing_stroller_svgrepo_com));
-        items.add(new SpinnerItem("Miscellaneous", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
+
+        items = FirstFragment.fetchAllSpinnerOptions(items);
 
         CustomSpinnerAdapter adapter = new CustomSpinnerAdapter(getContext(), items);
 
@@ -837,7 +993,7 @@ public class SecondFragment extends Fragment {
 //        for (TableRow row : tableRows) {
 //            expenseDetailsLayout.addView(row);
 //        }
-        populateTable();
+        populateTable1();
     }
 
     private ImageButton createImageButton(int anInt, TableRow tableRow) {
@@ -854,6 +1010,7 @@ public class SecondFragment extends Fragment {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
             builder.setTitle("Delete "+ anInt);
+            builder.setIcon(R.drawable.file_delete_svgrepo_com);
             builder.setMessage("Proceed for delete ? ");
             builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 @Override
@@ -861,6 +1018,7 @@ public class SecondFragment extends Fragment {
                     int count = db.deleteRow(anInt);
                     if(count > 0){
                         Toast.makeText(getContext(), "Deleted ID "+ anInt, Toast.LENGTH_SHORT).show();
+                        deleteRecordFromCloud(null);
                     }
                     expenseDetailsLayout.removeView(tableRow);
                     tableRows.remove(tableRow);
@@ -940,5 +1098,4 @@ public class SecondFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
-
 }

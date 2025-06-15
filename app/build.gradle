@@ -25,8 +25,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
     buildFeatures {
         viewBinding true
@@ -65,6 +65,10 @@ dependencies {
 
     implementation 'com.sun.mail:android-mail:1.6.5'
     implementation 'com.sun.mail:android-activation:1.6.5'
+    implementation "androidx.work:work-runtime:2.9.0" // or latest version
+
+    implementation 'org.apache.commons:commons-csv:1.10.0'
+    implementation 'com.itextpdf:itextg:5.5.10'
 
 
 

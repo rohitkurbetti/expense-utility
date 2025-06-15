@@ -18,7 +18,6 @@
         app:iconifiedByDefault="false"
         app:searchHintIcon="@null"
         app:queryHint="Search"
-        android:focusable="false"
         app:closeIcon="@drawable/icons8_close"
         app:searchIcon="@drawable/icons8_search_24"
 
@@ -51,7 +50,7 @@
             android:visibility="gone"
             android:id="@+id/bannerTxt"
             android:textStyle="bold"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:layout_margin="10dp"
             android:padding="5dp"
             android:layout_width="match_parent"
@@ -65,6 +64,29 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="right">
+
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/filteredListExpenseCalcText"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Word"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginLeft="8dp"
+            android:layout_gravity="center"
+            />
+
+        <ImageView
+
+            android:visibility="gone"
+            android:id="@+id/btnMonthlyPdf"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="8dp"
+            android:src="@drawable/pdf_svgrepo_com"
+            />
 
         <ImageView
             android:visibility="gone"

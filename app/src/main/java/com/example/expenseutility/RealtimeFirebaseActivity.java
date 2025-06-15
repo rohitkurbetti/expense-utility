@@ -1,15 +1,18 @@
 package com.example.expenseutility;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,9 +27,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RealtimeFirebaseActivity extends AppCompatActivity {
 
@@ -34,7 +40,9 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
     private TextView errorHelperTextView;
     private ImageView errorImageView;
     private MainAdapter mainAdapter;
-    private List<MainItem> mainItemList;
+    private CopyOnWriteArrayList<MainItem> mainItemList;
+    private AppCompatSpinner yearSpinner;
+
     DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
 
     private List<ExpenseItem> expenseList = new ArrayList<>();
@@ -42,41 +50,44 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
     public static Map<String, List<ExpenseItem>> map = new HashMap<>();
 
     ProgressDialog progressDialog;
+    TextView yearTotalTextView,finalTotalTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_realtime_firebase);
-
+        yearSpinner = findViewById(R.id.yearSpinner);
         progressDialog = new ProgressDialog(this);
         recyclerView = findViewById(R.id.recyclerview);
         errorHelperTextView = findViewById(R.id.errorHelperTextView);
         errorImageView = findViewById(R.id.errorImageView);
+        yearTotalTextView = findViewById(R.id.yearTotalTextView);
+        finalTotalTextView = findViewById(R.id.finalTotalTextView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // Populate main item list with sample data
-        mainItemList = new ArrayList<>();
+        mainItemList = new CopyOnWriteArrayList<>();
+        loadSpinner(yearSpinner);
+
+//        fetchFromFirebase(map);
+
+        yearSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedYear = parent.getItemAtPosition(position).toString();
+                mainItemList.clear();
+                fetchFromFirebase(map);
 
 
 
-        fetchFromFirebase(map);
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Handle no selection
+            }
+        });
 
-//        nestedItems1.add(new NestedItem("2024-10-12", "\u20B920", String.format("(%.2f%%)", (double) 20/2000)));
-//        nestedItems1.add(new NestedItem("2024-10-17","\u20B9120",String.format("(%.2f%%)", (double)120/2000)));
-//        nestedItems1.add(new NestedItem("2024-10-18","\u20B9420",String.format("(%.2f%%)", (double)420/2000)));
-//        nestedItems1.add(new NestedItem("2024-10-19","\u20B9220",String.format("(%.2f%%)",(double) 220/2000)));
-//        nestedItems1.add(new NestedItem("2024-10-20","\u20B950",String.format("(%.2f%%)", (double)50/2000)));
-
-
-        List<NestedItem> nestedItems2 = new ArrayList<>();
-//        nestedItems2.add(new NestedItem("Sub Item 2A","\u20B92300",(double) 2300/2000));
-//        nestedItems2.add(new NestedItem("Sub Item 2B","\u20B92300",(double) 2300/2000));
-//        nestedItems2.add(new NestedItem("Sub Item 2C","\u20B92300",(double) 2300/2000));
-
-//        mainItemList.add(new MainItem("Oct-2024", nestedItems1, String.format("\u20B912000 (%.2f%%)", ((double) 12000/62000)*100)));
-//        mainItemList.add(new MainItem("Main Item 2", nestedItems2));
-//        mainItemList.add(new MainItem("Main Item 3", new ArrayList<>()));
 
         // Set the adapter
         mainAdapter = new MainAdapter(mainItemList);
@@ -85,11 +96,41 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
 
 
     }
+
+    private void loadSpinner(AppCompatSpinner yearSpinner) {
+        // Get the current year
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+
+        // Generate a list of years (e.g., from 1900 to current year)
+        List<String> years = new ArrayList<>();
+        for (int year = 2019; year <= currentYear+3; year++) {
+            years.add(String.valueOf(year));
+        }
+
+        // Create an ArrayAdapter for the Spinner
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                years
+        );
+
+        // Set the layout for dropdown items
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // Attach the adapter to the Spinner
+        yearSpinner.setAdapter(adapter);
+
+        // Optionally, set the current year as the selected item
+        yearSpinner.setSelection(adapter.getPosition(String.valueOf(currentYear)));
+    }
+
     List<ExpenseItem> tempList = new ArrayList<>();
 
     private void fetchFromFirebase(Map<String, List<ExpenseItem>> map) {
         progressDialog.setMessage("Fetching from cloud database");
         progressDialog.show();
+        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+
         databaseReference.addValueEventListener(new ValueEventListener() {
             private String key;
 
@@ -113,31 +154,51 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
                                 expAmt += expense.getExpenseAmount();
                                 tList.add(expense);
                             }
-                            nestedItems1.add(new NestedItem(d2.getKey(), "\u20B9"+expAmt, String.format("(%.2f%%)", (double) expAmt/2000),expAmt));
+                            nestedItems1.add(new NestedItem(d2.getKey(), "\u20B9"+expAmt, String.format("(%.2f%%)", ((double) expAmt/(income/30))*100),expAmt));
                             expAmtMonth += expAmt;
                             map.put(key, tList);
-//                            tempList.clear();
 
-                            Log.i("Key val " ,key+"  "+tempList);
+//                            Log.i("Key val " ,key+"  "+tempList);
 
                         }
-                        mainItemList.add(new MainItem(d1.getKey(), nestedItems1, String.format("\u20B9"+expAmtMonth+" (%.2f%%)", ((double) expAmtMonth/62000)*100)));
+                        mainItemList.add(new MainItem(d1.getKey(), nestedItems1, String.format("\u20B9"+expAmtMonth+" (%.2f%%)", ((double) expAmtMonth/income)*100)));
+                        expAmtMonth = 0L;
                     }
                 }
+
+                AtomicInteger yearGrandTotal = new AtomicInteger(0);
+                mainItemList.forEach(i -> {
+                    i.getNestedItemList().forEach(nestedItem -> {
+                        yearGrandTotal.addAndGet(Math.toIntExact(nestedItem.getSubItemExpenseTotalAmount()));
+                    });
+                });
+
+                finalTotalTextView.setText(String.valueOf("Final Total  \u20B9"+yearGrandTotal));
+
+                String spinnerMonth = yearSpinner.getSelectedItem().toString();
+                for (MainItem y: mainItemList) {
+                    if(!y.getTitle().contains(spinnerMonth)) {
+                        mainItemList.remove(y);
+                    }
+                }
+                AtomicInteger yearTotal = new AtomicInteger();
+                mainItemList.forEach(i -> {
+                    i.getNestedItemList().forEach(nestedItem -> {
+                        yearTotal.addAndGet(Math.toIntExact(nestedItem.getSubItemExpenseTotalAmount()));
+                    });
+                });
+                yearTotalTextView.setText("Total  \u20B9"+yearTotal);
                 mainAdapter.notifyDataSetChanged();
 
-                if(!snapshot.hasChildren()) {
-                    errorHelperTextView.setText("No data on cloud");
+                if(mainItemList.isEmpty()) {
+                    errorHelperTextView.setText("No data available on cloud");
                     errorImageView.setVisibility(View.VISIBLE);
                     errorHelperTextView.setVisibility(View.VISIBLE);
-//                    Toast.makeText(RealtimeFirebaseActivity.this, "", Toast.LENGTH_SHORT).show();
                 } else {
                     errorImageView.setVisibility(View.GONE);
                     errorHelperTextView.setVisibility(View.GONE);
                 }
 
-//                expenseList = expenseList.stream().sorted(Comparator.comparing(ExpenseItem::getExpenseDate).reversed())
-//                        .collect(Collectors.toList());
             }
 
             @Override

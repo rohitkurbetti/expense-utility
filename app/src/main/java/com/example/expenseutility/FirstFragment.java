@@ -5,10 +5,13 @@ import static android.app.Activity.RESULT_OK;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.pdf.PdfRenderer;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.net.Uri;
@@ -17,6 +20,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -38,25 +42,34 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
 
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.FragmentFirstBinding;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.Suggestion;
+import com.example.expenseutility.utility.CsvImportWorker;
 import com.example.expenseutility.utility.CustomSpinnerAdapter;
 import com.example.expenseutility.utility.SpinnerItem;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 
-import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -69,7 +82,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -106,6 +122,7 @@ public class FirstFragment extends Fragment {
     private static String[] suggestionsList;
     private static DatabaseHelper db2;
     private static Set<String> partSet;
+    private static final String TAG = "No3rdPartyParse";
 
     @Override
     public View onCreateView(
@@ -118,11 +135,25 @@ public class FirstFragment extends Fragment {
 
     }
 
+
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         DatabaseHelper db = new DatabaseHelper(getContext());
         sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         populateSpinnerListItems();
+
+        binding.triggerImport.setOnClickListener(v -> {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setCancelable(false);
+            builder.setIcon(R.drawable.csv_document_svgrepo_com);
+            builder.setTitle("Data Import");
+            builder.setMessage("Ready to import the CSV file?");
+            builder.setPositiveButton("Ok", (dialog, which) -> scheduleCsvImport(getContext()))
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss()).create().show();
+
+
+        });
 
         handler = new Handler(Looper.getMainLooper());
 
@@ -150,7 +181,43 @@ public class FirstFragment extends Fragment {
         adapter.notifyDataSetChanged();
 
 
+        binding.readPdf.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                try {
+                    // Input PDF file from Downloads folder
+                    File inputPdf = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "statement3.pdf");
+
+                    // Output CSV file to Downloads folder
+                    File outputCsv = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "output.csv");
+
+                    PdfReader reader = new PdfReader(inputPdf.getAbsolutePath());
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(outputCsv));
+
+                    for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+                        String pageContent = PdfTextExtractor.getTextFromPage(reader, i);
+
+                        String[] lines = pageContent.split("\\r?\\n");
+
+                        for (String line : lines) {
+                            // Replace multiple spaces/tabs with a comma
+                            String csvLine = line.trim().replaceAll("\\s{2,}", ",");
+                            writer.write(csvLine);
+                            writer.newLine();
+                        }
+                    }
+
+                    writer.close();
+                    reader.close();
+
+                    System.out.println("CSV written to: " + outputCsv.getAbsolutePath());
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         // Optional: Set the minimum number of characters to show suggestions
 //        binding.etParticulars.setThreshold(1);  // Start showing suggestions after 1 character is typed
@@ -169,9 +236,10 @@ public class FirstFragment extends Fragment {
             @Override
             public boolean onLongClick(View v) {
                 // Show the Snackbar with details
+                float income = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
 
                 double todaysExp = db.getTotalExpenseForToday();
-                double todPer = (todaysExp/2000)*100;
+                double todPer = (todaysExp/(income/30))*100;
                 Snackbar.make(v, "Todays expense ", 4000)
                         .setAction("\u20B9"+(int) todaysExp +" ("+todPer+"%)", v1 -> {})
                         .show();
@@ -339,6 +407,8 @@ public class FirstFragment extends Fragment {
 
 
 
+
+
             private boolean validateFields(String spinnerItem, String particulars, String amount, String dateTimeVal, String dateVal) {
                 boolean isValid = true;
 
@@ -421,6 +491,52 @@ public class FirstFragment extends Fragment {
 
 
         binding.voiceAssistantBtn.setOnClickListener(v -> launchVoiceAssistant());
+
+    }
+
+    public void scheduleCsvImport(Context context) {
+
+        // One-time immediate execution
+        WorkRequest oneTimeRequest = new OneTimeWorkRequest.Builder(CsvImportWorker.class).build();
+        WorkManager.getInstance(requireContext()).enqueue(oneTimeRequest);
+
+        UUID workId = oneTimeRequest.getId();
+
+        WorkManager.getInstance(context).getWorkInfoByIdLiveData(workId)
+                .observe(this, workInfo -> {
+                    if (workInfo != null && workInfo.getProgress() != null) {
+                        binding.progressBar.setVisibility(View.VISIBLE);
+                        int progress = workInfo.getProgress().getInt("progress", 0);
+                        int total = workInfo.getProgress().getInt("total", 0);
+                        int per = workInfo.getProgress().getInt("per",0 );
+
+
+                        binding.importProgressTextView.setText("Imported " + progress + " of " + total + " rows "+ per+"% done");
+                        binding.progressBar.setProgress(per);
+                        if (workInfo.getState().isFinished()) {
+                            binding.importProgressTextView.setText("✅ Import finished!");
+                            binding.progressBar.setVisibility(View.GONE);
+                        }
+                    }
+                });
+
+
+
+//        *** Repeats on specific time
+
+//        PeriodicWorkRequest csvWork = new PeriodicWorkRequest.Builder(
+//                CsvImportWorker.class,
+//                10, TimeUnit.SECONDS // or whatever period you need
+//        ).build();
+//
+//        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+//                "CsvImportWork",
+//                ExistingPeriodicWorkPolicy.KEEP,
+//                csvWork
+//        );
+
+        // Show a toast notification when the scheduling is done
+        Toast.makeText(context, "CSV Import scheduler started", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -829,12 +945,25 @@ public class FirstFragment extends Fragment {
 
     private void populateSpinnerListItems() {
         List<SpinnerItem> items = new ArrayList<>();
-        items.add(new SpinnerItem("Select Options", 0));
+
+        fetchAllSpinnerOptions(items);
+
+
+
+        CustomSpinnerAdapter adapter = new CustomSpinnerAdapter(getContext(), items);
+        binding.spinnerOptions.setAdapter(adapter);
+    }
+
+    public static List<SpinnerItem> fetchAllSpinnerOptions(List<SpinnerItem> items) {
+        items.add(new SpinnerItem("Select Options", R.drawable.arrow_next_right_icon));
         items.add(new SpinnerItem("Housing Expenses", R.drawable.house_to_rent_svgrepo_com));
         items.add(new SpinnerItem("Transportation", R.drawable.ground_transportation_svgrepo_com));
         items.add(new SpinnerItem("Food", R.drawable.meal_easter_svgrepo_com));
         items.add(new SpinnerItem("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
         items.add(new SpinnerItem("Fuel", R.drawable.fuel_station));
+        items.add(new SpinnerItem("Recharge", R.drawable.mobile_phone_recharge_svgrepo_com));
+        items.add(new SpinnerItem("Shopping", R.drawable.shopping_cart_svgrepo_com));
+        items.add(new SpinnerItem("Subscriptions", R.drawable.youtube_svgrepo_com));
         items.add(new SpinnerItem("Debt Payments", R.drawable.money_svgrepo_com__1_));
         items.add(new SpinnerItem("Entertainment", R.drawable.entertainment_svgrepo_com));
         items.add(new SpinnerItem("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com));
@@ -846,9 +975,7 @@ public class FirstFragment extends Fragment {
         items.add(new SpinnerItem("Insurance", R.drawable.employee_svgrepo_com));
         items.add(new SpinnerItem("Childcare and Education", R.drawable.woman_pushing_stroller_svgrepo_com));
         items.add(new SpinnerItem("Miscellaneous", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
-
-        CustomSpinnerAdapter adapter = new CustomSpinnerAdapter(getContext(), items);
-        binding.spinnerOptions.setAdapter(adapter);
+        return items;
     }
 
     private void showDateTimeDialog() {

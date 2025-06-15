@@ -40,12 +40,13 @@
 
     <ImageButton
         android:id="@+id/btnDeleteDateEntry"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:scaleType="centerInside"
         android:text="Delete"
         android:visibility="gone"
         android:background="@android:color/transparent"
-        android:src="@drawable/baseline_delete_forever_24"
+        android:src="@drawable/delete_trash_svgrepo_com"
         android:layout_gravity="center_vertical"
         android:contentDescription="Delete selected"
         android:tooltipText="Delete selected"

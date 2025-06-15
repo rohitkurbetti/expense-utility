@@ -1,5 +1,6 @@
 package com.example.expenseutility;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -97,29 +98,43 @@ public class ChartActivity extends AppCompatActivity {
 
             String expenseCategory = cursor.getString(expCateIdx);
             Integer expenseCategoryAmount = cursor.getInt(amountIdx);
-            cateValMap.put(expenseCategory, Long.valueOf(expenseCategoryAmount));
-            dataEntryList.add(new ValueDataEntry(expenseCategory, expenseCategoryAmount));
-            totalAmount += expenseCategoryAmount;
-            stringBuilder.append("\u2022  "+expenseCategory);
-//            stringBuilder.append("  ");
-//            stringBuilder.append("\u20B9"+expenseCategoryAmount);
-            stringBuilder.append("\n");
 
-            stringBuilderVal.append("\n");
-//            stringBuilderVal.append("  ");
-            stringBuilderVal.append("\u20B9"+expenseCategoryAmount);
-//            stringBuilderVal.append("\n");
+            if(cateValMap.containsKey(expenseCategory)) {
+                cateValMap.put(expenseCategory, cateValMap.get(expenseCategory) + expenseCategoryAmount);
+            } else {
+
+                cateValMap.put(expenseCategory, Long.valueOf(expenseCategoryAmount));
+            }
+
+            totalAmount += expenseCategoryAmount;
+
         }
 
+cateValMap.forEach((k,v) -> {
 
+        dataEntryList.add(new ValueDataEntry(k, v));
+    stringBuilder.append("\u2022  "+k);
+//            stringBuilder.append("  ");
+//            stringBuilder.append("\u20B9"+expenseCategoryAmount);
+    stringBuilder.append("\n");
+
+    stringBuilderVal.append("\n");
+//            stringBuilderVal.append("  ");
+    stringBuilderVal.append("\u20B9"+v);
+//            stringBuilderVal.append("\n");
+
+});
+
+
+        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
 
 
         pie.data(dataEntryList);
         anyChartView.setChart(pie);
 
-        double perc = ((double) totalAmount / 60000) * 100;
+        double perc = ((double) totalAmount / income) * 100;
         perc = Double.parseDouble(String.format("%.2f",perc));
-        double dailyAvg = ((double)totalAmount / 2000) * 100;
+        double dailyAvg = ((double)totalAmount / (income/30)) * 100;
         dailyAvg = Double.parseDouble(String.format("%.2f",dailyAvg));
         String finalSb1 = "Total amount: \n\n\u2022 Avg(Daily): \n\u2022 Avg(Monthly):  \n\n\nTotal Drilldown: \n\n"+stringBuilder;
         SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(finalSb1);

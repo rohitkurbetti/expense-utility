@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/srNoTextView"
+        android:textSize="12sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="4dp"
+        />
+
+    <TextView
+        android:textSize="12sp"
+        android:id="@+id/date"
+        android:layout_width="0dp"
+        android:layout_weight=".5"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:text="Date" />
+
+    <TextView
+        android:textSize="12sp"
+        android:id="@+id/particulars"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="Particulars" />
+
+    <TextView
+        android:id="@+id/debitAmount"
+        android:layout_width="0dp"
+        android:layout_weight=".5"
+        android:textSize="12sp"
+        android:layout_height="wrap_content"
+        android:text="Amount" />
+</LinearLayout>
+

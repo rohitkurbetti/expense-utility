@@ -68,8 +68,11 @@ public class FirebaseExpenseAdapter extends BaseAdapter {
 
     private void populateExpByDailyAndMontlyIncome(Long expenseAmount, TextView dailyIncPerTextView, TextView monthlyIncPerTextView) {
 
-        double expPercentDaily = (double) expenseAmount / (62000 / 30);
-        double expPercentMonthly = (double) expenseAmount / 62000;
+        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+
+
+        double expPercentDaily = (double) expenseAmount / (income / 30);
+        double expPercentMonthly = (double) expenseAmount / income;
 
         dailyIncPerTextView.setText(String.format("(%.2f%%)",expPercentDaily*100));
         monthlyIncPerTextView.setText(String.format("(%.2f%%)",expPercentMonthly*100));

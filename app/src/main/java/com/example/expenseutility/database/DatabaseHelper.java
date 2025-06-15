@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.CursorWindow;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.Suggestion;
@@ -64,12 +65,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_ID_1 + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_DESCRIPTION_1 + " TEXT " + " )";
         db.execSQL(createTable1);
+
+
+        //txn ignore table
+
+        db.execSQL("CREATE TABLE txn_ignore (id INTEGER PRIMARY KEY AUTOINCREMENT, amount REAL, dateTime TEXT)");
+
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_1);
+        db.execSQL("DROP TABLE IF EXISTS txn_ignore");
         onCreate(db);
     }
 
@@ -122,7 +130,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getAllExpenseData() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        return db.rawQuery("SELECT * FROM " + TABLE_NAME + " order by " + COLUMN_DATE + " desc ", null);
     }
 
     public Cursor getExpenseGroupByDate() {
@@ -231,16 +239,53 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean checkIfExists(String expCategory, String expPart, String expAmt, String expDateTime, String expDate) {
+    public boolean checkIfExists(String expCategory, String expAmt, String expDateTime, String expDate) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT id from " + TABLE_NAME + " where " + COLUMN_PARTICULARS + "=? and " +
-                " "+ COLUMN_AMOUNT + "=? and "+COLUMN_EXPENSE_CATEGORY+" =? and "+COLUMN_DATE_TIME+" =? and "+ COLUMN_DATE + " =? ";
-        Cursor cursor = db.rawQuery(query, new String[]{expPart,expAmt,expCategory,expDateTime, expDate});
+        String query = "SELECT id from " + TABLE_NAME + " where "+ COLUMN_AMOUNT + "=? and "+COLUMN_EXPENSE_CATEGORY+" =? " +
+                " and "+COLUMN_DATE_TIME+" =? and "+ COLUMN_DATE + " =? ";
+        Cursor cursor = db.rawQuery(query, new String[]{expAmt,expCategory,expDateTime, expDate});
         boolean isExists = false;
         if(cursor.getCount()>0){
             isExists = true;
         }
         return isExists;
     }
+
+    public boolean checkIfExistsMinPossibleParams(int expAmt, String expDateTime, String expDate) {
+        boolean isExists = false;
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT id from " + TABLE_NAME + " where " + " "+ COLUMN_AMOUNT + "=? and "
+                + COLUMN_DATE_TIME + " =? and "+ COLUMN_DATE + " =? ";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(expAmt),expDateTime, expDate});
+        if(cursor.getCount()>0){
+            isExists = true;
+        }
+        return isExists;
+    }
+
+    public void insertIgnoredTransaction(double amount, String dateTime) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("amount", amount);
+        cv.put("dateTime", dateTime);
+        db.insert("txn_ignore", null, cv);
+    }
+
+    public boolean isTransactionIgnored(double amount, String dateTime) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM txn_ignore WHERE amount = ? AND dateTime = ?", new String[]{
+                String.valueOf(amount), dateTime
+        });
+
+        while(cursor.moveToNext()) {
+            Log.i("TXN", cursor.getString(1)+" " + cursor.getString(2));
+        }
+
+
+        boolean exists = (cursor != null && cursor.moveToFirst());
+        if (cursor != null) cursor.close();
+        return exists;
+    }
+
 }
 

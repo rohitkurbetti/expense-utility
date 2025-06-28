@@ -10,6 +10,7 @@
         android:id="@+id/dialogListView"
         android:layout_width="match_parent"
         android:layout_height="450dp"
+        android:descendantFocusability="afterDescendants"
         android:divider="@android:color/darker_gray"
         android:dividerHeight="1dp"/>
 </LinearLayout>

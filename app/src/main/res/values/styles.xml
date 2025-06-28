@@ -1,10 +1,214 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="OverlayTheme" parent="Theme.AppCompat.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowCloseOnTouchOutside">false</item> <!-- Optional -->
         <item name="android:backgroundDimEnabled">true</item>
     </style>
+
+
+    <color name="redPrimary">#F44336</color>
+    <color name="redPrimaryDark">#D32F2F</color>
+    <color name="redAccent">#FF5252</color>
+
+    <color name="bluePrimary">#2196F3</color>
+    <color name="bluePrimaryDark">#1976D2</color>
+    <color name="blueAccent">#448AFF</color>
+
+    <color name="greenPrimary">#4CAF50</color>
+    <color name="greenPrimaryDark">#388E3C</color>
+    <color name="greenAccent">#69F0AE</color>
+
+    <color name="purplePrimary">#9C27B0</color>
+    <color name="purplePrimaryDark">#7B1FA2</color>
+    <color name="purpleAccent">#E040FB</color>
+
+    <!-- Orange -->
+    <color name="orangePrimary">#FF9800</color>
+    <color name="orangePrimaryDark">#F57C00</color>
+    <color name="orangeAccent">#FFAB40</color>
+
+    <!-- Teal -->
+    <color name="tealPrimary">#009688</color>
+    <color name="tealPrimaryDark">#00796B</color>
+    <color name="tealAccent">#64FFDA</color>
+
+    <!-- Pink -->
+    <color name="pinkPrimary">#E91E63</color>
+    <color name="pinkPrimaryDark">#C2185B</color>
+    <color name="pinkAccent">#FF4081</color>
+
+    <!-- Cyan -->
+    <color name="cyanPrimary">#00BCD4</color>
+    <color name="cyanPrimaryDark">#0097A7</color>
+    <color name="cyanAccent">#18FFFF</color>
+
+    <!-- Lime -->
+    <color name="limePrimary">#CDDC39</color>
+    <color name="limePrimaryDark">#AFB42B</color>
+    <color name="limeAccent">#EEFF41</color>
+
+    <!-- Brown -->
+    <color name="brownPrimary">#795548</color>
+    <color name="brownPrimaryDark">#5D4037</color>
+    <color name="brownAccent">#D7CCC8</color> <!-- Optional: Beige Accent -->
+
+    <!-- Mint -->
+    <color name="mintPrimary">#A5D6A7</color>
+    <color name="mintPrimaryDark">#81C784</color>
+    <color name="mintAccent">#B9F6CA</color>
+
+    <!-- Coral -->
+    <color name="coralPrimary">#FF7043</color>
+    <color name="coralPrimaryDark">#F4511E</color>
+    <color name="coralAccent">#FF8A65</color>
+
+    <!-- Steel -->
+    <color name="steelPrimary">#90A4AE</color>
+    <color name="steelPrimaryDark">#607D8B</color>
+    <color name="steelAccent">#CFD8DC</color>
+
+    <!-- Lavender -->
+    <color name="lavenderPrimary">#CE93D8</color>
+    <color name="lavenderPrimaryDark">#AB47BC</color>
+    <color name="lavenderAccent">#E1BEE7</color>
+
+    <!-- Mustard -->
+    <color name="mustardPrimary">#FBC02D</color>
+    <color name="mustardPrimaryDark">#F9A825</color>
+    <color name="mustardAccent">#FFF176</color>
+
+
+    <style name="AppTheme.Red" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/redPrimary</item>
+        <item name="colorPrimaryDark">@color/redPrimaryDark</item>
+        <item name="colorAccent">@color/redAccent</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/redPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Blue" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/bluePrimary</item>
+        <item name="colorPrimaryDark">@color/bluePrimaryDark</item>
+        <item name="colorAccent">@color/blueAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/bluePrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Green" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/greenPrimary</item>
+        <item name="colorPrimaryDark">@color/greenPrimaryDark</item>
+        <item name="colorAccent">@color/greenAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/greenPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Purple" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/purplePrimary</item>
+        <item name="colorPrimaryDark">@color/purplePrimaryDark</item>
+        <item name="colorAccent">@color/purpleAccent</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/purplePrimaryDark</item>
+
+    </style>
+
+
+    <style name="AppTheme.Orange" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/orangePrimary</item>
+        <item name="colorPrimaryDark">@color/orangePrimaryDark</item>
+        <item name="colorAccent">@color/orangeAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/orangePrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Teal" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/tealPrimary</item>
+        <item name="colorPrimaryDark">@color/tealPrimaryDark</item>
+        <item name="colorAccent">@color/tealAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/tealPrimaryDark</item>
+    </style>
+
+    <style name="AppTheme.Pink" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/pinkPrimary</item>
+        <item name="colorPrimaryDark">@color/pinkPrimaryDark</item>
+        <item name="colorAccent">@color/pinkAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/pinkPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Cyan" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/cyanPrimary</item>
+        <item name="colorPrimaryDark">@color/cyanPrimaryDark</item>
+        <item name="colorAccent">@color/cyanAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/cyanPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Lime" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/limePrimary</item>
+        <item name="colorPrimaryDark">@color/limePrimaryDark</item>
+        <item name="colorAccent">@color/limeAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/limePrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Brown" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/brownPrimary</item>
+        <item name="colorPrimaryDark">@color/brownPrimaryDark</item>
+        <item name="colorAccent">@color/brownAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/brownPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Mint" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/mintPrimary</item>
+        <item name="colorPrimaryDark">@color/mintPrimaryDark</item>
+        <item name="colorAccent">@color/mintAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/mintPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Coral" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/coralPrimary</item>
+        <item name="colorPrimaryDark">@color/coralPrimaryDark</item>
+        <item name="colorAccent">@color/coralAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/coralPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Steel" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/steelPrimary</item>
+        <item name="colorPrimaryDark">@color/steelPrimaryDark</item>
+        <item name="colorAccent">@color/steelAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/steelPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Lavender" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/lavenderPrimary</item>
+        <item name="colorPrimaryDark">@color/lavenderPrimaryDark</item>
+        <item name="colorAccent">@color/lavenderAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/lavenderPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Mustard" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/mustardPrimary</item>
+        <item name="colorPrimaryDark">@color/mustardPrimaryDark</item>
+        <item name="colorAccent">@color/mustardAccent</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/mustardPrimaryDark</item>
+
+    </style>
+
+
+    <style name="RoundedImageStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
 
 </resources>

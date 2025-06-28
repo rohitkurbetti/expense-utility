@@ -10,10 +10,12 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
@@ -43,8 +45,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -180,12 +187,17 @@ public class ThirdFragment extends Fragment {
         binding.btnMonthlyPdf.setOnClickListener(new View.OnClickListener() {
             private Paint textPaint = new TextPaint();
 
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
                 int totalAmount=0;
                 Map<String, Long> cateValMap = new HashMap<>();
-
+                String expDate = "";
                 int[] expIds = filteredList.stream().mapToInt(ExpenseItem::getId).toArray();
+
+                if(!filteredList.isEmpty()) {
+                    expDate = filteredList.stream().findFirst().get().getExpenseDate();
+                }
 
                 Cursor cursor = db.getExpenseByIds(expIds);
 
@@ -221,12 +233,22 @@ public class ThirdFragment extends Fragment {
 
                 });
 
-                generateExpenseReportPdf(getContext(), exList, finalTotalAmount);
+                //sort list based on percenatage
+
+                Collections.sort(exList, new Comparator<ExpenseItem>() {
+                    @Override
+                    public int compare(ExpenseItem o1, ExpenseItem o2) {
+                        return o2.getExpenseAmount().compareTo(o1.getExpenseAmount());
+                    }
+                });
+
+                generateExpenseReportPdf(getContext(), exList, finalTotalAmount, expDate);
 
 
             }
 
-            private void generateExpenseReportPdf(Context context, List<ExpenseItem> exList, int finalTotalAmount) {
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            private void generateExpenseReportPdf(Context context, List<ExpenseItem> exList, int finalTotalAmount, String expDate) {
 
 
 //                String.format("%.2f",((float)val/ finalTotalAmount)*100)
@@ -255,8 +277,17 @@ public class ThirdFragment extends Fragment {
                 canvas.drawText("Expense Report", x + 200, y, headerPaint);
                 y += 30;
 
-                // 📅 Add current date in MMM-YYYY format (e.g., Jun-2025)
-                String formattedDate = new SimpleDateFormat("MMM-yyyy").format(new Date());
+                String formattedDate = "";
+                if(!expDate.isBlank()) {
+                    // 📅 Add current date in MMM-YYYY format (e.g., Jun-2025)
+                    String yearMonthStr = expDate.substring(0,7);
+                    YearMonth parsedDate = YearMonth.parse(yearMonthStr, DateTimeFormatter.ofPattern("yyyy-MM"));
+                    formattedDate = parsedDate.format(DateTimeFormatter.ofPattern("MMM-yyyy"));
+                } else {
+                    formattedDate = new SimpleDateFormat("MMM-yyyy").format(new Date());
+                }
+
+
                 headerPaint.setTextSize(12);
                 canvas.drawText(formattedDate, pageWidth / 2.5f, y, headerPaint);
                 y += 30;
@@ -346,7 +377,7 @@ public class ThirdFragment extends Fragment {
                 // Adjust y for table after pie + legend
                 y = legendY + 50;
 
-                canvas.drawText("Expense Details", x + 200, y, headerPaint);
+                canvas.drawText("Expense Details (\u20B9"+finalTotalAmount+")", x + 200, y, headerPaint);
                 y += 30;
 
 

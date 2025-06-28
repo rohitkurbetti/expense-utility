@@ -31,7 +31,7 @@
     <fragment
         android:id="@+id/thirdFragment"
         android:name="com.example.expenseutility.ThirdFragment"
-        android:label="Expense details"
+        android:label="Expense Details"
         tools:layout="@layout/fragment_third" >
         <action
             android:id="@+id/action_thirdFragment_to_SecondFragment2"

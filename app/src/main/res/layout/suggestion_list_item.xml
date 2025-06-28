@@ -10,8 +10,8 @@
         android:id="@+id/item_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight=".2"
         android:text="ID"
+        android:layout_marginEnd="8dp"
         android:textSize="16sp"
         android:textStyle="bold" />
 

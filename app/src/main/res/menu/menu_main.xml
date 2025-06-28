@@ -83,4 +83,21 @@
         android:title="Import from Statement"
         app:showAsAction="never" />
 
+
+
+    <item
+        android:id="@+id/chooseTheme"
+        android:orderInCategory="100"
+        android:title="Choose Theme"
+        app:showAsAction="never" />
+
+
+
+    <item
+        android:id="@+id/travelLauncher"
+        android:orderInCategory="100"
+        android:title="Travel"
+        app:showAsAction="never" />
+
+
 </menu>

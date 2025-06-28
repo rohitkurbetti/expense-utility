@@ -26,6 +26,7 @@ public class ConfigGridActivity extends AppCompatActivity {
         setContentView(R.layout.activity_config_grid);
 
         recyclerView = findViewById(R.id.recyclerView);
+
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
 
         // Prepare Data

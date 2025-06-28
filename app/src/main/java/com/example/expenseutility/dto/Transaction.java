@@ -6,6 +6,7 @@ public class Transaction {
     private String date;
     private String particulars;
     private String debitAmount;
+    private String category;
 
     public Transaction(String date, String particulars, String debitAmount) {
         this.date = date;
@@ -21,14 +22,13 @@ public class Transaction {
     public boolean isSelected() { return selected; }
     public void setSelected(boolean selected) { this.selected = selected; }
 
-
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "selected=" + selected +
-                ", date='" + date + '\'' +
-                ", particulars='" + particulars + '\'' +
-                ", debitAmount='" + debitAmount + '\'' +
-                '}';
+    public String getCategory() {
+        return category;
     }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+
 }

@@ -1,6 +1,7 @@
 package com.example.expenseutility;
 
 import static com.example.expenseutility.ExpenseInputActivity.getFormatted;
+import static com.example.expenseutility.FirstFragment.saveToFirebase;
 import static com.example.expenseutility.utility.SmsNotificationUtils.parseAmount;
 import static com.example.expenseutility.utility.SmsNotificationUtils.parseDateTime;
 
@@ -42,6 +43,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -70,8 +72,11 @@ import com.google.firebase.database.ValueEventListener;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -90,12 +95,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import androidx.work.OneTimeWorkRequest;
@@ -115,6 +122,13 @@ public class MainActivity extends AppCompatActivity {
     private static final int SMS_PERMISSION_CODE = 101;
     private DatabaseHelper db;
     private List<Transaction> transactionList;
+
+    Spinner themeSpinner;
+    String[] themes = {
+            "Red", "Blue", "Green", "Purple", "Orange",
+            "Teal", "Pink", "Cyan", "Lime", "Brown",
+            "Mint", "Coral", "Steel", "Lavender", "Mustard"
+    };
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void requestSmsPermission() {
@@ -222,6 +236,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applyUserTheme();  // Apply before setContentView
         super.onCreate(savedInstanceState);
         requestSmsPermission();
          sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
@@ -233,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             checkManageStoragePermission();
         } else {
@@ -261,6 +277,31 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
+    }
+
+    private void applyUserTheme() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String theme = prefs.getString("app_theme", "Theme.ExpenseUtility");
+
+        switch (theme) {
+            case "Default": setTheme(R.style.Base_Theme_ExpenseUtility); break;
+            case "Red": setTheme(R.style.AppTheme_Red); break;
+            case "Blue": setTheme(R.style.AppTheme_Blue); break;
+            case "Green": setTheme(R.style.AppTheme_Green); break;
+            case "Purple": setTheme(R.style.AppTheme_Purple); break;
+            case "Orange": setTheme(R.style.AppTheme_Orange); break;
+            case "Teal": setTheme(R.style.AppTheme_Teal); break;
+            case "Pink": setTheme(R.style.AppTheme_Pink); break;
+            case "Cyan": setTheme(R.style.AppTheme_Cyan); break;
+            case "Lime": setTheme(R.style.AppTheme_Lime); break;
+            case "Brown": setTheme(R.style.AppTheme_Brown); break;
+            case "Mint": setTheme(R.style.AppTheme_Mint); break;
+            case "Coral": setTheme(R.style.AppTheme_Coral); break;
+            case "Steel": setTheme(R.style.AppTheme_Steel); break;
+            case "Lavender": setTheme(R.style.AppTheme_Lavender); break;
+            case "Mustard": setTheme(R.style.AppTheme_Mustard); break;
+            default: setTheme(R.style.Base_Theme_ExpenseUtility); break;
+        }
     }
 
     private void requestNotificationPermission() {
@@ -426,10 +467,53 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.chooseTheme) {
+            showThemeChooserDialog();
+            return true;
+        }
+
+        if (id == R.id.travelLauncher) {
+            travelLauncher();
+            return true;
+        }
+
+
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void travelLauncher() {
+        Intent intent = new Intent(this, TravelActivity.class);
+        startActivity(intent);
+    }
+
+    private void showThemeChooserDialog() {
+
+        String currentTheme = PreferenceManager.getDefaultSharedPreferences(this).getString("app_theme", "Theme.ExpenseUtility");
+
+        int checkedIndex = Arrays.asList(themes).indexOf(currentTheme);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Choose Theme")
+                .setSingleChoiceItems(themes, checkedIndex, (dialog, which) -> {
+                    String selectedTheme = themes[which];
+
+                    SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+                    editor.putString("app_theme", selectedTheme);
+                    editor.apply();
+                    dialog.dismiss();
+
+                    Intent intent = getIntent();
+                    finish(); // Destroy current activity
+                    startActivity(intent); // Start it again
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void importCsvStatement() {
 
         transactionList = new ArrayList<>();
@@ -470,10 +554,59 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
 
         builder.setView(dialogView)
+            .setCancelable(false)
             .setTitle("Transactions List")
             .setPositiveButton("OK", (dialog, which) -> {
                 long selectedTtems = transactionList.stream().filter(Transaction::isSelected).count();
-                Toast.makeText(this, "Selected "+selectedTtems+" items", Toast.LENGTH_SHORT).show();
+
+                if(selectedTtems>0) {
+                    transactionList.stream().filter(Transaction::isSelected).filter(t -> {
+                        return !t.getCategory().equalsIgnoreCase("Select Options");
+                    }).forEach(item -> {
+                        Log.i("Item >> ", item.getCategory()+" "+item.getParticulars()+" "+item.getDate()+" "+item.getDebitAmount());
+
+                        String category = item.getCategory();
+                        String particulars = item.getParticulars()!=null&&!item.getParticulars().isBlank()?
+                                item.getParticulars().substring(0,Math.min(15,item.getParticulars().length()))
+                                :"Txn";
+                        double amount = Double.parseDouble(item.getDebitAmount());
+
+                        String dateStr = item.getDate();
+
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+                        LocalDate localDate = LocalDate.parse(dateStr, dateTimeFormatter);
+                        LocalDateTime localDateTime = localDate.atTime(0,0,0);
+
+                        String dateTimeStr = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+//                        localDateTime.toString();
+
+
+                        try {
+                            boolean res = db.insertExpense(category, particulars, String.valueOf((int) amount), dateTimeStr, String.valueOf(localDate), null, null, null);
+
+
+//                            if(res) {
+//                                //save data now into firebase
+//
+//                                try {
+//                                    saveToFirebase(category, particulars, String.valueOf((int) amount), dateTimeStr, String.valueOf(localDate), null, null);
+//                                } catch (ParseException e) {
+//                                    throw new RuntimeException(e);
+//                                }
+//                            }
+
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        } catch (NoSuchFieldException e) {
+                            throw new RuntimeException(e);
+                        }
+
+
+                    });
+                }
+
             })
             .show();
     }
@@ -632,7 +765,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             if(!dataExists) {
                                 try {
-                                    FirstFragment.saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null);
+                                    saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null);
                                 } catch (ParseException e) {
                                     Toast.makeText(MainActivity.this, "Error while storing on cloud", Toast.LENGTH_SHORT).show();
                                     throw new RuntimeException(e);
@@ -640,7 +773,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         } else {
                             try {
-                                FirstFragment.saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null);
+                                saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null);
                             } catch (ParseException e) {
                                 Toast.makeText(MainActivity.this, "Error while storing on cloud", Toast.LENGTH_SHORT).show();
                                 throw new RuntimeException(e);

@@ -36,21 +36,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RealtimeFirebaseActivity extends AppCompatActivity {
 
+    public static Map<String, List<ExpenseItem>> map = new HashMap<>();
+    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
+    ProgressDialog progressDialog;
+    TextView yearTotalTextView,finalTotalTextView;
+    List<ExpenseItem> tempList = new ArrayList<>();
     private RecyclerView recyclerView;
     private TextView errorHelperTextView;
     private ImageView errorImageView;
     private MainAdapter mainAdapter;
     private CopyOnWriteArrayList<MainItem> mainItemList;
     private AppCompatSpinner yearSpinner;
-
-    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
-
     private List<ExpenseItem> expenseList = new ArrayList<>();
-
-    public static Map<String, List<ExpenseItem>> map = new HashMap<>();
-
-    ProgressDialog progressDialog;
-    TextView yearTotalTextView,finalTotalTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,8 +120,6 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
         // Optionally, set the current year as the selected item
         yearSpinner.setSelection(adapter.getPosition(String.valueOf(currentYear)));
     }
-
-    List<ExpenseItem> tempList = new ArrayList<>();
 
     private void fetchFromFirebase(Map<String, List<ExpenseItem>> map) {
         progressDialog.setMessage("Fetching from cloud database");

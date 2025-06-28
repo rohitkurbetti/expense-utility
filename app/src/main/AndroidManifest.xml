@@ -33,6 +33,12 @@
         android:theme="@style/Theme.ExpenseUtility"
         tools:targetApi="31">
         <activity
+            android:name=".LocationDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".TravelActivity"
+            android:exported="false" />
+        <activity
             android:name=".ExpenseInputActivity"
             android:exported="false"
             android:theme="@style/OverlayTheme" />
@@ -83,7 +89,7 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".notification.NotificationActionReceiver"/>
+        <receiver android:name=".notification.NotificationActionReceiver" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -94,9 +100,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
-
-
     </application>
 
 </manifest>

@@ -8,6 +8,25 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
+    <string-array name="theme_options">
+        <item>Red</item>
+        <item>Blue</item>
+        <item>Green</item>
+        <item>Purple</item>
+        <item>Orange</item>
+        <item>Teal</item>
+        <item>Pink</item>
+        <item>Cyan</item>
+        <item>Lime</item>
+        <item>Brown</item>
+        <item>Mint</item>
+        <item>Coral</item>
+        <item>Steel</item>
+        <item>Lavender</item>
+        <item>Mustard</item>
+    </string-array>
+
+
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
         volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus

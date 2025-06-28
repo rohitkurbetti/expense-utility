@@ -5,15 +5,22 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.example.expenseutility.FirstFragment;
 import com.example.expenseutility.R;
 import com.example.expenseutility.dto.Transaction;
+import com.example.expenseutility.utility.CustomSpinnerAdapter;
+import com.example.expenseutility.utility.SpinnerItem;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,8 +50,26 @@ public class TransactionAdapter extends ArrayAdapter<Transaction> {
         TextView date = convertView.findViewById(R.id.date);
         TextView particulars = convertView.findViewById(R.id.particulars);
         TextView amount = convertView.findViewById(R.id.debitAmount);
+        Spinner spinnerTxnList = convertView.findViewById(R.id.spinnerTransactionList);
 
-        srNoTextView.setText(String.valueOf(position+1));
+        loadSpinner(spinnerTxnList);
+
+        spinnerTxnList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                SpinnerItem expCategory = (SpinnerItem) spinnerTxnList.getSelectedItem();
+
+                transaction.setCategory(expCategory.getText());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        srNoTextView.setText(String.valueOf((position+1)+"]"));
         date.setText(transaction.getDate());
 
         String particularStr = extractParticular(transaction.getParticulars());
@@ -55,7 +80,18 @@ public class TransactionAdapter extends ArrayAdapter<Transaction> {
         checkBox.setChecked(transaction.isSelected());
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> transaction.setSelected(isChecked));
 
+
+
+
+
         return convertView;
+    }
+
+    private void loadSpinner(Spinner spinnerTxnList) {
+        List<SpinnerItem> items = new ArrayList<>();
+        FirstFragment.fetchAllSpinnerOptions(items);
+        CustomSpinnerAdapter adapter = new CustomSpinnerAdapter(context, items);
+        spinnerTxnList.setAdapter(adapter);
     }
 
     public static String extractParticular(String particulars) {

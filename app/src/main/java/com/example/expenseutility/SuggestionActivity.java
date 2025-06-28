@@ -76,7 +76,6 @@ public class SuggestionActivity extends AppCompatActivity {
                 db.addSuggestion(s);
             });
             suggestionsList = db.getAllSuggestions();
-
         }
 
         adapter = new SuggestionAdapter(this, suggestionsList);

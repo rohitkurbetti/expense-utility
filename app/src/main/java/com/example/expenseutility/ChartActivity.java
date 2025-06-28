@@ -125,7 +125,6 @@ cateValMap.forEach((k,v) -> {
 
 });
 
-
         float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
 
 

@@ -10,8 +10,6 @@ import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,16 +24,11 @@ import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.dto.Transaction;
 import com.example.expenseutility.emailutility.EmailSender;
 import com.example.expenseutility.emailutility.NotificationUtils;
-import com.example.expenseutility.entityadapter.CustomListAdapter;
 import com.example.expenseutility.entityadapter.ExpenseItem;
-import com.example.expenseutility.entityadapter.Expenses;
-import com.example.expenseutility.entityadapter.FirebaseExpenseAdapter;
 import com.example.expenseutility.entityadapter.TransactionAdapter;
 import com.example.expenseutility.notification.DismissNotificationReceiver;
 import com.example.expenseutility.notification.NotificationReceiver;
-import com.example.expenseutility.utility.CsvImportWorker;
 import com.example.expenseutility.utility.SmsNotificationUtils;
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -51,7 +44,6 @@ import android.view.View;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.MenuItemCompat;
@@ -59,9 +51,6 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 
 import com.example.expenseutility.databinding.ActivityMainBinding;
 import com.google.firebase.database.DataSnapshot;
@@ -72,8 +61,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -85,10 +72,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.sql.Blob;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -96,17 +80,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkRequest;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -257,6 +235,13 @@ public class MainActivity extends AppCompatActivity {
 
 //        createNotificationChannelBkgrndImport();
         requestNotificationPermission();
+
+        String month = new SimpleDateFormat("yyyy-MM").format(new Date());
+
+        List<ExpenseItem> expenseItemList = db.getMonthData(month);
+
+        Log.i("expenseItemList >> ", expenseItemList.toString());
+
 
         float income = sharedPreferences.getFloat("monthlyIncome", 87000.0f);
 
@@ -477,9 +462,23 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.imageDetector) {
+            imageDetectionLauncer();
+            return true;
+        }
+
+
+
 
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void imageDetectionLauncer() {
+
+        Intent intent = new Intent(this, ImageDetectionActivity.class);
+        startActivity(intent);
+
     }
 
     private void travelLauncher() {

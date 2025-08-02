@@ -11,12 +11,9 @@ import android.util.Log;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.Suggestion;
 
-import org.checkerframework.checker.units.qual.C;
-
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -287,5 +284,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return exists;
     }
 
+    public List<ExpenseItem> getMonthData(String month) {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE "+COLUMN_DATE+ " like '"+month+"%' ",null);
+
+        Log.i("Count >> ", ""+sqlRows.getCount());
+
+        List<ExpenseItem> expenseItemList = new ArrayList<>();
+
+        while(sqlRows.moveToNext()) {
+            int id = sqlRows.getInt(0);
+            String expCat = sqlRows.getString(1);
+            String pert = sqlRows.getString(2);
+            long amt = sqlRows.getInt(3);
+            String dtm = sqlRows.getString(4);
+            String dt = sqlRows.getString(5);
+            String flnm = sqlRows.getString(6);
+
+            ExpenseItem item = new ExpenseItem(id, pert, amt,dt,expCat,flnm,null);
+            expenseItemList.add(item);
+        }
+
+        return expenseItemList;
+
+    }
 }
 

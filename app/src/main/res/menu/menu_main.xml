@@ -99,5 +99,11 @@
         android:title="Travel"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/imageDetector"
+        android:orderInCategory="100"
+        android:title="Image Detection"
+        app:showAsAction="never" />
+
 
 </menu>

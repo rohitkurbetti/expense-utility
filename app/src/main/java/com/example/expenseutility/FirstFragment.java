@@ -2,16 +2,14 @@ package com.example.expenseutility;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.animation.ObjectAnimator;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.pdf.PdfRenderer;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.net.Uri;
@@ -20,7 +18,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -29,7 +26,6 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,9 +43,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
@@ -74,18 +68,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,7 +83,7 @@ import java.util.regex.Pattern;
 public class FirstFragment extends Fragment {
 
     public static FragmentFirstBinding binding;
-
+    private int val = 0;
     private String dateVal;
     private String dateTimeVal;
     private static final int PICK_PDF_REQUEST = 1;
@@ -122,7 +112,6 @@ public class FirstFragment extends Fragment {
     private static String[] suggestionsList;
     private static DatabaseHelper db2;
     private static Set<String> partSet;
-    private static final String TAG = "No3rdPartyParse";
 
     @Override
     public View onCreateView(
@@ -139,9 +128,14 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         DatabaseHelper db = new DatabaseHelper(getContext());
+        db2 = new DatabaseHelper(getContext());
         sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         populateSpinnerListItems();
-
+        try {
+            monthlySpendingView(false, false);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
         binding.triggerImport.setOnClickListener(v -> {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -155,11 +149,33 @@ public class FirstFragment extends Fragment {
 
         });
 
+        binding.previousMonthData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    monthlySpendingView(true, false);
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        binding.nextMonthData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    monthlySpendingView(false, true);
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
         handler = new Handler(Looper.getMainLooper());
 
         partSet = sharedPreferences.getStringSet("partSuggestionsList", new HashSet<>());
 
-        db2 = new DatabaseHelper(getContext());
 
         List<Suggestion> suggestionList = db2.getAllSuggestions();
 
@@ -491,6 +507,61 @@ public class FirstFragment extends Fragment {
 
 
         binding.voiceAssistantBtn.setOnClickListener(v -> launchVoiceAssistant());
+
+    }
+
+    private void animateProgressBar(int start, int end, int duration) {
+        ObjectAnimator animation = ObjectAnimator.ofInt(binding.spendingProgressBar, "progress", start, end);
+        animation.setDuration(duration);
+        animation.start();
+    }
+
+    private void monthlySpendingView(boolean prev, boolean next) throws ParseException {
+        String month = new SimpleDateFormat("yyyy-MM").format(new Date());
+        String monthYearText = new SimpleDateFormat("MMMM yyyy").format(new Date());
+
+        List<ExpenseItem> items;
+        if(prev) {
+            String monthStr = sharedPreferences.getString("dateStr", month);
+            Date d = new SimpleDateFormat("yyyy-MM").parse(monthStr);
+            d.setMonth(d.getMonth()-1);
+            month = new SimpleDateFormat("yyyy-MM").format(d);
+            sharedPreferences.edit().putString("dateStr", month).apply();
+
+            monthYearText = new SimpleDateFormat("MMMM yyyy").format(d);
+            items = db2.getMonthData(month);
+            binding.monthYearText.setText(String.valueOf(monthYearText));
+
+        } else if(next) {
+            String monthStr = sharedPreferences.getString("dateStr", month);
+            Date d = new SimpleDateFormat("yyyy-MM").parse(monthStr);
+            if(!d.before(new Date())) {
+                d.setMonth(d.getMonth()+1);
+            } else {
+                d.setMonth(new Date().getMonth());
+            }
+            month = new SimpleDateFormat("yyyy-MM").format(d);
+            sharedPreferences.edit().putString("dateStr", month).apply();
+
+            monthYearText = new SimpleDateFormat("MMMM yyyy").format(d);
+            items = db2.getMonthData(month);
+            binding.monthYearText.setText(String.valueOf(monthYearText));
+        } else {
+            sharedPreferences.edit().putString("dateStr", month).apply();
+            items = db2.getMonthData(month);
+            binding.monthYearText.setText(String.valueOf(monthYearText));
+
+        }
+//        List<ExpenseItem> items = db2.getMonthData(month);
+        binding.monthYearText.setText(String.valueOf(monthYearText));
+        long totalExpAmount = items.stream().mapToLong(ExpenseItem::getExpenseAmount).sum();
+        double per = ((double) totalExpAmount / 86000) * 100;
+        binding.spendingProgressBar.setProgress((int) per, true);
+        binding.spendingPercentageText.setText(String.format("%.2f",per)+"%");
+        binding.totalSpentText.setText(String.valueOf("\u20B9"+totalExpAmount));
+        binding.monthlySalaryText.setText(String.valueOf("100%"));
+        binding.remainingBudgetText.setText(String.format("%.2f",(100-per))+"%");
+        animateProgressBar(0, (int) per, 1500); // duration in ms
 
     }
 

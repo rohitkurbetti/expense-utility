@@ -62,7 +62,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         map.put("Debt Payments", R.drawable.money_svgrepo_com__1_);
         map.put("Entertainment", R.drawable.entertainment_svgrepo_com);
         map.put("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com);
-        map.put("Clothing and Personal Care", R.drawable.clothes_clothing_formal_wear_svgrepo_com);
+        map.put("Clothing", R.drawable.clothes_clothing_formal_wear_svgrepo_com);
+        map.put("Personal Care", R.drawable.personalcare__2_);
         map.put("Education", R.drawable.education_graduation_learning_school_study_svgrepo_com);
         map.put("Charity and Gifts", R.drawable.loving_charity_svgrepo_com);
         map.put("Travel", R.drawable.travel_svgrepo_com__1_);

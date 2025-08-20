@@ -725,7 +725,7 @@ public class MainActivity extends AppCompatActivity {
                     rowsCount++;
                 }
 
-                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("expenses"); // Replace 'items' with your specific path
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL+"/"+"expenses"); // Replace 'items' with your specific path
 
                 String childPath = "";
 

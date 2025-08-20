@@ -111,7 +111,7 @@ public class NestedListAdapter extends BaseAdapter {
 
                 // Reference to the Firebase Realtime Database
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference databaseReference = database.getReference("expenses");
+                DatabaseReference databaseReference = database.getReference(Build.MODEL+"/"+"expenses");
 
                 String childPath = "";
                 String expDate = nestedItem.getSubItemName();
@@ -226,7 +226,7 @@ public class NestedListAdapter extends BaseAdapter {
     private void deleteFromFirebaseCloud(ExpenseItem i) {
         // Reference to the Firebase Realtime Database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference databaseReference = database.getReference("expenses");
+        DatabaseReference databaseReference = database.getReference(Build.MODEL+"/"+"expenses");
 
         String childPath = "";
         String expDate = i.getExpenseDate();

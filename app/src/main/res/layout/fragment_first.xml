@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -18,10 +17,10 @@
             android:id="@+id/monthlyCardView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:layout_marginTop="10dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            android:layout_marginHorizontal="8dp"
-            android:layout_marginTop="30dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -42,8 +41,7 @@
                         android:id="@+id/previousMonthData"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/chevron_left_arrow_svgrepo_com"
-                        />
+                        android:src="@drawable/chevron_left_arrow_svgrepo_com" />
 
                     <TextView
                         android:id="@+id/monthYearText"
@@ -51,7 +49,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="December 2024"
-                        android:textColor="#1F2937"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -59,8 +56,7 @@
                         android:id="@+id/nextMonthData"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/chevron_right_arrow_svgrepo_com"
-                        />
+                        android:src="@drawable/chevron_right_arrow_svgrepo_com" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -80,7 +76,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Monthly Salary"
-                        android:textColor="#6B7280"
                         android:textSize="12sp" />
 
                     <TextView
@@ -89,7 +84,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="$5,000"
-                        android:textColor="#1F2937"
+                        android:textColor="@color/bluePrimary"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 
@@ -98,25 +93,47 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <TextView
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:layout_weight=".8"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Total Spent"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/totalSpentText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="$0"
+                            android:textColor="#EF4444"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Total Spent"
-                        android:textColor="#6B7280"
-                        android:textSize="12sp" />
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight=".2">
 
-                    <TextView
-                        android:id="@+id/totalSpentText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="$0"
-                        android:textColor="#EF4444"
-                        android:textSize="24sp"
-                        android:textStyle="bold" />
+                        <ImageView
+                            android:id="@+id/monthSpendDetailsBtn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/arrow_next_right_icon" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -130,7 +147,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Remaining Budget"
-                        android:textColor="#6B7280"
                         android:textSize="12sp" />
 
                     <TextView
@@ -161,7 +177,6 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Spending Progress"
-                            android:textColor="#6B7280"
                             android:textSize="12sp" />
 
                         <TextView
@@ -169,7 +184,6 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0.0%"
-                            android:textColor="#1F2937"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -180,11 +194,25 @@
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
                         android:layout_height="12dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:max="100"
                         android:progress="70"
-                        android:progressDrawable="@drawable/custom_progress_drawable"
-                        android:progressTint="#F59E0B" />
+                        android:progressDrawable="@drawable/custom_progress"
+                        android:indeterminate="false"
+                        />
+
+
+                    <ProgressBar
+                        android:visibility="gone"
+                        android:id="@+id/customProgressBar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="12dp"
+                        android:layout_marginTop="16dp"
+                        android:progressDrawable="@drawable/custom_progress"
+                        android:max="100"
+                        android:progress="70"
+                        android:indeterminate="false"/>
 
                 </LinearLayout>
 
@@ -195,29 +223,28 @@
         <!-- Spinner -->
         <Spinner
             android:id="@+id/spinnerOptions"
-            android:layout_marginTop="30dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="5dp"
-            android:gravity="center_vertical"
+            android:layout_marginTop="30dp"
             android:entries="@array/expense_categories"
+            android:gravity="center_vertical"
             android:importantForAccessibility="yes"
             android:minHeight="48dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/monthlyCardView"
-            />
+            app:layout_constraintTop_toBottomOf="@+id/monthlyCardView" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/et_particularsM"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter expense here"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="20dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            app:endIconMode="clear_text"
+            android:hint="Enter expense here"
             app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
+            app:endIconMode="clear_text"
             app:layout_constraintTop_toBottomOf="@+id/spinnerOptions">
 
             <AutoCompleteTextView
@@ -230,17 +257,16 @@
         </com.google.android.material.textfield.TextInputLayout>
 
 
-
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/et_amountM"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter amount here"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="20dp"
-            app:endIconMode="clear_text"
+            android:hint="Enter amount here"
             app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:endIconMode="clear_text"
             app:layout_constraintTop_toBottomOf="@+id/et_particularsM">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -249,8 +275,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal"
                 android:paddingHorizontal="10dp"
-                android:paddingVertical="15dp"
-                />
+                android:paddingVertical="15dp" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -270,26 +295,25 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/et_date_timeM"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Select Date and Time"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="20dp"
-            app:endIconMode="clear_text"
+            android:hint="Select Date and Time"
             app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:endIconMode="clear_text"
             app:layout_constraintTop_toBottomOf="@+id/et_amountM">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_date_time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="15dp"
+                android:layout_marginTop="20dp"
                 android:focusable="false"
                 android:inputType="none"
-                android:layout_marginTop="20dp"
-                />
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="15dp" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -310,23 +334,23 @@
 
 
         <com.google.android.material.textfield.TextInputLayout
-            android:visibility="gone"
             android:id="@+id/chooseFileTextM"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="20dp"
             android:clickable="true"
-            android:hint="Choose file"
             android:focusable="false"
+            android:gravity="center_vertical"
+            android:hint="Choose file"
             android:textColorHint="@android:color/holo_blue_light"
             android:textSize="18sp"
-            app:endIconMode="clear_text"
+            android:visibility="gone"
             app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_marginTop="20dp"
-            android:layout_marginHorizontal="20dp"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:endIconMode="clear_text"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/et_date_timeM">
 
@@ -334,25 +358,22 @@
                 android:id="@+id/chooseFileText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="15dp"
+                android:layout_marginTop="20dp"
                 android:focusable="true"
                 android:inputType="none"
-                android:layout_marginTop="20dp"
-                />
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="15dp" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
 
-
-
         <ImageButton
-            android:visibility="gone"
-            style="@style/Widget.Material3.Button"
             android:id="@+id/launchCaptureActivity"
+            style="@style/Widget.Material3.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/camera_svgrepo_com"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/chooseFileTextM"
             app:layout_constraintStart_toEndOf="@+id/chooseFileTextM"
             app:layout_constraintTop_toTopOf="@+id/chooseFileTextM" />
@@ -383,25 +404,25 @@
             />
 
         <Button
-            android:visibility="gone"
             android:id="@+id/readPdf"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Read PDF"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="@+id/btn_get_all_data"
             app:layout_constraintStart_toStartOf="@+id/btn_get_all_data"
             app:layout_constraintTop_toBottomOf="@+id/resultTextView" />
 
         <TextView
-            android:visibility="gone"
             android:id="@+id/triggerImport"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:clickable="true"
             android:text="Start csv Import"
             android:textStyle="bold"
-            android:clickable="true"
-            android:layout_marginTop="24dp"
+            android:visibility="gone"
             app:layout_constraintStart_toStartOf="@+id/btn_get_all_data"
             app:layout_constraintTop_toBottomOf="@+id/btn_get_all_data" />
 
@@ -415,26 +436,26 @@
             app:layout_constraintTop_toTopOf="@+id/triggerImport" />
 
         <ProgressBar
-            android:visibility="gone"
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:max="100"
             android:progress="0"
-            android:layout_marginTop="16dp"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="@+id/importProgressTextView"
             app:layout_constraintStart_toStartOf="@+id/triggerImport"
             app:layout_constraintTop_toBottomOf="@+id/importProgressTextView" />
 
 
         <Button
-            android:visibility="gone"
             android:id="@+id/voiceAssistantBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
             android:text="AI Assistant"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btn_get_all_data"
@@ -442,55 +463,52 @@
             />
 
         <TextView
-            android:visibility="gone"
             android:id="@+id/resultTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="18dp"
+            android:padding="16dp"
             android:text="Recognized text will appear here"
             android:textSize="18sp"
-            android:layout_marginTop="18dp"
-            android:layout_gravity="center"
-            android:padding="16dp"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/voiceAssistantBtn"
-            />
+            app:layout_constraintTop_toBottomOf="@+id/voiceAssistantBtn" />
 
 
-<!--        <Button-->
-<!--            android:id="@+id/button_first"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="@string/next"-->
-<!--            app:layout_constraintBottom_toTopOf="@id/textview_first"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintStart_toStartOf="parent"-->
-<!--            app:layout_constraintTop_toTopOf="parent" />-->
+        <!--        <Button-->
+        <!--            android:id="@+id/button_first"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:text="@string/next"-->
+        <!--            app:layout_constraintBottom_toTopOf="@id/textview_first"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
 
-<!--        <TextView-->
-<!--            android:id="@+id/textview_first"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginTop="16dp"-->
-<!--            android:text="@string/lorem_ipsum"-->
-<!--            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintStart_toStartOf="parent"-->
-<!--            app:layout_constraintTop_toBottomOf="@id/button_first" />-->
+        <!--        <TextView-->
+        <!--            android:id="@+id/textview_first"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginTop="16dp"-->
+        <!--            android:text="@string/lorem_ipsum"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toBottomOf="@id/button_first" />-->
 
 
         <Button
-            android:visibility="gone"
             android:id="@+id/flashLightBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Flash"
             android:layout_marginTop="30dp"
+            android:text="Flash"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/resultTextView" />
-
-
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

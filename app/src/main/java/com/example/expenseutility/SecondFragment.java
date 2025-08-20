@@ -82,6 +82,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class SecondFragment extends Fragment {
 
@@ -145,7 +146,7 @@ public class SecondFragment extends Fragment {
 
         // Reference to the Firebase Realtime Database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference databaseReference = database.getReference("expenses");
+        DatabaseReference databaseReference = database.getReference(Build.MODEL+"/"+"expenses");
 
         String childPath = "";
         String expDate = expenseItemObj.getExpenseDate();
@@ -224,6 +225,17 @@ public class SecondFragment extends Fragment {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
+        }
+
+        if (getArguments() != null) {
+            String date = getArguments().getString("date");
+
+            List<ExpenseItem> filteredList =  expenseItems.stream().filter(expenseItem -> expenseItem.getExpenseDate().contains(date)).collect(Collectors.toList());
+
+            long monthExpSum = filteredList.stream().mapToLong(ExpenseItem::getExpenseAmount).sum();
+            binding.tvHeading1.setText("Total  \u20B9"+ monthExpSum);
+            expenseDetailsAdapter.filterMonthlyList(getContext(), filteredList);
+
         }
 
         binding.btnPredict.setOnClickListener(new View.OnClickListener() {
@@ -458,7 +470,6 @@ public class SecondFragment extends Fragment {
 //            expenseItemList.clear();
 
         }
-        Log.i("mapp", mapItems.toString());
 
         return mapItems;
 

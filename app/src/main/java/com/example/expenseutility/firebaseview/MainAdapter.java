@@ -1,6 +1,7 @@
 package com.example.expenseutility.firebaseview;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -77,7 +78,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
                 // Reference to the Firebase Realtime Database
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference databaseReference = database.getReference("expenses");
+                DatabaseReference databaseReference = database.getReference(Build.MODEL+"/"+"expenses");
 
                 String path = year +"/"+monthStr;
 

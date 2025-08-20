@@ -68,6 +68,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -474,6 +477,25 @@ public class FirstFragment extends Fragment {
             }
         });
 
+        binding.monthSpendDetailsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String monthYearTxt = (String) binding.monthYearText.getText();
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
+
+                YearMonth ym = YearMonth.parse(monthYearTxt, formatter);
+
+
+                Bundle bundle = new Bundle();
+                bundle.putString("date", String.valueOf(ym));
+
+                NavHostFragment.findNavController(FirstFragment.this)
+                        .navigate(R.id.action_FirstFragment_to_SecondFragment, bundle);
+            }
+        });
+
 
 
         binding.flashLightBtn.setOnClickListener(new View.OnClickListener() {
@@ -693,7 +715,8 @@ public class FirstFragment extends Fragment {
 
         // Save data in "expenses" node with a unique id
         if (expenseId != null) {
-            database.child("expenses").child(String.valueOf(year+"/"+subDir)).child(expenseId).setValue(expense)
+
+            database.child(Build.MODEL+"/"+"expenses").child(String.valueOf(year+"/"+subDir)).child(expenseId).setValue(expense)
             .addOnSuccessListener(aVoid -> {
                 // Success message
                 Toast.makeText(FirstFragment.adapter.getContext(), "Expense saved in cloud.", Toast.LENGTH_SHORT).show();
@@ -1039,7 +1062,8 @@ public class FirstFragment extends Fragment {
         items.add(new SpinnerItem("Entertainment", R.drawable.entertainment_svgrepo_com));
         items.add(new SpinnerItem("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com));
         items.add(new SpinnerItem("Grocery", R.drawable.shopping_basket));
-        items.add(new SpinnerItem("Clothing and Personal Care", R.drawable.clothes_clothing_formal_wear_svgrepo_com));
+        items.add(new SpinnerItem("Clothing", R.drawable.clothes_clothing_formal_wear_svgrepo_com));
+        items.add(new SpinnerItem("Personal Care", R.drawable.personalcare__2_));
         items.add(new SpinnerItem("Education", R.drawable.education_graduation_learning_school_study_svgrepo_com));
         items.add(new SpinnerItem("Charity and Gifts", R.drawable.loving_charity_svgrepo_com));
         items.add(new SpinnerItem("Travel", R.drawable.travel_svgrepo_com__1_));

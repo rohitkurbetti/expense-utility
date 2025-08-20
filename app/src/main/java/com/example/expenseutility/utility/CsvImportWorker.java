@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -31,8 +30,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.file.Files;
-import java.util.stream.Stream;
 
 public class CsvImportWorker extends Worker {
     private static final String CHANNEL_ID = "CSV_IMPORT_CHANNEL";
@@ -74,11 +71,11 @@ public class CsvImportWorker extends Worker {
                         tokens[2],
                         tokens[3],
                         tokens[4],
-                        null,null
+                        null, null
                 );
-                dbHelper.insertExpense( tokens[0], tokens[1], tokens[2], tokens[3], tokens[4],null,null, null);
+                dbHelper.insertExpense(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], null, null, null);
 
-                int val = (int) (((float)count/totalRows)*100);
+                int val = (int) (((float) count / totalRows) * 100);
 
                 // Update progress every 50 records
                 if (count % 1 == 0 || count == totalRows) {
@@ -90,14 +87,13 @@ public class CsvImportWorker extends Worker {
                             .putInt("per", val)
                             .build());
                 }
-                Log.i("per", String.valueOf((float) (count) + " / "+((float)count/totalRows)*100 ));
                 count++;
             }
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
 
 
-            showNotification("CSV Import Complete", count + " entries inserted in "+duration+ " ms");
+            showNotification("CSV Import Complete", count + " entries inserted in " + duration + " ms");
             return Result.success();
 
         } catch (Exception e) {
@@ -123,8 +119,8 @@ public class CsvImportWorker extends Worker {
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, getApplicationContext().getPackageName());
-                getApplicationContext().startActivity(intent);
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, getApplicationContext().getPackageName());
+            getApplicationContext().startActivity(intent);
             return;
         }
         NotificationManagerCompat.from(getApplicationContext()).notify((int) System.currentTimeMillis(), builder.build());

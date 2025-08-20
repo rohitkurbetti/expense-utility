@@ -289,8 +289,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE "+COLUMN_DATE+ " like '"+month+"%' ",null);
 
-        Log.i("Count >> ", ""+sqlRows.getCount());
-
         List<ExpenseItem> expenseItemList = new ArrayList<>();
 
         while(sqlRows.moveToNext()) {

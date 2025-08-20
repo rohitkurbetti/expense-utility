@@ -17,6 +17,7 @@ import android.widget.TextView;
 import com.example.expenseutility.R;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 public class ExpenseDetailsAdapter extends BaseAdapter {
@@ -31,6 +32,13 @@ public class ExpenseDetailsAdapter extends BaseAdapter {
         this.context = context;
         this.expenseItemList = expenseItemList;
     }
+
+    public void filterMonthlyList(Context context, List<ExpenseItem> expenseItemList) {
+        this.context = context;
+        this.expenseItemList = expenseItemList;
+        notifyDataSetChanged();
+    }
+
 
     @Override
     public int getCount() {
@@ -95,7 +103,7 @@ public class ExpenseDetailsAdapter extends BaseAdapter {
                 if (!word.isEmpty()) init.append(Character.toUpperCase(word.charAt(0)));
             }
 //            initials.setText(init.length() > 2 ? init.substring(0, 2) : init.toString());  // for 2 initials ex. Tea Coffee -> TC
-            initials.setText(words.length > 0 ? String.valueOf(Character.toUpperCase(words[0].charAt(0))) : "?");  // for only 1 initials ex. Tea Coffee -> T
+            initials.setText(words.length > 0 && !Objects.equals(words[0], "") ? String.valueOf(Character.toUpperCase(words[0].charAt(0))) : "?");  // for only 1 initials ex. Tea Coffee -> T
 
             // Create a round shape with random color
             GradientDrawable circleDrawable = new GradientDrawable();

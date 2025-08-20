@@ -1,5 +1,6 @@
 package com.example.expenseutility;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -112,7 +113,7 @@ public class FirebaseList extends AppCompatActivity {
     }
 
     private void fetchFromFirebase() {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL +"/"+"expenses");
 
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override

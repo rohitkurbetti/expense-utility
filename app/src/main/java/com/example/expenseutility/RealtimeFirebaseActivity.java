@@ -2,6 +2,7 @@ package com.example.expenseutility;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -37,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RealtimeFirebaseActivity extends AppCompatActivity {
 
     public static Map<String, List<ExpenseItem>> map = new HashMap<>();
-    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
+    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL+"/"+"expenses");
     ProgressDialog progressDialog;
     TextView yearTotalTextView,finalTotalTextView;
     List<ExpenseItem> tempList = new ArrayList<>();

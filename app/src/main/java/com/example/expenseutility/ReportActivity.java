@@ -222,11 +222,19 @@ public class ReportActivity extends AppCompatActivity {
     }
 
     private void generateReport(String selectedYear, String monthFormatted) {
-        String monthFilter = selectedYear + "-" + monthFormatted;
+        String monthFilter = "";
+        if (selectedYear != null && monthFormatted != null) {
+            monthFilter = selectedYear + "-" + monthFormatted;
+        }
         List<ExpenseItem> expenseItems = databaseHelper.getExpenseDataList(monthFilter);
         // Create filename with timestamp
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
-        String fileName = "ExpenseReport_" + monthFilter + "_" + sdf.format(new Date());
+        String fileName;
+        if (monthFilter.isEmpty()) {
+            fileName = "ExpenseReport_" + sdf.format(new Date());
+        } else {
+            fileName = "ExpenseReport_" + monthFilter + "_" + sdf.format(new Date());
+        }
 
         // Show progress
         progressBar.setVisibility(View.VISIBLE);

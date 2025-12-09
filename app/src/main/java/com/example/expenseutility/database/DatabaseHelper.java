@@ -331,9 +331,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<ExpenseItem> getExpenseDataList(String monthFilter) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor sqlRows;
-        String filterWithWildcard = monthFilter + "%";
-
         if (!monthFilter.isEmpty()) {
+            String filterWithWildcard = monthFilter + "%";
             sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE " +
                     COLUMN_DATE + " like ? ", new String[]{filterWithWildcard});
 

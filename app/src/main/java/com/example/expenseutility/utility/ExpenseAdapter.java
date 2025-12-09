@@ -2,6 +2,8 @@ package com.example.expenseutility.utility;
 
 import static androidx.appcompat.content.res.AppCompatResources.getDrawable;
 
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -75,7 +77,7 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseViewHolder> {
     public void updateRecyclerView(List<ExpenseItem> filteredExpenses, TextView bannerTxt) {
         int sum = filteredExpenses.stream().mapToInt(i -> i.getExpenseAmount().intValue()).sum();
 
-        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
 
         double val = ((double) sum/income)*100;

@@ -39,6 +39,19 @@ public class CsvImportWorker extends Worker {
         createNotificationChannel();
     }
 
+    public static int getCsvRowCountWithCommonsCSV(File file) {
+        int count = 0;
+        try (Reader in = new FileReader(file)) {
+            Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
+            for (CSVRecord record : records) {
+                count++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     @NonNull
     @Override
@@ -73,7 +86,7 @@ public class CsvImportWorker extends Worker {
                         tokens[4],
                         null, null
                 );
-                dbHelper.insertExpense(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], null, null, null);
+                dbHelper.insertExpense(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], null, null, null, null, false);
 
                 int val = (int) (((float) count / totalRows) * 100);
 
@@ -136,18 +149,5 @@ public class CsvImportWorker extends Worker {
             NotificationManager notificationManager = getApplicationContext().getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
-    }
-
-    public static int getCsvRowCountWithCommonsCSV(File file) {
-        int count = 0;
-        try (Reader in = new FileReader(file)) {
-            Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
-            for (CSVRecord record : records) {
-                count++;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return count;
     }
 }

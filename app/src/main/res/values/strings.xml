@@ -12,6 +12,7 @@
         <item>Red</item>
         <item>Blue</item>
         <item>Green</item>
+        <item>GreenParrot</item>
         <item>Purple</item>
         <item>Orange</item>
         <item>Teal</item>
@@ -78,7 +79,7 @@
         <item>Charity and Gifts</item>
         <item>Travel</item>
         <item>Insurance</item>
-        <item>Childcare and Education</item>
+        <item>Childcare</item>
         <item>Miscellaneous</item>
     </string-array>
 

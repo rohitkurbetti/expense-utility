@@ -13,15 +13,14 @@ public class ExpenseItem implements Serializable {
     private String expenseDate;
     private String expenseDateTime;
     private String expenseCategory;
-
     private Boolean isChecked = false;
-
     private String fileName;
     private byte[] fileBytes;
-
+    private String partDetails;
+    private boolean isHomeExpense;
     private Integer imageDrawableId;
 
-    public ExpenseItem () {
+    public ExpenseItem() {
 
     }
 
@@ -33,6 +32,69 @@ public class ExpenseItem implements Serializable {
         this.expenseDate = dateVal;
         this.fileName = fileName;
         this.fileBytes = pdfBytes;
+    }
+
+    public ExpenseItem(String expenseCategory, String particulars, String amount, String dateTimeVal, String dateVal, String fileName, byte[] pdfBytes, String encodedPartDetails) {
+        this.expenseCategory = expenseCategory;
+        this.expenseParticulars = particulars;
+        this.expenseAmount = Long.valueOf(amount);
+        this.expenseDateTime = dateTimeVal;
+        this.expenseDate = dateVal;
+        this.fileName = fileName;
+        this.fileBytes = pdfBytes;
+        this.partDetails = encodedPartDetails;
+    }
+
+    public ExpenseItem(Integer id, String expenseParticulars, Long expenseAmount, String expenseDate, String expenseCategory, String fileName, byte[] fileBytes) {
+        this.id = id;
+        this.expenseParticulars = expenseParticulars;
+        this.expenseAmount = expenseAmount;
+        this.expenseDate = expenseDate;
+        this.expenseCategory = expenseCategory;
+        this.fileName = fileName;
+        this.fileBytes = fileBytes;
+    }
+
+    public ExpenseItem(Integer id, String expenseParticulars, Long expenseAmount, String expenseDate, String expenseCategory, String fileName, byte[] fileBytes, String encodedPartDetails) {
+        this.id = id;
+        this.expenseParticulars = expenseParticulars;
+        this.expenseAmount = expenseAmount;
+        this.expenseDate = expenseDate;
+        this.expenseCategory = expenseCategory;
+        this.fileName = fileName;
+        this.fileBytes = fileBytes;
+        this.partDetails = encodedPartDetails;
+    }
+
+    public ExpenseItem(String expenseParticulars, Long expenseAmount, String expenseDate, String expenseCategory) {
+        this.expenseParticulars = expenseParticulars;
+        this.expenseAmount = expenseAmount;
+        this.expenseDate = expenseDate;
+        this.expenseCategory = expenseCategory;
+    }
+
+    public ExpenseItem(int id, String expenseParticulars, long amt, String dtm, String expCat, String fileName, byte[] fileBytes, String encodedPartDetails, boolean isHomeExpense) {
+        this.id = id;
+        this.expenseParticulars = expenseParticulars;
+        this.expenseAmount = amt;
+        this.expenseDate = dtm;
+        this.expenseCategory = expCat;
+        this.fileName = fileName;
+        this.fileBytes = fileBytes;
+        this.partDetails = encodedPartDetails;
+        this.isHomeExpense = isHomeExpense;
+    }
+
+    public ExpenseItem(String expenseCategory, String particulars, String amount, String dateTimeVal, String dateVal, String fileName, byte[] fileBytes, String encodedPartDetails, boolean isHomeExpense) {
+        this.expenseParticulars = particulars;
+        this.expenseAmount = Long.valueOf(amount);
+        this.expenseDate = dateVal;
+        this.expenseDateTime = dateTimeVal;
+        this.expenseCategory = expenseCategory;
+        this.fileName = fileName;
+        this.fileBytes = fileBytes;
+        this.partDetails = encodedPartDetails;
+        this.isHomeExpense = isHomeExpense;
     }
 
     public Boolean getChecked() {
@@ -107,29 +169,28 @@ public class ExpenseItem implements Serializable {
         this.expenseDateTime = expenseDateTime;
     }
 
+    public String getPartDetails() {
+        return partDetails;
+    }
+
+    public void setPartDetails(String partDetails) {
+        this.partDetails = partDetails;
+    }
+
+    public boolean isHomeExpense() {
+        return isHomeExpense;
+    }
+
+    public void setHomeExpense(boolean homeExpense) {
+        isHomeExpense = homeExpense;
+    }
+
     public Integer getImageDrawableId() {
         return imageDrawableId;
     }
 
     public void setImageDrawableId(Integer imageDrawableId) {
         this.imageDrawableId = imageDrawableId;
-    }
-
-    public ExpenseItem(Integer id, String expenseParticulars, Long expenseAmount, String expenseDate, String expenseCategory, String fileName, byte[] fileBytes) {
-        this.id = id;
-        this.expenseParticulars = expenseParticulars;
-        this.expenseAmount = expenseAmount;
-        this.expenseDate = expenseDate;
-        this.expenseCategory = expenseCategory;
-        this.fileName = fileName;
-        this.fileBytes = fileBytes;
-    }
-
-    public ExpenseItem(String expenseParticulars, Long expenseAmount, String expenseDate, String expenseCategory) {
-        this.expenseParticulars = expenseParticulars;
-        this.expenseAmount = expenseAmount;
-        this.expenseDate = expenseDate;
-        this.expenseCategory = expenseCategory;
     }
 
     @Override

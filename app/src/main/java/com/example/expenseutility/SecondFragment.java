@@ -19,7 +19,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -50,8 +49,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.expenseutility.database.DatabaseHelper;
@@ -59,6 +56,7 @@ import com.example.expenseutility.databinding.FragmentSecondBinding;
 import com.example.expenseutility.entityadapter.ExpenseDetailsAdapter;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.python.TFLiteModel;
+import com.example.expenseutility.utility.Commons;
 import com.example.expenseutility.utility.CustomSpinnerAdapter;
 import com.example.expenseutility.utility.SpinnerItem;
 import com.google.firebase.database.DataSnapshot;
@@ -72,7 +70,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -80,6 +80,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -88,38 +89,39 @@ public class SecondFragment extends Fragment {
 
     private static final int PICK_PDF_REQUEST = 312;
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    private static DatabaseHelper db;
+    private static CopyOnWriteArrayList<ExpenseItem> expenseItems = new CopyOnWriteArrayList<>();
+    private static ExpenseDetailsAdapter expenseDetailsAdapter;
+    ProgressBar progressBar;
+    float total = 0;
     private byte[] pdfBytes;
     private String fileName;
     private FragmentSecondBinding binding;
-    private static DatabaseHelper db;
     private TFLiteModel tfliteModel;
     private float[] binaryArray;
     private float[] binaryArrayForCityType;
     private ArrayList<TableRow> tableRows = new ArrayList<>(); // To keep track of the rows
-
     private ConstraintLayout layout;
     private LinearLayout linearLayout;
     private TableLayout expenseDetailsLayout;
     private String dateVal;
     private String dateTimeVal;
     private EditText chooseFileTextEdit;
-    ProgressBar progressBar;
     private ListView expenseDetailsListView;
-    private static CopyOnWriteArrayList<ExpenseItem> expenseItems = new CopyOnWriteArrayList<>();
-    private static ExpenseDetailsAdapter expenseDetailsAdapter;
     private ListView listViewTest;
 
     public static void callOnClickListener(Context context, String delId, int position, ExpenseItem expenseItem) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Delete "+ delId);
-        builder.setMessage("Proceed for delete ? ");
+        builder.setTitle("Delete " + delId);
+        builder.setMessage("Proceed for deletion ? ");
         builder.setIcon(R.drawable.file_delete_svgrepo_com);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                int count = db.deleteRow(Integer.parseInt(""+delId));
-                if(count > 0){
-                    Toast.makeText(context, "Deleted ID "+ delId, Toast.LENGTH_SHORT).show();
+                int count = db.deleteRow(Integer.parseInt("" + delId));
+                if (count > 0) {
+                    Toast.makeText(context, "Deleted ID " + delId, Toast.LENGTH_SHORT).show();
 
                     deleteRecordFromCloud(expenseItem);
 
@@ -146,7 +148,7 @@ public class SecondFragment extends Fragment {
 
         // Reference to the Firebase Realtime Database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference databaseReference = database.getReference(Build.MODEL+"/"+"expenses");
+        DatabaseReference databaseReference = database.getReference(Build.MODEL + "/" + "expenses");
 
         String childPath = "";
         String expDate = expenseItemObj.getExpenseDate();
@@ -158,14 +160,14 @@ public class SecondFragment extends Fragment {
         DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM"); // "MMM" gives abbreviated month
         String month = monthFormatter.format(date);
 
-        childPath = "/"+year +"/"+(month+"-"+year)+"/"+expDate;
+        childPath = "/" + year + "/" + (month + "-" + year) + "/" + expDate;
 
 
         String finalChildPath = childPath;
         databaseReference.child(childPath).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.hasChildren()) {
+                if (snapshot.hasChildren()) {
                     boolean dataExists = false;
                     for (DataSnapshot d3 : snapshot.getChildren()) {
                         ExpenseItem expenseItem = d3.getValue(ExpenseItem.class);
@@ -176,11 +178,11 @@ public class SecondFragment extends Fragment {
                                 expenseItem.getExpenseDate().equalsIgnoreCase(expenseItemObj.getExpenseDate())
                         ) {
                             dataExists = true;
-                            databaseReference.child(finalChildPath +"/"+d3.getKey()).removeValue();
+                            databaseReference.child(finalChildPath + "/" + d3.getKey()).removeValue();
 //                            Toast.makeText(this, "Deleted "+i.getExpenseParticulars() +" "+i.getExpenseDateTime()+" "+i.getExpenseAmount(),
 //                                    Toast.LENGTH_LONG).show();
 
-                            
+
                             break;
                         } else {
                             dataExists = false;
@@ -208,8 +210,6 @@ public class SecondFragment extends Fragment {
 
     }
 
-
-
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         db = new DatabaseHelper(getContext());
@@ -230,10 +230,14 @@ public class SecondFragment extends Fragment {
         if (getArguments() != null) {
             String date = getArguments().getString("date");
 
-            List<ExpenseItem> filteredList =  expenseItems.stream().filter(expenseItem -> expenseItem.getExpenseDate().contains(date)).collect(Collectors.toList());
+            List<ExpenseItem> filteredList = expenseItems.stream().filter(expenseItem -> expenseItem.getExpenseDate().contains(date)).collect(Collectors.toList());
 
             long monthExpSum = filteredList.stream().mapToLong(ExpenseItem::getExpenseAmount).sum();
-            binding.tvHeading1.setText("Total  \u20B9"+ monthExpSum);
+            NumberFormat formatter = NumberFormat.getInstance(new Locale("en", "IN"));
+            int roundedAmount = (int) monthExpSum;
+
+            String formattedAmount = "₹" + formatter.format(roundedAmount);
+            binding.tvHeading1.setText("Total  " + formattedAmount);
             expenseDetailsAdapter.filterMonthlyList(getContext(), filteredList);
 
         }
@@ -290,14 +294,12 @@ public class SecondFragment extends Fragment {
                 });
 
 
-
-
 //                builder.setView();
                 builder.setPositiveButton("Predict", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         try {
-                            if(etArea.getText().toString().isEmpty()){
+                            if (etArea.getText().toString().isEmpty()) {
                                 Toast.makeText(getContext(), "Please provide valid input", Toast.LENGTH_SHORT).show();
                                 return;
                             }
@@ -314,7 +316,6 @@ public class SecondFragment extends Fragment {
                             float[][] output = tfliteModel.runInference(input);
 
 
-
                             // Use the output
 //                            Toast.makeText(getContext(), "Model Output: " + output[0][0], Toast.LENGTH_SHORT).show();
 
@@ -324,7 +325,7 @@ public class SecondFragment extends Fragment {
                             stringBuilder.append("Area (In Sq.ft): ");
                             stringBuilder.append("\n");
 
-                            stringBuilder1.append(""+etArea.getText());
+                            stringBuilder1.append("" + etArea.getText());
                             stringBuilder1.append("\n");
 
                             stringBuilder.append("Locality : ");
@@ -340,13 +341,11 @@ public class SecondFragment extends Fragment {
                             stringBuilder1.append("\n");
 
 
-                            stringBuilder.append("\n\n"+"Predicted price (INR) :");
+                            stringBuilder.append("\n\n" + "Predicted price (INR) :");
                             stringBuilder.append("\n");
 
-                            stringBuilder1.append("\n\n"+output[0][0]);
+                            stringBuilder1.append("\n\n" + output[0][0]);
                             stringBuilder1.append("\n");
-
-
 
 
                             binding.tvPredResult.setText(stringBuilder);
@@ -368,9 +367,6 @@ public class SecondFragment extends Fragment {
                 dialog.show();
 
 
-
-
-
             }
         });
 
@@ -378,7 +374,20 @@ public class SecondFragment extends Fragment {
         binding.pieChartBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String date = getArguments() == null ? "" : getArguments().getString("date");
+                int[] collect;
+                if (!date.isEmpty()) {
+
+                    List<ExpenseItem> filteredList = expenseItems.stream().filter(expenseItem -> expenseItem.getExpenseDate().contains(date)).collect(Collectors.toList());
+                    collect = filteredList.stream().mapToInt(ExpenseItem::getId).toArray();
+                } else {
+                    collect = expenseItems.stream().mapToInt(ExpenseItem::getId).toArray();
+
+                }
+
                 Intent intent = new Intent(getContext(), ChartActivity.class);
+                intent.putExtra("filteredByDate", true);
+                intent.putExtra("filteredList", (Serializable) collect);
                 startActivity(intent);
             }
         });
@@ -394,7 +403,6 @@ public class SecondFragment extends Fragment {
 //        new LoadDataTask().execute();
 
 
-
         binding.seeAllBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -405,13 +413,12 @@ public class SecondFragment extends Fragment {
 
     }
 
-
     private void populateTable1() throws NoSuchFieldException, IllegalAccessException {
         Cursor data = db.getAllExpenseData();
         Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
         field.setAccessible(true);
         field.set(null, 100 * 1024 * 1024); //100 MB is the new size
-        if(data.getCount()>0) {
+        if (data.getCount() > 0) {
             expenseItems.clear();
             total = 0;
             while (data.moveToNext()) {
@@ -421,6 +428,8 @@ public class SecondFragment extends Fragment {
                 Float amount = data.getFloat(3);
                 String expDateTime = data.getString(4);
                 String category = data.getString(1);
+                String partDetails = data.getString(8);
+                int isHomeExpense = data.getInt(9);
 
                 ExpenseItem expenseItem = new ExpenseItem();
                 expenseItem.setId(id);
@@ -429,11 +438,17 @@ public class SecondFragment extends Fragment {
                 expenseItem.setExpenseParticulars(particulars);
                 expenseItem.setExpenseDateTime(expDateTime);
                 expenseItem.setExpenseCategory(category);
+                expenseItem.setPartDetails(partDetails);
+                expenseItem.setHomeExpense(isHomeExpense == 1);
                 expenseItems.add(expenseItem);
                 total += amount;
 
             }
-            binding.tvHeading1.setText("Total  \u20B9"+ total);
+            int roundedAmount = (int) total;
+
+            String formattedAmount = Commons.getFormattedCurrency(roundedAmount);
+
+            binding.tvHeading1.setText("Total  " + formattedAmount);
 
 //            Map<String, List<ExpenseItem>> map = processExpenseItems(expenseItems);
 //
@@ -442,7 +457,6 @@ public class SecondFragment extends Fragment {
 //                groupedTransactions.add(entry.getKey());
 //                groupedTransactions.addAll(entry.getValue());
 //            }
-            
 
 
             // Set the ListView adapter
@@ -450,32 +464,6 @@ public class SecondFragment extends Fragment {
             expenseDetailsListView.setAdapter(expenseDetailsAdapter);
 
         }
-    }
-
-    private Map<String, List<ExpenseItem>> processExpenseItems(CopyOnWriteArrayList<ExpenseItem> expenseItems) {
-        Map<String, List<ExpenseItem>> mapItems = new LinkedHashMap<>();
-        List<ExpenseItem> expenseItemList = new ArrayList<>();
-        int counter = 12;
-        for (int i=counter;i>0;i--) {
-            if(expenseItems.size()>0) {
-                for (ExpenseItem ex : expenseItems) {
-                    if(ex.getExpenseDate().contains("2024-"+counter)) {
-                        expenseItemList.add(ex);
-                    }
-                }
-                mapItems.put("2024-"+counter,expenseItemList);
-                expenseItems.removeAll(expenseItemList);
-                counter--;
-            }
-//            expenseItemList.clear();
-
-        }
-
-        return mapItems;
-
-
-
-
     }
 
 //    private class LoadDataTask extends AsyncTask<Void, Void, Void> {
@@ -496,15 +484,40 @@ public class SecondFragment extends Fragment {
 //                    Logger.getAnonymousLogger().info("BG thread: "+i);
 //
 //                    double track = ((double)i/n)*100;
-////                    if(track > 25f && track <= 35f) {
-////                        Logger.getAnonymousLogger().info("BG thread: Reached 25%");
-////                    } else if (track > 35f && track <= 50){
-////                        Logger.getAnonymousLogger().info("BG thread: Reached 50%");
-////                    } else if (track > 50f && track <= 75f){
-////                        Logger.getAnonymousLogger().info("BG thread: Reached 75%");
-////                    } else if (track > 75f) {
+
+    /// /                    if(track > 25f && track <= 35f) {
+    /// /                        Logger.getAnonymousLogger().info("BG thread: Reached 25%");
+    /// /                    } else if (track > 35f && track <= 50){
+    /// /                        Logger.getAnonymousLogger().info("BG thread: Reached 50%");
+    /// /                    } else if (track > 50f && track <= 75f){
+    /// /                        Logger.getAnonymousLogger().info("BG thread: Reached 75%");
+    /// /                    } else if (track > 75f) {
 //                        Logger.getAnonymousLogger().info("BG thread: Reached "+String.format("%.2f",track) +"%");
-////                    }
+    private Map<String, List<ExpenseItem>> processExpenseItems(CopyOnWriteArrayList<ExpenseItem> expenseItems) {
+        Map<String, List<ExpenseItem>> mapItems = new LinkedHashMap<>();
+        List<ExpenseItem> expenseItemList = new ArrayList<>();
+        int counter = 12;
+        for (int i = counter; i > 0; i--) {
+            if (expenseItems.size() > 0) {
+                for (ExpenseItem ex : expenseItems) {
+                    if (ex.getExpenseDate().contains("2024-" + counter)) {
+                        expenseItemList.add(ex);
+                    }
+                }
+                mapItems.put("2024-" + counter, expenseItemList);
+                expenseItems.removeAll(expenseItemList);
+                counter--;
+            }
+//            expenseItemList.clear();
+
+        }
+
+        return mapItems;
+
+
+    }
+
+    /// /                    }
 //
 //                }
 //
@@ -523,9 +536,6 @@ public class SecondFragment extends Fragment {
 //            expenseDetailsLayout.setVisibility(View.VISIBLE);
 //        }
 //    }
-
-
-
     private float[] convertToBinaryArrayForCityType(String cityType) {
         switch (cityType) {
             case "Metro":
@@ -549,7 +559,6 @@ public class SecondFragment extends Fragment {
                 return new float[]{0.0f, 0.0f};
         }
     }
-
 
     @Override
     public void onResume() {
@@ -584,63 +593,60 @@ public class SecondFragment extends Fragment {
 //        populateTable();
 
 
-
-
     }
-    float total = 0;
 
     private void populateTable() throws NoSuchFieldException, IllegalAccessException {
         Cursor data = db.getAllExpenseData();
         Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
         field.setAccessible(true);
         field.set(null, 100 * 1024 * 1024); //100 MB is the new size
-        if(data.getCount()>0) {
+        if (data.getCount() > 0) {
 
-            total=0;
-                    while(data.moveToNext()){
-                        Integer id = data.getInt(0);
-                        String date = data.getString(5);
-                        String particulars = data.getString(2);
-                        Float amount = data.getFloat(3);
-                        String fileName = data.getString(6);
-                        total += amount;
-                        TextView dwnldDocLink = createDownloadLink(data.getBlob(7),fileName);
-                        dwnldDocLink.setPadding(10,10,10,10);
-                        dwnldDocLink.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            total = 0;
+            while (data.moveToNext()) {
+                Integer id = data.getInt(0);
+                String date = data.getString(5);
+                String particulars = data.getString(2);
+                Float amount = data.getFloat(3);
+                String fileName = data.getString(6);
+                total += amount;
+                TextView dwnldDocLink = createDownloadLink(data.getBlob(7), fileName);
+                dwnldDocLink.setPadding(10, 10, 10, 10);
+                dwnldDocLink.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
 
-                        TableRow tableRow = new TableRow(getContext());
-                        tableRow.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                        tableRow.setPadding(0,5,0,5);
-                        tableRow.setVerticalGravity(Gravity.CENTER_VERTICAL);
+                TableRow tableRow = new TableRow(getContext());
+                tableRow.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                tableRow.setPadding(0, 5, 0, 5);
+                tableRow.setVerticalGravity(Gravity.CENTER_VERTICAL);
 
 //                CheckBox checkBox = crateCheckBox(data.getInt(0));
 
-                        TextView srNoView = new TextView(getContext());
-                        srNoView.setText(String.valueOf(id));
-                        srNoView.setPadding(10,10,10,10);
-                        srNoView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                TextView srNoView = new TextView(getContext());
+                srNoView.setText(String.valueOf(id));
+                srNoView.setPadding(10, 10, 10, 10);
+                srNoView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-                        TextView dateView = new TextView(getContext());
-                        dateView.setText(date);
-                        dateView.setPadding(10,10,10,10);
-                        dateView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                TextView dateView = new TextView(getContext());
+                dateView.setText(date);
+                dateView.setPadding(10, 10, 10, 10);
+                dateView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-                        TextView particularsView = new TextView(getContext());
-                        particularsView.setText(particulars);
-                        particularsView.setPadding(10,10,10,10);
-                        particularsView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                        if(isDarkModeOn()) {
-                            particularsView.setTextColor(getResources().getColor(R.color.darkbluecolor));
-                        } else {
-                            particularsView.setTextColor(getResources().getColor(R.color.purple_700));
-                        }
-                        particularsView.setClickable(true);
-                        particularsView.setFocusable(true);
-                        particularsView.setTypeface(particularsView.getTypeface(), Typeface.BOLD);
+                TextView particularsView = new TextView(getContext());
+                particularsView.setText(particulars);
+                particularsView.setPadding(10, 10, 10, 10);
+                particularsView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                if (isDarkModeOn()) {
+                    particularsView.setTextColor(getResources().getColor(R.color.darkbluecolor));
+                } else {
+                    particularsView.setTextColor(getResources().getColor(R.color.purple_700));
+                }
+                particularsView.setClickable(true);
+                particularsView.setFocusable(true);
+                particularsView.setTypeface(particularsView.getTypeface(), Typeface.BOLD);
 
 
-                        // commented the EDIT functionality on saved expenses
+                // commented the EDIT functionality on saved expenses
 //                        particularsView.setOnClickListener(new View.OnClickListener() {
 //                            @Override
 //                            public void onClick(View v) {
@@ -677,27 +683,27 @@ public class SecondFragment extends Fragment {
 //                        });
 
 
-                        TextView amountView = new TextView(getContext());
-                        amountView.setText(String.valueOf(amount));
-                        amountView.setPadding(10,10,10,10);
-                        amountView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                TextView amountView = new TextView(getContext());
+                amountView.setText(String.valueOf(amount));
+                amountView.setPadding(10, 10, 10, 10);
+                amountView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-                        ImageButton imageButton = createImageButton(data.getInt(0), tableRow);
+                ImageButton imageButton = createImageButton(data.getInt(0), tableRow);
 
 //                tableRow.addView(checkBox);
-                        tableRow.addView(srNoView);
-                        tableRow.addView(dateView);
-                        tableRow.addView(particularsView);
-                        tableRow.addView(amountView);
-                        tableRow.addView(dwnldDocLink);
-                        tableRow.addView(imageButton);
+                tableRow.addView(srNoView);
+                tableRow.addView(dateView);
+                tableRow.addView(particularsView);
+                tableRow.addView(amountView);
+                tableRow.addView(dwnldDocLink);
+                tableRow.addView(imageButton);
 //                        tableRow.setBackgroundResource(R.drawable.border_v2);
-                        expenseDetailsLayout.addView(tableRow);
-                        tableRows.add(tableRow);
+                expenseDetailsLayout.addView(tableRow);
+                tableRows.add(tableRow);
 
 
-                    }
-                    binding.tvHeading1.setText("Expense Details (Total "+ total+")");
+            }
+            binding.tvHeading1.setText("Expense Details (Total " + total + ")");
 
 
         }
@@ -708,8 +714,8 @@ public class SecondFragment extends Fragment {
     private void openEditAlertDialog(TextView particularsView, Integer id) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Edit "+particularsView.getText());
-        builder.setMessage("ID " +id+ " is now editable ");
+        builder.setTitle("Edit " + particularsView.getText());
+        builder.setMessage("ID " + id + " is now editable ");
         builder.setCancelable(false);
 
         View view = getLayoutInflater().inflate(R.layout.edit_layout, null, false);
@@ -724,10 +730,10 @@ public class SecondFragment extends Fragment {
 
         Cursor cursor = db.getExpenseById(id);
 
-        String pert = "", dateTime="",spinnerItem="";
-        Long amount= 0L;
-        if(cursor.getCount() > 0) {
-            while(cursor.moveToNext()) {
+        String pert = "", dateTime = "", spinnerItem = "";
+        Long amount = 0L;
+        if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
                 spinnerItem = cursor.getString(1);
                 pert = cursor.getString(2);
                 amount = cursor.getLong(3);
@@ -745,9 +751,7 @@ public class SecondFragment extends Fragment {
         chooseFileTextEdit.setOnClickListener(v -> openFileChooser());
 
 
-
         builder.setView(view);
-
 
 
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
@@ -761,24 +765,24 @@ public class SecondFragment extends Fragment {
                     res = db.insertExpense(String.valueOf(spItem.getText()),
                             etParticularsEdit.getText().toString(),
                             etAmountEdit.getText().toString(),
-                            dateTimeVal == null ? etDateTimeEdit.getText().toString(): dateTimeVal,
-                            dateVal == null ? etDateTimeEdit.getText().toString().substring(0,10):dateVal,
-                            fileName,pdfBytes, id);
+                            dateTimeVal == null ? etDateTimeEdit.getText().toString() : dateTimeVal,
+                            dateVal == null ? etDateTimeEdit.getText().toString().substring(0, 10) : dateVal,
+                            fileName, pdfBytes, id, null, false);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 } catch (NoSuchFieldException e) {
                     throw new RuntimeException(e);
                 }
 
-                if(res) {
+                if (res) {
 //            resetFields();
-                    Toast.makeText(getContext(), "Expense updated "+id, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Expense updated " + id, Toast.LENGTH_SHORT).show();
 //                    tableRows.remove(0);
 //                    tableRows.remove(1);
 //                    tableRows.remove(2);
 //                    tableRows.remove(3);
 //                    tableRows.remove(4);
-                    expenseDetailsLayout.removeViews(1,expenseDetailsLayout.getChildCount()-1);
+                    expenseDetailsLayout.removeViews(1, expenseDetailsLayout.getChildCount() - 1);
                     try {
                         populateTable1();
                     } catch (NoSuchFieldException e) {
@@ -787,11 +791,11 @@ public class SecondFragment extends Fragment {
                         throw new RuntimeException(e);
                     }
                     int fadeRowIndex = 0;
-                    for(int i=1; i < expenseDetailsLayout.getChildCount(); i++) {
+                    for (int i = 1; i < expenseDetailsLayout.getChildCount(); i++) {
                         TableRow trow = (TableRow) expenseDetailsLayout.getChildAt(i);
                         TextView textView = (TextView) trow.getChildAt(0);
                         Integer match = Integer.parseInt(String.valueOf(textView.getText()));
-                        if(id == match) {
+                        if (id == match) {
                             fadeRowIndex = i;
                         }
                     }
@@ -799,7 +803,6 @@ public class SecondFragment extends Fragment {
 //                    TextView view1 =(TextView) fadeRow.getChildAt(2);
 //                    Toast.makeText(getContext(), "dekh > "+view1.getText(), Toast.LENGTH_SHORT).show(); view1.getText();
                     animateBackgroundColor(fadeRow);
-
 
 
 //            NavHostFragment.findNavController(FirstFragment.this)
@@ -817,16 +820,16 @@ public class SecondFragment extends Fragment {
                 int endColor = Color.YELLOW; // Light yellow color
                 endColor = getResources().getColor(R.color.yellow);
                 startColor = getResources().getColor(R.color.yellow1);
-                int creamWhite = getResources().getColor(com.google.android.material.R.color.m3_sys_color_light_background);
+                int creamWhite = getResources().getColor(android.R.color.system_background_light);
 
                 ValueAnimator colorAnimation = null;
-                if(isDarkModeOn()) {
+                if (isDarkModeOn()) {
 
                     int bloueColor = getResources().getColor(R.color.bluecolor);
 
                     colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), bloueColor, Color.TRANSPARENT);
                 } else {
-                    colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), endColor,startColor, creamWhite);
+                    colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), endColor, startColor, creamWhite);
                 }
 
                 colorAnimation.setDuration(3000);
@@ -876,16 +879,16 @@ public class SecondFragment extends Fragment {
             try {
 
                 InputStream inputStream = getContext().getContentResolver().openInputStream(pdfUri);
-                if(inputStream != null) {
+                if (inputStream != null) {
                     int fileSize = inputStream.available();
                     inputStream.close();
                     if (fileSize <= MAX_FILE_SIZE) {
                         pdfBytes = readPdfFromUri(pdfUri);
                         fileName = getFileName(pdfUri);
-                        chooseFileTextEdit.setText(fileName.length()>25 ? fileName.substring(0,20)+"..."+fileName.substring(fileName.lastIndexOf(".")) :fileName);
+                        chooseFileTextEdit.setText(fileName.length() > 25 ? fileName.substring(0, 20) + "..." + fileName.substring(fileName.lastIndexOf(".")) : fileName);
                     } else {
                         Toast.makeText(getContext(), "File size exceeds 2MB limit.", Toast.LENGTH_SHORT).show();
-                        pdfBytes= null;
+                        pdfBytes = null;
                         fileName = "";
                         chooseFileTextEdit.setText("");
                     }
@@ -947,9 +950,9 @@ public class SecondFragment extends Fragment {
                             (TimePicker view1, int hourOfDay, int minute) -> {
                                 calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                                 calendar.set(Calendar.MINUTE, minute);
-                                String dateTime = new SimpleDateFormat("dd").format(calendar.getTime()) + "-" + (String.format("%02d",month + 1) ) + "-" + year + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
+                                String dateTime = new SimpleDateFormat("dd").format(calendar.getTime()) + "-" + (String.format("%02d", month + 1)) + "-" + year + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
                                 dateVal = year + "-" + new SimpleDateFormat("MM").format(calendar.getTime()) + "-" + new SimpleDateFormat("dd").format(calendar.getTime());
-                                dateTimeVal = year + "-" + (String.format("%02d",month + 1) ) + "-" + new SimpleDateFormat("dd").format(calendar.getTime()) + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
+                                dateTimeVal = year + "-" + (String.format("%02d", month + 1)) + "-" + new SimpleDateFormat("dd").format(calendar.getTime()) + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
                                 etDateTimeEdit.setText(dateTime);
                             },
                             calendar.get(Calendar.HOUR_OF_DAY),
@@ -968,12 +971,6 @@ public class SecondFragment extends Fragment {
     private void addEventListeners(View view, Integer id) {
 
 
-
-
-
-
-
-
     }
 
     private void getAllSpinnerOptions(Spinner spinnerEdit, String spinnerItem) {
@@ -990,9 +987,9 @@ public class SecondFragment extends Fragment {
         if (adapter != null) {
             for (int i = 0; i < adapter.getCount(); i++) {
                 SpinnerItem option = adapter.getItem(i);
-                if(option.getText().equalsIgnoreCase(spinnerItem)) {
-                    long ll =  spinnerEdit.getItemIdAtPosition(i);
-                    spinnerEdit.setSelection((int)ll);
+                if (option.getText().equalsIgnoreCase(spinnerItem)) {
+                    long ll = spinnerEdit.getItemIdAtPosition(i);
+                    spinnerEdit.setSelection((int) ll);
                 }
             }
         }
@@ -1000,7 +997,7 @@ public class SecondFragment extends Fragment {
     }
 
     private void refreshTable() throws NoSuchFieldException, IllegalAccessException {
-        expenseDetailsLayout.removeViews(1, expenseDetailsLayout.getChildCount()-1);
+        expenseDetailsLayout.removeViews(1, expenseDetailsLayout.getChildCount() - 1);
 //        for (TableRow row : tableRows) {
 //            expenseDetailsLayout.addView(row);
 //        }
@@ -1020,15 +1017,16 @@ public class SecondFragment extends Fragment {
         imageButton.setOnClickListener(v -> {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setTitle("Delete "+ anInt);
+            builder.setTitle("Delete " + anInt);
             builder.setIcon(R.drawable.file_delete_svgrepo_com);
-            builder.setMessage("Proceed for delete ? ");
+            builder.setMessage("Proceed for deletion ? ");
             builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     int count = db.deleteRow(anInt);
-                    if(count > 0){
-                        Toast.makeText(getContext(), "Deleted ID "+ anInt, Toast.LENGTH_SHORT).show();
+                    if (count > 0) {
+                        Toast.makeText(getContext(), "Deleted ID " + anInt, Toast.LENGTH_SHORT).show();
                         deleteRecordFromCloud(null);
                     }
                     expenseDetailsLayout.removeView(tableRow);
@@ -1064,7 +1062,7 @@ public class SecondFragment extends Fragment {
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked) {
+                if (isChecked) {
 
                 }
             }
@@ -1075,7 +1073,7 @@ public class SecondFragment extends Fragment {
     private TextView createDownloadLink(byte[] pdfBytes, String fileName) {
         TextView downloadLink = new TextView(getContext());
         if (pdfBytes != null) {
-            downloadLink.setText(fileName.length()>25 ? fileName.substring(0,20)+"..."+fileName.substring(fileName.lastIndexOf(".")) :fileName);
+            downloadLink.setText(fileName.length() > 25 ? fileName.substring(0, 20) + "..." + fileName.substring(fileName.lastIndexOf(".")) : fileName);
             downloadLink.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
             downloadLink.setClickable(true);
             downloadLink.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);

@@ -2,46 +2,47 @@ package com.example.expenseutility;
 
 import static com.example.expenseutility.ExpenseInputActivity.getFormatted;
 import static com.example.expenseutility.FirstFragment.saveToFirebase;
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
 import static com.example.expenseutility.utility.SmsNotificationUtils.parseAmount;
 import static com.example.expenseutility.utility.SmsNotificationUtils.parseDateTime;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-
-import com.example.expenseutility.database.DatabaseHelper;
-import com.example.expenseutility.dto.Transaction;
-import com.example.expenseutility.emailutility.EmailSender;
-import com.example.expenseutility.emailutility.NotificationUtils;
-import com.example.expenseutility.entityadapter.ExpenseItem;
-import com.example.expenseutility.entityadapter.TransactionAdapter;
-import com.example.expenseutility.notification.DismissNotificationReceiver;
-import com.example.expenseutility.notification.NotificationReceiver;
-import com.example.expenseutility.utility.SmsNotificationUtils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -52,20 +53,31 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.ActivityMainBinding;
+import com.example.expenseutility.dto.Transaction;
+import com.example.expenseutility.emailutility.EmailSender;
+import com.example.expenseutility.emailutility.NotificationUtils;
+import com.example.expenseutility.entityadapter.ExpenseItem;
+import com.example.expenseutility.entityadapter.TransactionAdapter;
+import com.example.expenseutility.notification.DismissNotificationReceiver;
+import com.example.expenseutility.notification.NotificationReceiver;
+import com.example.expenseutility.utility.SmsNotificationUtils;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.RGBLuminanceSource;
+import com.google.zxing.Result;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -73,6 +85,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -82,31 +96,31 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
-
-    private DatabaseReference database;
-
-    private ActivityMainBinding binding;
     private static final int REQUEST_MANAGE_STORAGE = 123;
     private static final int REQUEST_WRITE_STORAGE = 112;
-    SharedPreferences sharedPreferences;
     private static final int REQUEST_CODE_NOTIFICATION = 2001;
     private static final int SMS_PERMISSION_CODE = 101;
-    private DatabaseHelper db;
-    private List<Transaction> transactionList;
-
+    SharedPreferences sharedPreferences;
     Spinner themeSpinner;
     String[] themes = {
-            "Red", "Blue", "Green", "Purple", "Orange",
+            "Red", "Blue", "Green", "GreenParrot", "Purple", "Orange",
             "Teal", "Pink", "Cyan", "Lime", "Brown",
             "Mint", "Coral", "Steel", "Lavender", "Mustard"
     };
+    private AppBarConfiguration appBarConfiguration;
+    private DatabaseReference database;
+    private ActivityMainBinding binding;
+    private DatabaseHelper db;
+    private List<Transaction> transactionList;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void requestSmsPermission() {
@@ -119,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
             readExistingSms();
         }
     }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void readExistingSms() {
 
@@ -128,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
         Uri uriSms = Uri.parse("content://sms/inbox");
         String selection = "date >= ?";
-        String[] selectionArgs = { String.valueOf(threeDaysAgoMillis) };
+        String[] selectionArgs = {String.valueOf(threeDaysAgoMillis)};
         Cursor cursor = getContentResolver().query(uriSms, null, selection, selectionArgs, "date DESC");
 
         if (cursor != null) {
@@ -148,59 +163,57 @@ public class MainActivity extends AppCompatActivity {
 //                ) {
 //                    if (!TransactionQueue.getInstance(this).getMessages().contains(body)) {
 //                        TransactionQueue.getInstance(this).getMessages().add(body);
-                        // Show/update reminder notification
+                // Show/update reminder notification
 
 
-                    double amount = parseAmount(body); // e.g., extract "100.00"
-                    String dateTime = parseDateTime(body); // extract date and time
-                    int notificationId = (amount + dateTime).hashCode(); // consistent ID
+                double amount = parseAmount(body); // e.g., extract "100.00"
+                String dateTime = parseDateTime(body); // extract date and time
+                int notificationId = (amount + dateTime).hashCode(); // consistent ID
 
-                    if(amount>0.0d && !dateTime.isEmpty()) {
+                if (amount > 0.0d && !dateTime.isEmpty()) {
 
-                        if(db==null) {
-                            db = new DatabaseHelper(this);
-                        }
-
-                        if (!db.isTransactionIgnored(amount, dateTime)) {
-                            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss");
-                            DateTimeFormatter outputDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-                            LocalDateTime parsedDateTime = LocalDateTime.parse(dateTime, dateTimeFormatter);
-
-                            StringBuilder dateTimeStr = new StringBuilder();
-
-
-                            String month = getFormatted(parsedDateTime.getMonthValue());
-                            String day = getFormatted(parsedDateTime.getDayOfMonth());
-                            String hour = getFormatted(parsedDateTime.getHour());
-                            String minute = getFormatted(parsedDateTime.getMinute());
-                            String second = getFormatted(parsedDateTime.getSecond());
-
-                            dateTimeStr.append(parsedDateTime.getYear());
-                            dateTimeStr.append("-");
-                            dateTimeStr.append(month);
-                            dateTimeStr.append("-");
-                            dateTimeStr.append(day);
-                            dateTimeStr.append(" ");
-                            dateTimeStr.append(hour);
-                            dateTimeStr.append(":");
-                            dateTimeStr.append(minute);
-
-                            String dateStr = parsedDateTime.getYear()+"-"+month+"-"+day;
-
-
-
-                            //check if record exists in db
-                            boolean isExists = db.checkIfExistsMinPossibleParams((int) amount, dateTimeStr.toString(), dateStr);
-
-                            if(!isExists) {
-                                SmsNotificationUtils.showInputNotification(this, body, (int) notificationId);
-                            }
-                        }
-
-
-
+                    if (db == null) {
+                        db = new DatabaseHelper(this);
                     }
+
+                    if (!db.isTransactionIgnored(amount, dateTime)) {
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss");
+                        DateTimeFormatter outputDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+                        LocalDateTime parsedDateTime = LocalDateTime.parse(dateTime, dateTimeFormatter);
+
+                        StringBuilder dateTimeStr = new StringBuilder();
+
+
+                        String month = getFormatted(parsedDateTime.getMonthValue());
+                        String day = getFormatted(parsedDateTime.getDayOfMonth());
+                        String hour = getFormatted(parsedDateTime.getHour());
+                        String minute = getFormatted(parsedDateTime.getMinute());
+                        String second = getFormatted(parsedDateTime.getSecond());
+
+                        dateTimeStr.append(parsedDateTime.getYear());
+                        dateTimeStr.append("-");
+                        dateTimeStr.append(month);
+                        dateTimeStr.append("-");
+                        dateTimeStr.append(day);
+                        dateTimeStr.append(" ");
+                        dateTimeStr.append(hour);
+                        dateTimeStr.append(":");
+                        dateTimeStr.append(minute);
+
+                        String dateStr = parsedDateTime.getYear() + "-" + month + "-" + day;
+
+
+                        //check if record exists in db
+                        boolean isExists = db.checkIfExistsMinPossibleParams((int) amount, dateTimeStr.toString(), dateStr);
+
+                        if (!isExists) {
+                            SmsNotificationUtils.showInputNotification(this, body, (int) notificationId);
+                        }
+                    }
+
+
+                }
 //                    }
 //                }
 
@@ -211,13 +224,133 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIncomingIntent(intent);
+    }
 
+    private void handleIncomingIntent(Intent intent) {
+        if (intent != null) {
+            StringBuilder receivedData = new StringBuilder();
+
+            // Check for different types of data
+            if (intent.hasExtra("DATA_KEY")) {
+                String data = intent.getStringExtra("DATA_KEY");
+                receivedData.append("Data: ").append(data).append("\n");
+            }
+
+            if (intent.hasExtra("TIMESTAMP")) {
+                long timestamp = intent.getLongExtra("TIMESTAMP", 0);
+                receivedData.append("Timestamp: ").append(new Timestamp(timestamp)).append("\n");
+            }
+
+            if (intent.hasExtra("SENDER_PACKAGE")) {
+                String sender = intent.getStringExtra("SENDER_PACKAGE");
+                receivedData.append("Sender: ").append(sender).append("\n");
+            }
+
+            if (intent.hasExtra(Intent.EXTRA_TEXT)) {
+                String extraText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                receivedData.append("Extra Text: ").append(extraText).append("\n");
+            }
+
+            if (intent.getAction() != null) {
+                receivedData.append("Action: ").append(intent.getAction()).append("\n");
+            }
+
+            if (intent.getData() != null) {
+                receivedData.append("URI: ").append(intent.getData().toString()).append("\n");
+            }
+
+            if (receivedData.length() > 0) {
+
+                Toast.makeText(this, "Data received successfully!" + receivedData, Toast.LENGTH_SHORT).show();
+                Log.i("DDD", "" + receivedData);
+
+
+                // Create and show the dialog
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("📬 Data Received from Another App")
+                        .setMessage(receivedData.toString())
+                        .setPositiveButton("Process Data", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                processReceivedData(intent);
+                                dialog.dismiss();
+                            }
+                        })
+//                        .setNegativeButton("View in App", new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                // Also update the main text view
+////                                updateMainTextView(dialogMessage.toString());
+//                                dialog.dismiss();
+//                            }
+//                        })
+                        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setCancelable(false)
+                        .show();
+
+
+                // Process the received data
+                processReceivedData(intent);
+            }
+        }
+    }
+
+    private void processReceivedData(Intent intent) {
+        // Add your business logic here to handle the received data
+        String action = intent.getAction();
+
+        if ("com.example.expenseutility.ACTION_PROCESS_DATA".equals(action)) {
+            // Handle custom action
+            String data = intent.getStringExtra("DATA_KEY");
+            String priority = intent.getStringExtra("PRIORITY");
+
+            // Perform actions based on the data
+            if ("HIGH".equals(priority)) {
+                // Handle high priority data
+                performHighPriorityTask(data);
+            }
+        }
+
+        // You can also send a result back if needed
+        sendResultBackToSender();
+    }
+
+    private void sendResultBackToSender() {
+        // If you need to send data back to the sender
+        Intent resultIntent = new Intent();
+        resultIntent.setAction("com.example.sendingapp.ACTION_RESULT");
+        resultIntent.putExtra("RESULT", "Data processed successfully");
+        resultIntent.putExtra("PROCESSED_AT", System.currentTimeMillis());
+
+        // Note: This is a broadcast, you might need a different approach
+        // for actual two-way communication
+        sendBroadcast(resultIntent);
+    }
+
+    private void performHighPriorityTask(String data) {
+        // Implement your high priority task logic here
+        Toast.makeText(this, "Processing high priority: " + data, Toast.LENGTH_LONG).show();
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         applyUserTheme();  // Apply before setContentView
         super.onCreate(savedInstanceState);
         requestSmsPermission();
-         sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+// Handle incoming intent
+//        handleIncomingIntent(getIntent());
+        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         db = new DatabaseHelper(this);
         // Initialize Firebase Database
         database = FirebaseDatabase.getInstance().getReference();
@@ -243,9 +376,9 @@ public class MainActivity extends AppCompatActivity {
         Log.i("expenseItemList >> ", expenseItemList.toString());
 
 
-        float income = sharedPreferences.getFloat("monthlyIncome", 87000.0f);
+        float income = sharedPreferences.getFloat("monthlyIncome", ANN_INCOME);
 
-        if(income==0.0f) {
+        if (income == 0.0f) {
             setGlobalIncome();
         }
 
@@ -253,7 +386,6 @@ public class MainActivity extends AppCompatActivity {
 //        Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
 //                .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
 //        startActivity(intent);
-
 
 
 //        scheduleCsvImport(this);
@@ -269,23 +401,60 @@ public class MainActivity extends AppCompatActivity {
         String theme = prefs.getString("app_theme", "Theme.ExpenseUtility");
 
         switch (theme) {
-            case "Default": setTheme(R.style.Base_Theme_ExpenseUtility); break;
-            case "Red": setTheme(R.style.AppTheme_Red); break;
-            case "Blue": setTheme(R.style.AppTheme_Blue); break;
-            case "Green": setTheme(R.style.AppTheme_Green); break;
-            case "Purple": setTheme(R.style.AppTheme_Purple); break;
-            case "Orange": setTheme(R.style.AppTheme_Orange); break;
-            case "Teal": setTheme(R.style.AppTheme_Teal); break;
-            case "Pink": setTheme(R.style.AppTheme_Pink); break;
-            case "Cyan": setTheme(R.style.AppTheme_Cyan); break;
-            case "Lime": setTheme(R.style.AppTheme_Lime); break;
-            case "Brown": setTheme(R.style.AppTheme_Brown); break;
-            case "Mint": setTheme(R.style.AppTheme_Mint); break;
-            case "Coral": setTheme(R.style.AppTheme_Coral); break;
-            case "Steel": setTheme(R.style.AppTheme_Steel); break;
-            case "Lavender": setTheme(R.style.AppTheme_Lavender); break;
-            case "Mustard": setTheme(R.style.AppTheme_Mustard); break;
-            default: setTheme(R.style.Base_Theme_ExpenseUtility); break;
+            case "Default":
+                setTheme(R.style.Base_Theme_ExpenseUtility);
+                break;
+            case "Red":
+                setTheme(R.style.AppTheme_Red);
+                break;
+            case "Blue":
+                setTheme(R.style.AppTheme_Blue);
+                break;
+            case "Green":
+                setTheme(R.style.AppTheme_Green);
+                break;
+            case "GreenParrot":
+                setTheme(R.style.AppTheme_GreenParrot);
+                break;
+            case "Purple":
+                setTheme(R.style.AppTheme_Purple);
+                break;
+            case "Orange":
+                setTheme(R.style.AppTheme_Orange);
+                break;
+            case "Teal":
+                setTheme(R.style.AppTheme_Teal);
+                break;
+            case "Pink":
+                setTheme(R.style.AppTheme_Pink);
+                break;
+            case "Cyan":
+                setTheme(R.style.AppTheme_Cyan);
+                break;
+            case "Lime":
+                setTheme(R.style.AppTheme_Lime);
+                break;
+            case "Brown":
+                setTheme(R.style.AppTheme_Brown);
+                break;
+            case "Mint":
+                setTheme(R.style.AppTheme_Mint);
+                break;
+            case "Coral":
+                setTheme(R.style.AppTheme_Coral);
+                break;
+            case "Steel":
+                setTheme(R.style.AppTheme_Steel);
+                break;
+            case "Lavender":
+                setTheme(R.style.AppTheme_Lavender);
+                break;
+            case "Mustard":
+                setTheme(R.style.AppTheme_Mustard);
+                break;
+            default:
+                setTheme(R.style.Base_Theme_ExpenseUtility);
+                break;
         }
     }
 
@@ -297,7 +466,7 @@ public class MainActivity extends AppCompatActivity {
                         new String[]{Manifest.permission.POST_NOTIFICATIONS},
                         REQUEST_CODE_NOTIFICATION);
                 Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
                 startActivity(intent);
             }
         }
@@ -316,6 +485,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -399,6 +569,12 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.report) {
+            Intent intent = new Intent(MainActivity.this, ReportActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
         if (id == R.id.action_trig_notif) {
             showNotification();
             return true;
@@ -413,7 +589,20 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_restoreExpenses) {
-            restoreExpenses();
+
+            // Create and show progress dialog
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage("Restoring expenses...");
+            progressDialog.show();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    restoreExpenses(progressDialog);
+                }
+            }).start();
+
+
             return true;
         }
         if (id == R.id.action_schedule_notif) {
@@ -467,11 +656,143 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
 
-
+        if (id == R.id.qr_code) {
+            runQRProcess();
+            return true;
+        }
 
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    // 🔹 Split JSON into chunks (3000 chars each)
+    private List<String> splitJsonIntoChunks(String json, int chunkSize) {
+        List<String> chunks = new ArrayList<>();
+        int length = json.length();
+        for (int i = 0; i < length; i += chunkSize) {
+            int end = Math.min(length, i + chunkSize);
+            chunks.add((i / chunkSize) + "::" + json.substring(i, end));
+        }
+        return chunks;
+    }
+
+    // 🔹 Generate multiple QR codes
+    private void generateAndSaveMultiQR(String jsonData) {
+        List<String> chunks = splitJsonIntoChunks(jsonData, 2900);
+        int qrIndex = 1;
+
+        for (String chunk : chunks) {
+            try {
+                int size = 1200; // Bigger QR for more data
+                QRCodeWriter writer = new QRCodeWriter();
+                BitMatrix bitMatrix = writer.encode(chunk, BarcodeFormat.QR_CODE, size, size);
+
+                Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565);
+                for (int x = 0; x < size; x++) {
+                    for (int y = 0; y < size; y++) {
+                        bitmap.setPixel(x, y, bitMatrix.get(x, y) ?
+                                ContextCompat.getColor(this, android.R.color.black) :
+                                ContextCompat.getColor(this, android.R.color.white));
+                    }
+                }
+                saveBitmap(bitmap, "sample_json_qr_part_" + qrIndex + ".png");
+                qrIndex++;
+            } catch (WriterException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void runQRProcess() {
+        // 🔹 Example: Very large JSON (you can expand this more)
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n  \"user\": {\n");
+        sb.append("    \"id\": \"12345\",\n");
+        sb.append("    \"name\": \"Rohit Kurbetti\",\n");
+        sb.append("    \"email\": \"rohit@example.com\",\n");
+        sb.append("    \"phone\": \"+91-9876543210\",\n");
+        sb.append("    \"transactions\": [\n");
+
+        // Add 200 fake transactions for demo
+        for (int i = 1; i <= 200; i++) {
+            sb.append("      {\"date\": \"2025-09-" + (i % 30 + 1) + "\", \"amount\": \"" + (1000 + i * 10) + "\", \"category\": \"Category" + i + "\"}");
+            if (i < 200) sb.append(",\n");
+        }
+
+        sb.append("\n    ]\n  }\n}");
+        String jsonData = sb.toString();
+
+        // 🔹 Generate QR codes
+        generateAndSaveMultiQR(jsonData);
+
+        // 🔹 Collect all saved QR files
+        List<File> qrFiles = new ArrayList<>();
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        for (int i = 1; ; i++) {
+            File f = new File(path, "sample_json_qr_part_" + i + ".png");
+            if (f.exists()) {
+                qrFiles.add(f);
+            } else break;
+        }
+
+        // 🔹 Decode & reconstruct
+        String reconstructed = decodeAndReconstruct(qrFiles);
+        Toast.makeText(this, "Reconstructed JSON length: " + reconstructed.length(), Toast.LENGTH_LONG).show();
+
+    }
+
+    // 🔹 Decode multiple QR codes & reconstruct JSON
+    private String decodeAndReconstruct(List<File> qrFiles) {
+        Map<Integer, String> orderedChunks = new TreeMap<>();
+        for (File file : qrFiles) {
+            try {
+                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                int[] intArray = new int[bitmap.getWidth() * bitmap.getHeight()];
+                bitmap.getPixels(intArray, 0, bitmap.getWidth(),
+                        0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+                LuminanceSource source = new RGBLuminanceSource(bitmap.getWidth(), bitmap.getHeight(), intArray);
+                BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
+                Result result = new MultiFormatReader().decode(binaryBitmap);
+
+                String text = result.getText();
+                String[] parts = text.split("::", 2);
+                int index = Integer.parseInt(parts[0]);
+                String chunk = parts[1];
+                orderedChunks.put(index, chunk);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        StringBuilder fullJson = new StringBuilder();
+        for (String chunk : orderedChunks.values()) {
+            fullJson.append(chunk);
+        }
+        Log.i("Reconstructed JSON", fullJson.toString());
+        return fullJson.toString();
+    }
+
+    // 🔹 Save bitmap to storage
+    private void saveBitmap(Bitmap bitmap, String fileName) {
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File file = new File(path, fileName);
+        try {
+            path.mkdirs();
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void imageDetectionLauncer() {
@@ -523,13 +844,16 @@ public class MainActivity extends AppCompatActivity {
             boolean isHeader = true;
 
             while ((line = reader.readLine()) != null) {
-                if (isHeader) { isHeader = false; continue; }
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
                 String[] columns = line.split(",", -1);
                 if (columns.length >= 3) {
                     String date = columns[0].trim();
                     String particulars = columns[1].trim();
                     String debit = columns[2].trim();
-                    if(debit.isEmpty()) {
+                    if (debit.isEmpty()) {
                         continue;
                     } else {
                         Transaction tr = new Transaction(date, particulars, debit);
@@ -553,37 +877,37 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
 
         builder.setView(dialogView)
-            .setCancelable(false)
-            .setTitle("Transactions List")
-            .setPositiveButton("OK", (dialog, which) -> {
-                long selectedTtems = transactionList.stream().filter(Transaction::isSelected).count();
+                .setCancelable(false)
+                .setTitle("Transactions List")
+                .setPositiveButton("OK", (dialog, which) -> {
+                    long selectedTtems = transactionList.stream().filter(Transaction::isSelected).count();
 
-                if(selectedTtems>0) {
-                    transactionList.stream().filter(Transaction::isSelected).filter(t -> {
-                        return !t.getCategory().equalsIgnoreCase("Select Options");
-                    }).forEach(item -> {
-                        Log.i("Item >> ", item.getCategory()+" "+item.getParticulars()+" "+item.getDate()+" "+item.getDebitAmount());
+                    if (selectedTtems > 0) {
+                        transactionList.stream().filter(Transaction::isSelected).filter(t -> {
+                            return !t.getCategory().equalsIgnoreCase("Select Options");
+                        }).forEach(item -> {
+                            Log.i("Item >> ", item.getCategory() + " " + item.getParticulars() + " " + item.getDate() + " " + item.getDebitAmount());
 
-                        String category = item.getCategory();
-                        String particulars = item.getParticulars()!=null&&!item.getParticulars().isBlank()?
-                                item.getParticulars().substring(0,Math.min(15,item.getParticulars().length()))
-                                :"Txn";
-                        double amount = Double.parseDouble(item.getDebitAmount());
+                            String category = item.getCategory();
+                            String particulars = item.getParticulars() != null && !item.getParticulars().isBlank() ?
+                                    item.getParticulars().substring(0, Math.min(15, item.getParticulars().length()))
+                                    : "Txn";
+                            double amount = Double.parseDouble(item.getDebitAmount());
 
-                        String dateStr = item.getDate();
+                            String dateStr = item.getDate();
 
-                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-                        LocalDate localDate = LocalDate.parse(dateStr, dateTimeFormatter);
-                        LocalDateTime localDateTime = localDate.atTime(0,0,0);
+                            LocalDate localDate = LocalDate.parse(dateStr, dateTimeFormatter);
+                            LocalDateTime localDateTime = localDate.atTime(0, 0, 0);
 
-                        String dateTimeStr = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                            String dateTimeStr = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
 //                        localDateTime.toString();
 
 
-                        try {
-                            boolean res = db.insertExpense(category, particulars, String.valueOf((int) amount), dateTimeStr, String.valueOf(localDate), null, null, null);
+                            try {
+                                boolean res = db.insertExpense(category, particulars, String.valueOf((int) amount), dateTimeStr, String.valueOf(localDate), null, null, null, null, false);
 
 
 //                            if(res) {
@@ -596,18 +920,18 @@ public class MainActivity extends AppCompatActivity {
 //                                }
 //                            }
 
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        } catch (NoSuchFieldException e) {
-                            throw new RuntimeException(e);
-                        }
+                            } catch (IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            } catch (NoSuchFieldException e) {
+                                throw new RuntimeException(e);
+                            }
 
 
-                    });
-                }
+                        });
+                    }
 
-            })
-            .show();
+                })
+                .show();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -621,10 +945,9 @@ public class MainActivity extends AppCompatActivity {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm:ss a");
 
 
-
         // Call EmailSender to send the file in the background
-        new EmailSender("rohitbackup47@gmail.com", "Expense backup csv "+dateTimeFormatter.format(localDateTime),
-                "Backing up expenses data", csvFile).execute();
+        new EmailSender("rohitbackup47@gmail.com", "Expense backup csv " + dateTimeFormatter.format(localDateTime),
+                "Backing up expenses data", csvFile, this).execute();
         NotificationUtils.showNotification(this, "Email Sent", "The CSV file was successfully sent to backup email accounts.");
     }
 
@@ -656,7 +979,6 @@ public class MainActivity extends AppCompatActivity {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm:ss a");
 
 
-
         // Create an intent to send the email
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setType("text/csv");
@@ -681,7 +1003,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void restoreExpenses() {
+    private void restoreExpenses(ProgressDialog progressDialog) {
         DatabaseHelper db = new DatabaseHelper(MainActivity.this);
 
         File downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
@@ -698,7 +1020,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             br = new BufferedReader(new FileReader(backedUpFile));
             boolean isFirstLine = true;
-            int rowsCount =0;
+            int rowsCount = 0;
             while ((line = br.readLine()) != null) {
                 // Skip the header row
                 if (isFirstLine) {
@@ -719,13 +1041,21 @@ public class MainActivity extends AppCompatActivity {
                 String expAmt = tokens[3];
                 String expDateTime = tokens[4];
                 String expDate = tokens[5];
+                String encodedPartDetails = "";
 
-                if(!db.checkIfExists(expCategory, expAmt, expDateTime, expDate)) {
-                    db.insertExpense(expCategory, expPart, expAmt, expDateTime, expDate, null, null, null);
+                if (tokens.length > 5 && tokens[6].equals("-")) {
+                    encodedPartDetails = "";
+                } else {
+                    encodedPartDetails = tokens[6];
+                }
+                boolean isHomeExpense = Boolean.parseBoolean(tokens[7]);
+
+                if (!db.checkIfExists(expCategory, expAmt, expDateTime, expDate)) {
+                    db.insertExpense(expCategory, expPart, expAmt, expDateTime, expDate, null, null, null, encodedPartDetails, isHomeExpense);
                     rowsCount++;
                 }
 
-                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL+"/"+"expenses"); // Replace 'items' with your specific path
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL + "/" + "expenses"); // Replace 'items' with your specific path
 
                 String childPath = "";
 
@@ -738,7 +1068,8 @@ public class MainActivity extends AppCompatActivity {
                 String month = monthFormatter.format(date);
 
 
-                childPath = "/"+year +"/"+(month+"-"+year)+"/"+expDate;
+                childPath = "/" + year + "/" + (month + "-" + year) + "/" + expDate;
+                String finalEncodedPartDetails = encodedPartDetails;
                 databaseReference.child(childPath).addListenerForSingleValueEvent(new ValueEventListener() {
                     @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
@@ -746,11 +1077,11 @@ public class MainActivity extends AppCompatActivity {
 //                        for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
 //                            for (DataSnapshot d1 : dataSnapshot.getChildren()) {
 //                                for (DataSnapshot d2 : d1.getChildren()) {
-                        if(snapshot.hasChildren()){
+                        if (snapshot.hasChildren()) {
                             boolean dataExists = false;
                             for (DataSnapshot d3 : snapshot.getChildren()) {
                                 ExpenseItem expenseItem = d3.getValue(ExpenseItem.class);
-                                if(expenseItem.getExpenseCategory().equalsIgnoreCase(expCategory) &&
+                                if (expenseItem.getExpenseCategory().equalsIgnoreCase(expCategory) &&
                                         expenseItem.getExpenseAmount().toString().equals(expAmt) &&
                                         expenseItem.getExpenseDateTime().equalsIgnoreCase(expDateTime) &&
                                         expenseItem.getExpenseDate().equalsIgnoreCase(expDate)
@@ -762,9 +1093,9 @@ public class MainActivity extends AppCompatActivity {
                                     dataExists = false;
                                 }
                             }
-                            if(!dataExists) {
+                            if (!dataExists) {
                                 try {
-                                    saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null);
+                                    saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null, finalEncodedPartDetails, isHomeExpense);
                                 } catch (ParseException e) {
                                     Toast.makeText(MainActivity.this, "Error while storing on cloud", Toast.LENGTH_SHORT).show();
                                     throw new RuntimeException(e);
@@ -772,7 +1103,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         } else {
                             try {
-                                saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null);
+                                saveToFirebase(expCategory, expPart, expAmt, expDateTime, expDate, null, null, finalEncodedPartDetails, isHomeExpense);
                             } catch (ParseException e) {
                                 Toast.makeText(MainActivity.this, "Error while storing on cloud", Toast.LENGTH_SHORT).show();
                                 throw new RuntimeException(e);
@@ -781,13 +1112,22 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                     }
+
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         Toast.makeText(MainActivity.this, "Cloud DB error", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
-            Toast.makeText(this, "Restored rows "+rowsCount, Toast.LENGTH_SHORT).show();
+            // Dismiss dialog on UI thread
+            int finalRowsCount = rowsCount;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    progressDialog.dismiss();
+                    Toast.makeText(MainActivity.this, "Restored rows " + finalRowsCount, Toast.LENGTH_SHORT).show();
+                }
+            });
 
         } catch (Exception ex) {
             System.err.println(ex.fillInStackTrace());
@@ -810,7 +1150,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putStringSet("partSuggestionsList", new HashSet<>(itemsArray));
         editor.apply();
-        Toast.makeText(this, "SuggesstionsList preferred "+itemsArray.size(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "SuggesstionsList preferred " + itemsArray.size(), Toast.LENGTH_SHORT).show();
     }
 
     private List<String> parseTextFileToArray(File file) {
@@ -852,14 +1192,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 String blinkTime = etBlinkDuration.getText().toString();
                 String intervalTime = etIntervalDuration.getText().toString();
-                if(!blinkTime.isEmpty() && !intervalTime.isEmpty()) {
+                if (!blinkTime.isEmpty() && !intervalTime.isEmpty()) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     int blinkTimeInt = Integer.parseInt(blinkTime);
                     int intervalTimeInt = Integer.parseInt(intervalTime);
-                    editor.putInt("blinkTime",blinkTimeInt);
-                    editor.putInt("intervalTime",intervalTimeInt);
+                    editor.putInt("blinkTime", blinkTimeInt);
+                    editor.putInt("intervalTime", intervalTimeInt);
                     editor.apply();
-                    Toast.makeText(MainActivity.this, "BlinkTime: "+blinkTimeInt +" IntervalTime: "+intervalTimeInt, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "BlinkTime: " + blinkTimeInt + " IntervalTime: " + intervalTimeInt, Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -870,7 +1210,6 @@ public class MainActivity extends AppCompatActivity {
                 dialog.dismiss();
             }
         });
-
 
 
         builder.setView(view);
@@ -885,7 +1224,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Format the total expense to two decimal places
         String formattedTotalExpense = String.format("%.2f", totalExpense);
-
 
 
         // Create a notification
@@ -908,12 +1246,12 @@ public class MainActivity extends AppCompatActivity {
                 dismissIntent,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_IMMUTABLE : 0
         );
-        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
         String dateFrmt = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-        String dataTxt = "Total Expense: \u20B9" + totalExpense+"\n" +
-                "Average spent (day income) "+String.format("%.2f",(totalExpense/(income/30))*100)+"%\n"+
-                "Average spent (monthly income) "+String.format("%.2f",(totalExpense/income)*100)+"%";
+        String dataTxt = "Total Expense: \u20B9" + totalExpense + "\n" +
+                "Average spent (day income) " + String.format("%.2f", (totalExpense / (income / 30)) * 100) + "%\n" +
+                "Average spent (monthly income) " + String.format("%.2f", (totalExpense / income) * 100) + "%";
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.drawable.money_svgrepo_com__1_) // Add your own icon here
                 .setContentTitle("Today's Total Expense")
@@ -965,8 +1303,9 @@ public class MainActivity extends AppCompatActivity {
     private void exportCSV() throws IOException {
         DatabaseHelper db = new DatabaseHelper(MainActivity.this);
         Cursor sqlRows = db.getAllExpenseData();
+        List<ExpenseItem> expenses = new ArrayList<>();
 
-        if(sqlRows.getCount() > 0) {
+        if (sqlRows.getCount() > 0) {
 
             String fileName = "BackupExpensesData.csv";
 
@@ -976,9 +1315,9 @@ public class MainActivity extends AppCompatActivity {
             FileOutputStream fileOutputStream = new FileOutputStream(csvFile);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
 
-            outputStreamWriter.write("ID,ExpCat,Pert,Amt,DateTime,Date\n");
+            outputStreamWriter.write("ID,ExpCat,Pert,Amt,DateTime,Date,Description,isForHome\n");
 
-            while(sqlRows.moveToNext()) {
+            while (sqlRows.moveToNext()) {
                 int id = sqlRows.getInt(0);
                 String expCat = sqlRows.getString(1);
                 String pert = sqlRows.getString(2);
@@ -986,24 +1325,106 @@ public class MainActivity extends AppCompatActivity {
                 String dtm = sqlRows.getString(4);
                 String dt = sqlRows.getString(5);
                 String flnm = sqlRows.getString(6);
+                String encodedPartDetails = sqlRows.getString(8);
+                encodedPartDetails = encodedPartDetails.isBlank() ? "-" : encodedPartDetails;
+                boolean isHomeExpense = sqlRows.getInt(9) == 1;
+
 //                byte[] file = sqlRows.getBlob(7);
 //                String encodedString = "";
 //                if(file!=null) {
 //                    encodedString = Base64.getEncoder().encodeToString(file);
 //                }
-                String row = id + "," + expCat + "," + pert + "," + amt + "," + dtm + "," + dt + "\n";
+                String row = id + "," + expCat + "," + pert + "," + amt + "," + dtm + "," + dt + "," + encodedPartDetails + "," + isHomeExpense + "\n";
                 outputStreamWriter.write(row);
+                expenses.add(new ExpenseItem(id, pert, (long) amt, dtm, expCat, null, null, encodedPartDetails, isHomeExpense));
+
 
             }
             outputStreamWriter.close();
             sqlRows.close();
             fileOutputStream.close();
-            Toast.makeText(this, "File saved "+csvFile.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "File saved " + csvFile.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+
+            // Calculate summary
+            Map<String, Double> categorySummary = calculateCategorySummary(expenses);
+            double totalAmount = calculateTotalAmount(expenses);
+
+            // Show summary popup
+            showSummaryPopup(categorySummary, totalAmount, expenses);
 
         } else {
             //no sql rows returned
         }
 
+    }
+
+    private void showSummaryPopup(Map<String, Double> categorySummary, double totalAmount, List<ExpenseItem> expenses) {
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+
+        Dialog summaryDialog = new Dialog(this);
+        summaryDialog.setContentView(R.layout.dialog_summary);
+        summaryDialog.setTitle("Expense Summary Report");
+        summaryDialog.setCancelable(false);
+
+        TextView tvSummaryContent = summaryDialog.findViewById(R.id.tvSummaryContent);
+        Button btnClose = summaryDialog.findViewById(R.id.btnClose);
+
+        StringBuilder summaryBuilder = new StringBuilder();
+        summaryBuilder.append("CONSOLIDATED EXPENSE SUMMARY\n\n");
+        summaryBuilder.append("CATEGORY WISE BREAKDOWN:\n");
+        summaryBuilder.append("------------------------\n");
+
+        // Add each category with its total amount
+        for (Map.Entry<String, Double> entry : categorySummary.entrySet()) {
+            summaryBuilder.append(entry.getKey())
+                    .append(": ₹")
+                    .append(decimalFormat.format(entry.getValue()))
+                    .append("\n");
+        }
+
+        summaryBuilder.append("\n------------------------\n");
+        summaryBuilder.append("TOTAL AMOUNT: ₹")
+                .append(decimalFormat.format(totalAmount))
+                .append("\n");
+        summaryBuilder.append("Total Expenses: ")
+                .append(expenses.size())
+                .append(" transactions");
+
+        tvSummaryContent.setText(summaryBuilder.toString());
+
+        btnClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                summaryDialog.dismiss();
+            }
+        });
+
+        summaryDialog.show();
+    }
+
+    private double calculateTotalAmount(List<ExpenseItem> expenses) {
+        double total = 0;
+        for (ExpenseItem expense : expenses) {
+            total += expense.getExpenseAmount();
+        }
+        return total;
+    }
+
+    private Map<String, Double> calculateCategorySummary(List<ExpenseItem> expenses) {
+        Map<String, Double> categoryMap = new HashMap<>();
+
+        for (ExpenseItem expense : expenses) {
+            String category = expense.getExpenseCategory();
+            double amount = expense.getExpenseAmount();
+
+            if (categoryMap.containsKey(category)) {
+                categoryMap.put(category, categoryMap.get(category) + amount);
+            } else {
+                categoryMap.put(category, amount);
+            }
+        }
+
+        return categoryMap;
     }
 
     private void showListView() {
@@ -1021,7 +1442,7 @@ public class MainActivity extends AppCompatActivity {
         View dialogView = inflater.inflate(R.layout.popup_with_edittext, null);
 
         EditText editText = dialogView.findViewById(R.id.editTextPopup);
-        Float monthlyIncome = sharedPreferences.getFloat("monthlyIncome", 87000f);
+        Float monthlyIncome = sharedPreferences.getFloat("monthlyIncome", ANN_INCOME);
         editText.setText(String.valueOf(monthlyIncome));
         // Create the AlertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -1032,7 +1453,7 @@ public class MainActivity extends AppCompatActivity {
                     // Handle the input text
                     String inputText = editText.getText().toString();
 
-                    if(inputText != null && inputText != "" && inputText != "0"){
+                    if (inputText != null && inputText != "" && inputText != "0") {
                         editor.putFloat("monthlyIncome", Float.valueOf(inputText));
                         editor.apply();
                         Toast.makeText(this, "Income has been set", Toast.LENGTH_SHORT).show();

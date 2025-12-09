@@ -37,6 +37,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_ID_1 = "id";
     private static final String COLUMN_DESCRIPTION_1 = "suggestionDescription";
 
+    private static final String COLUMN_PART_DETAILS = "partDetails";
+    private static final String COLUMN_HOME_EXPENSE = "isHomeExpense";
+
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -52,7 +55,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_DATE_TIME + " TEXT," +
                 COLUMN_DATE + " Date, " +
                 COLUMN_FILE_NAME + " TEXT, " +
-                COLUMN_FILE + " blob " +
+                COLUMN_FILE + " blob, " +
+                COLUMN_PART_DETAILS + " TEXT, " +
+                COLUMN_HOME_EXPENSE + " BOOL " +
                 " )";
         db.execSQL(createTable);
 
@@ -80,25 +85,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     public void putDummyData() throws IllegalAccessException, NoSuchFieldException {
-        insertExpense("Grocery",	"ask",	"150",	"2024-08-30 02:22"	,"2024-08-30",	null	,null, null);
-        insertExpense("Healthcare",	"tabletvs",	"140",	"2024-08-23 11:21"	,"2024-08-23",	null	,null, null);
-        insertExpense("Food",	"breakfast",	"508",	"2024-08-23 11:21"	,"2024-08-23",	null	,null, null);
-        insertExpense("Savings and Investments",	"movie",	"100",	"2024-08-23 11:20"	,"2024-08-23",	null	,null, null);
-        insertExpense("Grocery",	"dmart",	"340",	"2024-08-23 11:20"	,"2024-08-23",	null	,null, null);
+        boolean isHomeExpense = false;
+        insertExpense("Grocery", "ask", "150", "2024-08-30 02:22", "2024-08-30", null, null, null, null, isHomeExpense);
+        insertExpense("Healthcare", "tabletvs", "140", "2024-08-23 11:21", "2024-08-23", null, null, null, null, isHomeExpense);
+        insertExpense("Food", "breakfast", "508", "2024-08-23 11:21", "2024-08-23", null, null, null, null, isHomeExpense);
+        insertExpense("Savings and Investments", "movie", "100", "2024-08-23 11:20", "2024-08-23", null, null, null, null, isHomeExpense);
+        insertExpense("Grocery", "dmart", "340", "2024-08-23 11:20", "2024-08-23", null, null, null, null, isHomeExpense);
     }
 
     public void putDummyData(int n) throws IllegalAccessException, NoSuchFieldException {
+        boolean isHomeExpense = false;
 
-        for(int i =0;i<n;i++) {
-        insertExpense("Grocery",	"ask",	"150",	"2024-08-30 02:22"	,"2024-08-30",	null	,null, null);
-        insertExpense("Healthcare",	"tabletvs",	"140",	"2024-08-23 11:21"	,"2024-08-23",	null	,null, null);
-        insertExpense("Food",	"breakfast",	"508",	"2024-08-23 11:21"	,"2024-08-23",	null	,null, null);
-        insertExpense("Savings and Investments",	"movie",	"100",	"2024-08-23 11:20"	,"2024-08-23",	null	,null, null);
-        insertExpense("Grocery",	"dmart",	"340",	"2024-08-23 11:20"	,"2024-08-23",	null	,null, null);
+        for (int i = 0; i < n; i++) {
+            insertExpense("Grocery", "ask", "150", "2024-08-30 02:22", "2024-08-30", null, null, null, null, isHomeExpense);
+            insertExpense("Healthcare", "tabletvs", "140", "2024-08-23 11:21", "2024-08-23", null, null, null, null, isHomeExpense);
+            insertExpense("Food", "breakfast", "508", "2024-08-23 11:21", "2024-08-23", null, null, null, null, isHomeExpense);
+            insertExpense("Savings and Investments", "movie", "100", "2024-08-23 11:20", "2024-08-23", null, null, null, null, isHomeExpense);
+            insertExpense("Grocery", "dmart", "340", "2024-08-23 11:20", "2024-08-23", null, null, null, null, isHomeExpense);
         }
     }
 
-    public boolean insertExpense(String expenseCategory, String particulars, String amount, String dateTime, String date, String fileName, byte[] fileBytes, Integer id) throws IllegalAccessException, NoSuchFieldException {
+    // java
+// add this method to DatabaseHelper class
+    public Cursor getExpensesForMonth(int month, int year) {
+        String mm = String.format(Locale.getDefault(), "%02d", month - 1);
+        String yyyy = String.format(Locale.getDefault(), "%04d", year);
+        // Assumes table name is 'expenses' and there is a 'date' column in ISO format (YYYY-MM-DD).
+        // Adjust table/column names to match your schema.
+        String sql = "SELECT expenseCategory, amount FROM " + TABLE_NAME + " WHERE strftime('%m', date) = ? AND strftime('%Y', date) = ?";
+        return getReadableDatabase().rawQuery(sql, new String[]{mm, yyyy});
+    }
+
+
+    public boolean insertExpense(String expenseCategory, String particulars, String amount, String dateTime, String date, String fileName, byte[] fileBytes, Integer id, String partDetails, boolean isHomeExpense) throws IllegalAccessException, NoSuchFieldException {
         Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
         field.setAccessible(true);
         field.set(null, 100 * 1024 * 1024); //the 100MB is the new size
@@ -111,11 +130,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COLUMN_DATE, date);
         contentValues.put(COLUMN_FILE_NAME, fileName);
         contentValues.put(COLUMN_FILE, fileBytes);
+        contentValues.put(COLUMN_PART_DETAILS, partDetails);
+        contentValues.put(COLUMN_HOME_EXPENSE, isHomeExpense);
         long result = 0;
-        if(id !=null){
+        if (id != null) {
             //updation
             contentValues.put(COLUMN_ID, id);
-            result = db.update(TABLE_NAME, contentValues,COLUMN_ID + "=?", new String[]{String.valueOf(id)});
+            result = db.update(TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
         } else {
             //insertion
             result = db.insert(TABLE_NAME, null, contentValues);
@@ -168,7 +189,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getAllExpenseDataForChart() {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT expenseCategory,sum("+ COLUMN_AMOUNT +") as amount FROM " + TABLE_NAME + " group by expenseCategory";
+        String query = "SELECT expenseCategory,sum(" + COLUMN_AMOUNT + ") as amount FROM " + TABLE_NAME + " group by expenseCategory";
         Cursor cursor = db.rawQuery(query, null);
         return cursor;
 
@@ -184,19 +205,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getExpenseByIds(int[] items) {
         SQLiteDatabase db = this.getReadableDatabase();
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i=0;i<items.length;i++) {
+        for (int i = 0; i < items.length; i++) {
             stringBuilder.append(items[i]);
-            if(i != items.length-1) {
+            if (i != items.length - 1) {
                 stringBuilder.append(",");
             }
 
         }
-        String query = "SELECT * from " + TABLE_NAME + " where " + COLUMN_ID + " in ( "+ stringBuilder +" )";
+        String query = "SELECT * from " + TABLE_NAME + " where " + COLUMN_ID + " in ( " + stringBuilder + " )";
 
         Cursor cursor = db.rawQuery(query, null);
         return cursor;
     }
-
 
 
     public int deleteRowSuggestion(int anInt) {
@@ -238,11 +258,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public boolean checkIfExists(String expCategory, String expAmt, String expDateTime, String expDate) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT id from " + TABLE_NAME + " where "+ COLUMN_AMOUNT + "=? and "+COLUMN_EXPENSE_CATEGORY+" =? " +
-                " and "+COLUMN_DATE_TIME+" =? and "+ COLUMN_DATE + " =? ";
-        Cursor cursor = db.rawQuery(query, new String[]{expAmt,expCategory,expDateTime, expDate});
+        String query = "SELECT id from " + TABLE_NAME + " where " + COLUMN_AMOUNT + "=? and " + COLUMN_EXPENSE_CATEGORY + " =? " +
+                " and " + COLUMN_DATE_TIME + " =? and " + COLUMN_DATE + " =? ";
+        Cursor cursor = db.rawQuery(query, new String[]{expAmt, expCategory, expDateTime, expDate});
         boolean isExists = false;
-        if(cursor.getCount()>0){
+        if (cursor.getCount() > 0) {
             isExists = true;
         }
         return isExists;
@@ -251,10 +271,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean checkIfExistsMinPossibleParams(int expAmt, String expDateTime, String expDate) {
         boolean isExists = false;
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT id from " + TABLE_NAME + " where " + " "+ COLUMN_AMOUNT + "=? and "
-                + COLUMN_DATE_TIME + " =? and "+ COLUMN_DATE + " =? ";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(expAmt),expDateTime, expDate});
-        if(cursor.getCount()>0){
+        String query = "SELECT id from " + TABLE_NAME + " where " + " " + COLUMN_AMOUNT + "=? and "
+                + COLUMN_DATE_TIME + " =? and " + COLUMN_DATE + " =? ";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(expAmt), expDateTime, expDate});
+        if (cursor.getCount() > 0) {
             isExists = true;
         }
         return isExists;
@@ -274,8 +294,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String.valueOf(amount), dateTime
         });
 
-        while(cursor.moveToNext()) {
-            Log.i("TXN", cursor.getString(1)+" " + cursor.getString(2));
+        while (cursor.moveToNext()) {
+            Log.i("TXN", cursor.getString(1) + " " + cursor.getString(2));
         }
 
 
@@ -287,11 +307,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<ExpenseItem> getMonthData(String month) {
 
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE "+COLUMN_DATE+ " like '"+month+"%' ",null);
+        Cursor sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + " like '" + month + "%' ", null);
 
         List<ExpenseItem> expenseItemList = new ArrayList<>();
 
-        while(sqlRows.moveToNext()) {
+        while (sqlRows.moveToNext()) {
             int id = sqlRows.getInt(0);
             String expCat = sqlRows.getString(1);
             String pert = sqlRows.getString(2);
@@ -300,7 +320,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String dt = sqlRows.getString(5);
             String flnm = sqlRows.getString(6);
 
-            ExpenseItem item = new ExpenseItem(id, pert, amt,dt,expCat,flnm,null);
+            ExpenseItem item = new ExpenseItem(id, pert, amt, dt, expCat, flnm, null);
+            expenseItemList.add(item);
+        }
+
+        return expenseItemList;
+
+    }
+
+    public List<ExpenseItem> getExpenseDataList(String monthFilter) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor sqlRows;
+        String filterWithWildcard = monthFilter + "%";
+
+        if (!monthFilter.isEmpty()) {
+            sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE " +
+                    COLUMN_DATE + " like ? ", new String[]{filterWithWildcard});
+
+        } else {
+            sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        }
+
+
+        List<ExpenseItem> expenseItemList = new ArrayList<>();
+
+        while (sqlRows.moveToNext()) {
+            int id = sqlRows.getInt(0);
+            String expCat = sqlRows.getString(1);
+            String pert = sqlRows.getString(2);
+            long amt = sqlRows.getInt(3);
+            String dtm = sqlRows.getString(4);
+            String dt = sqlRows.getString(5);
+            String flnm = sqlRows.getString(6);
+            int isHomeExpense = sqlRows.getInt(9);
+
+            ExpenseItem item = new ExpenseItem(id, pert, amt, dt, expCat, flnm, null, null, isHomeExpense == 1);
             expenseItemList.add(item);
         }
 

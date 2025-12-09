@@ -8,7 +8,7 @@
         android:icon="@drawable/messages_communication_svgrepo_com"
         android:title="Notifications"
         app:actionLayout="@layout/notification_badge"
-        app:showAsAction="always"/>
+        app:showAsAction="always" />
 
 
     <item
@@ -27,12 +27,14 @@
         android:id="@+id/action_schedule_notif"
         android:orderInCategory="100"
         android:title="Schedule notification"
+        android:visible="false"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_trig_notif"
         android:orderInCategory="100"
         android:title="Trigger Notification"
+        android:visible="false"
         app:showAsAction="never" />
 
     <item
@@ -63,6 +65,7 @@
         android:id="@+id/action_load_particulars"
         android:orderInCategory="100"
         android:title="Fetch Particulars list from file"
+        android:visible="false"
         app:showAsAction="never" />
 
     <item
@@ -84,13 +87,11 @@
         app:showAsAction="never" />
 
 
-
     <item
         android:id="@+id/chooseTheme"
         android:orderInCategory="100"
         android:title="Choose Theme"
         app:showAsAction="never" />
-
 
 
     <item
@@ -103,7 +104,28 @@
         android:id="@+id/imageDetector"
         android:orderInCategory="100"
         android:title="Image Detection"
+        android:visible="false"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/settings"
+        android:icon="@drawable/displaysettings"
+        android:orderInCategory="100"
+        android:title="Settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/qr_code"
+        android:orderInCategory="100"
+        android:title="QR Code"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/report"
+        android:orderInCategory="100"
+        android:title="Report"
+         />
 
 
 </menu>

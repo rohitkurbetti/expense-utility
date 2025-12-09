@@ -1,5 +1,7 @@
 package com.example.expenseutility;
 
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
@@ -32,7 +34,7 @@ public class ChartActivity extends AppCompatActivity {
 
     AnyChartView anyChartView;
 
-    TextView filteredTextView,filterValuesTextView;
+    TextView filteredTextView, filterValuesTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,20 +50,19 @@ public class ChartActivity extends AppCompatActivity {
         filterValuesTextView = findViewById(R.id.filterValuesTextView);
         boolean isFilterByDate = getIntent().getBooleanExtra("filteredByDate", false);
 
-        if(isFilterByDate) {
-            int[] items =  (int[]) getIntent().getSerializableExtra("filteredList");
+        if (isFilterByDate) {
+            int[] items = (int[]) getIntent().getSerializableExtra("filteredList");
             Cursor itemsList = db.getExpenseByIds(items);
             setupPieChart(itemsList);
         } else {
             Cursor cursor = db.getAllExpenseDataForChart();
-            if(cursor.getCount() > 0){
+            if (cursor.getCount() > 0) {
                 setupPieChart(cursor);
             } else {
                 Toast.makeText(this, "No data to show", Toast.LENGTH_SHORT).show();
                 finish();
             }
         }
-
 
 
     }
@@ -71,7 +72,7 @@ public class ChartActivity extends AppCompatActivity {
         List<DataEntry> dataEntryList = new ArrayList<>();
         pie.animation().duration(700).enabled(true);
 
-        for (ExpenseItem item: filteredList) {
+        for (ExpenseItem item : filteredList) {
             dataEntryList.add(new ValueDataEntry(item.getExpenseCategory(), item.getExpenseAmount()));
         }
         pie.data(dataEntryList);
@@ -89,8 +90,8 @@ public class ChartActivity extends AppCompatActivity {
         StringBuilder stringBuilder = new StringBuilder();
 
         StringBuilder stringBuilderVal = new StringBuilder();
-        int counter=0;
-        while(cursor.moveToNext()) {
+        int counter = 0;
+        while (cursor.moveToNext()) {
 
             int expCateIdx = cursor.getColumnIndex("expenseCategory");
             int amountIdx = cursor.getColumnIndex("amount");
@@ -99,7 +100,7 @@ public class ChartActivity extends AppCompatActivity {
             String expenseCategory = cursor.getString(expCateIdx);
             Integer expenseCategoryAmount = cursor.getInt(amountIdx);
 
-            if(cateValMap.containsKey(expenseCategory)) {
+            if (cateValMap.containsKey(expenseCategory)) {
                 cateValMap.put(expenseCategory, cateValMap.get(expenseCategory) + expenseCategoryAmount);
             } else {
 
@@ -110,36 +111,36 @@ public class ChartActivity extends AppCompatActivity {
 
         }
 
-cateValMap.forEach((k,v) -> {
+        cateValMap.forEach((k, v) -> {
 
-        dataEntryList.add(new ValueDataEntry(k, v));
-    stringBuilder.append("\u2022  "+k);
+            dataEntryList.add(new ValueDataEntry(k, v));
+            stringBuilder.append("\u2022  " + k);
 //            stringBuilder.append("  ");
 //            stringBuilder.append("\u20B9"+expenseCategoryAmount);
-    stringBuilder.append("\n");
+            stringBuilder.append("\n");
 
-    stringBuilderVal.append("\n");
+            stringBuilderVal.append("\n");
 //            stringBuilderVal.append("  ");
-    stringBuilderVal.append("\u20B9"+v);
+            stringBuilderVal.append("\u20B9" + v);
 //            stringBuilderVal.append("\n");
 
-});
+        });
 
-        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
 
         pie.data(dataEntryList);
         anyChartView.setChart(pie);
 
         double perc = ((double) totalAmount / income) * 100;
-        perc = Double.parseDouble(String.format("%.2f",perc));
-        double dailyAvg = ((double)totalAmount / (income/30)) * 100;
-        dailyAvg = Double.parseDouble(String.format("%.2f",dailyAvg));
-        String finalSb1 = "Total amount: \n\n\u2022 Avg(Daily): \n\u2022 Avg(Monthly):  \n\n\nTotal Drilldown: \n\n"+stringBuilder;
+        perc = Double.parseDouble(String.format("%.2f", perc));
+        double dailyAvg = ((double) totalAmount / (income / 30)) * 100;
+        dailyAvg = Double.parseDouble(String.format("%.2f", dailyAvg));
+        String finalSb1 = "Total amount: \n\n\u2022 Avg(Daily): \n\u2022 Avg(Monthly):  \n\n\nTotal Drilldown: \n\n" + stringBuilder;
         SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(finalSb1);
         spannableStringBuilder.setSpan(new StyleSpan(Typeface.BOLD), 0, finalSb1.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         filteredTextView.setText(spannableStringBuilder);
-        filterValuesTextView.setText("\u20B9"+totalAmount+"\n\n"+dailyAvg+"%" +"\n"+perc+"% \n\n\n\n"+stringBuilderVal);
+        filterValuesTextView.setText("\u20B9" + totalAmount + "\n\n" + dailyAvg + "%" + "\n" + perc + "% \n\n\n\n" + stringBuilderVal);
 
     }
 

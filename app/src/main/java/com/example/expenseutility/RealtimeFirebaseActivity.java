@@ -1,5 +1,7 @@
 package com.example.expenseutility;
 
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Build;
@@ -21,6 +23,7 @@ import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.firebaseview.MainAdapter;
 import com.example.expenseutility.firebaseview.MainItem;
 import com.example.expenseutility.firebaseview.NestedItem;
+import com.example.expenseutility.utility.Commons;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -101,7 +104,7 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
 
         // Generate a list of years (e.g., from 1900 to current year)
         List<String> years = new ArrayList<>();
-        for (int year = 2019; year <= currentYear+3; year++) {
+        for (int year = 2019; year <= currentYear+5; year++) {
             years.add(String.valueOf(year));
         }
 
@@ -125,7 +128,7 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
     private void fetchFromFirebase(Map<String, List<ExpenseItem>> map) {
         progressDialog.setMessage("Fetching from cloud database");
         progressDialog.show();
-        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+        float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
         databaseReference.addValueEventListener(new ValueEventListener() {
             private String key;
@@ -169,7 +172,10 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
                     });
                 });
 
-                finalTotalTextView.setText(String.valueOf("Final Total  \u20B9"+yearGrandTotal));
+                String formattedAmount =  Commons.getFormattedCurrency(yearGrandTotal.get());
+
+
+                finalTotalTextView.setText(String.valueOf("Final Total  "+formattedAmount));
 
                 String spinnerMonth = yearSpinner.getSelectedItem().toString();
                 for (MainItem y: mainItemList) {

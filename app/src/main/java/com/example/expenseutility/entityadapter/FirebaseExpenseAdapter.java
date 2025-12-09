@@ -1,5 +1,7 @@
 package com.example.expenseutility.entityadapter;
 
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +14,6 @@ import com.example.expenseutility.R;
 import java.util.List;
 
 public class FirebaseExpenseAdapter extends BaseAdapter {
-
     private Context context;
     private List<ExpenseItem> expenseList;
 
@@ -68,7 +69,7 @@ public class FirebaseExpenseAdapter extends BaseAdapter {
 
     private void populateExpByDailyAndMontlyIncome(Long expenseAmount, TextView dailyIncPerTextView, TextView monthlyIncPerTextView) {
 
-        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
 
         double expPercentDaily = (double) expenseAmount / (income / 30);

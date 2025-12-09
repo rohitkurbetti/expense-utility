@@ -6,32 +6,24 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-
-import com.example.expenseutility.database.DatabaseHelper;
-import com.example.expenseutility.utility.CustomSpinnerAdapter;
-import com.example.expenseutility.utility.SpinnerItem;
-import com.google.android.material.snackbar.Snackbar;
-
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 
+import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.ActivityExpenseInputBinding;
+import com.example.expenseutility.utility.Commons;
+import com.example.expenseutility.utility.CustomSpinnerAdapter;
+import com.example.expenseutility.utility.SpinnerItem;
 
 import java.text.ParseException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -39,14 +31,19 @@ import java.util.List;
 
 public class ExpenseInputActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityExpenseInputBinding binding;
     Spinner spinnerCategory;
-    EditText particularsInput;
+    EditText particularsInput, particularsDetail;
     TextView amountView, dateTimeView;
+    CheckBox homeCheckBox;
     double amount;
     String dateTime;
+    private AppBarConfiguration appBarConfiguration;
+    private ActivityExpenseInputBinding binding;
     private Button btnCancel;
+
+    public static String getFormatted(int monthValue) {
+        return monthValue != 0 ? String.format("%02d", monthValue) : "0";
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -58,12 +55,13 @@ public class ExpenseInputActivity extends AppCompatActivity {
 
         spinnerCategory = findViewById(R.id.spinnerCategory);
         particularsInput = findViewById(R.id.editParticulars);
+        particularsDetail = findViewById(R.id.editParticularsDetail);
         amountView = findViewById(R.id.textAmount);
         dateTimeView = findViewById(R.id.textDateTime);
         btnCancel = findViewById(R.id.btnCancel);
+        homeCheckBox = findViewById(R.id.homeCheckBox);
 
         loadSpinner(spinnerCategory);
-
 
 
         amount = getIntent().getDoubleExtra("amount", 0);
@@ -76,7 +74,7 @@ public class ExpenseInputActivity extends AppCompatActivity {
             SpinnerItem spItem = (SpinnerItem) spinnerCategory.getSelectedItem();
             String category = spItem.getText();
             String particulars = particularsInput.getText().toString();
-
+            String partDetails = particularsDetail.getText().toString();
             DatabaseHelper dbHelper = new DatabaseHelper(this);
 
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss");
@@ -105,15 +103,16 @@ public class ExpenseInputActivity extends AppCompatActivity {
 //            dateTimeStr.append(":");
 //            dateTimeStr.append(second);
 
-            String dateStr = parsedDateTime.getYear()+"-"+month+"-"+day;
+            String dateStr = parsedDateTime.getYear() + "-" + month + "-" + day;
 
-
+            String encodedPartDetails = Commons.encryptString(partDetails);
+            boolean isHomeExpense = homeCheckBox.isChecked();
             try {
-                boolean res = dbHelper.insertExpense(category, particulars, String.valueOf((int) amount), dateTimeStr.toString(), dateStr, null, null, null);
+                boolean res = dbHelper.insertExpense(category, particulars, String.valueOf((int) amount), dateTimeStr.toString(), dateStr, null, null, null, encodedPartDetails, isHomeExpense);
                 Toast.makeText(this, "Saved to db", Toast.LENGTH_SHORT).show();
 
-                if(res) {
-                    saveToFirebase(category,particulars, String.valueOf((int) amount), dateTimeStr.toString(), dateStr, null, null);
+                if (res) {
+                    saveToFirebase(category, particulars, String.valueOf((int) amount), dateTimeStr.toString(), dateStr, null, null, encodedPartDetails, isHomeExpense);
 
                 }
                 int notificationId = getIntent().getIntExtra("notificationId", -1);
@@ -139,18 +138,6 @@ public class ExpenseInputActivity extends AppCompatActivity {
         });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 //        setSupportActionBar(binding.toolbar);
 //
 //        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_expense_input);
@@ -165,10 +152,6 @@ public class ExpenseInputActivity extends AppCompatActivity {
 //                        .setAction("Action", null).show();
 //            }
 //        });
-    }
-
-    public static String getFormatted(int monthValue) {
-        return monthValue!=0? String.format("%02d",monthValue):"0";
     }
 
     private void loadSpinner(Spinner spinnerCategory) {

@@ -80,6 +80,15 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite:2.11.0'
     implementation 'org.tensorflow:tensorflow-lite-support:0.3.1'
 
+    implementation "androidx.viewpager2:viewpager2:1.0.0"
+    implementation 'com.tbuonomo:dotsindicator:4.3'   // for dots indicator
+    implementation 'com.squareup.picasso:picasso:2.8'
+
+
+    //QR Code
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+    implementation 'com.google.zxing:core:3.5.3'
+
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

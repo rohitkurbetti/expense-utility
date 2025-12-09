@@ -1,6 +1,9 @@
 package com.example.expenseutility.entityadapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,8 +14,11 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+
 import com.example.expenseutility.R;
 import com.example.expenseutility.firebaseview.NestedListAdapter;
+import com.example.expenseutility.utility.Commons;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +64,41 @@ public class NestedItemAdapter extends ArrayAdapter<ExpenseItem> {
         titleTextView.setText(currentItem.getExpenseParticulars());
         amountTextView.setText(String.valueOf("\u20B9"+currentItem.getExpenseAmount()));
         descriptionTextView.setText(currentItem.getExpenseCategory());
+
+        if(currentItem.getPartDetails() !=null && !currentItem.getPartDetails().isBlank()) {
+            titleTextView.setPaintFlags(titleTextView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
+            // Add info icon for items with partDetails
+            Drawable infoIcon = ContextCompat.getDrawable(context, R.drawable.sign_info_svgrepo_com);
+            infoIcon.setBounds(0, 0, infoIcon.getIntrinsicWidth(), infoIcon.getIntrinsicHeight());
+            titleTextView.setCompoundDrawablesRelative(null, null, infoIcon, null);
+            titleTextView.setCompoundDrawablePadding(16);
+
+
+            titleTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+                    builder.setMessage(!currentItem.getPartDetails().isEmpty() ? Commons.decryptString(currentItem.getPartDetails()) : currentItem.getPartDetails())
+                            .setPositiveButton("OK", (dialog, id) -> dialog.dismiss());
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                    // Optional: Customize dialog text view
+                    TextView messageView = dialog.findViewById(android.R.id.message);
+                    if (messageView != null) {
+                        messageView.setTextSize(14);
+                        messageView.setLineSpacing(1.2f, 1.2f);
+                    }
+                }
+            });
+        } else {
+            titleTextView.setOnClickListener(null);
+            titleTextView.setPaintFlags(titleTextView.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
+            titleTextView.setCompoundDrawablePadding(0);
+            titleTextView.setCompoundDrawablesRelative(null, null, null, null);
+        }
+
 
         delNestedItemCheckBox.setChecked(checkedStates.get(position));
 

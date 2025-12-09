@@ -1,5 +1,6 @@
 package com.example.expenseutility.emailutility;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import java.util.Properties;
 import javax.mail.Authenticator;
@@ -13,6 +14,10 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.example.expenseutility.MainActivity;
+
 import java.io.File;
 
 public class EmailSender extends AsyncTask<Void, Void, Void> {
@@ -20,12 +25,14 @@ public class EmailSender extends AsyncTask<Void, Void, Void> {
     private String subject;
     private String messageBody;
     private File fileAttachment;
+    private Context context;
 
-    public EmailSender(String recipientEmail, String subject, String messageBody, File fileAttachment) {
+    public EmailSender(String recipientEmail, String subject, String messageBody, File fileAttachment, Context context) {
         this.recipientEmail = recipientEmail;
         this.subject = subject;
         this.messageBody = messageBody;
         this.fileAttachment = fileAttachment;
+        this.context = context;
     }
 
     @Override
@@ -43,7 +50,7 @@ public class EmailSender extends AsyncTask<Void, Void, Void> {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
                 // Sender email and password (use app-specific password for Gmail)
-                return new PasswordAuthentication("rkurbetti30@gmail.com", "dvgz etbv paxv piko");
+                return new PasswordAuthentication("rkurbetti30@gmail.com", "exug qkmn rrxt aauo");
             }
         });
 
@@ -58,6 +65,7 @@ public class EmailSender extends AsyncTask<Void, Void, Void> {
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipientEmail));
             message.addRecipient(Message.RecipientType.TO, new InternetAddress("kurbettirohit75@gmail.com"));
             message.addRecipient(Message.RecipientType.TO, new InternetAddress("rohitbackup0001@gmail.com"));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress("rohitbackup0002@gmail.com"));
 
             // Set subject
             message.setSubject(subject);
@@ -82,7 +90,7 @@ public class EmailSender extends AsyncTask<Void, Void, Void> {
 
             // Send the message
             Transport.send(message);
-
+//            Toast.makeText(context, "Email sent successfully", Toast.LENGTH_SHORT).show();
             Log.d("EmailSender", "Email sent successfully");
         } catch (MessagingException | java.io.IOException e) {
             e.printStackTrace();

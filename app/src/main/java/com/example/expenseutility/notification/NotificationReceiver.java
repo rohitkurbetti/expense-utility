@@ -1,5 +1,7 @@
 package com.example.expenseutility.notification;
 
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
+
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -45,7 +47,7 @@ public class NotificationReceiver extends BroadcastReceiver {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_IMMUTABLE : 0
         );
 
-        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+        float income = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
 
         String dateFrmt = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());

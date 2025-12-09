@@ -1,6 +1,7 @@
 package com.example.expenseutility;
 
 import static android.app.Activity.RESULT_OK;
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
 
 import android.animation.ObjectAnimator;
 import android.app.DatePickerDialog;
@@ -25,13 +26,18 @@ import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -43,22 +49,35 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.viewpager2.widget.ViewPager2;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+import com.example.expenseutility.constants.ExpenseConstants;
+import com.example.expenseutility.customs.GlossyButtonTest1;
+import com.example.expenseutility.customs.Win7ProgressBar;
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.FragmentFirstBinding;
 import com.example.expenseutility.entityadapter.ExpenseItem;
+import com.example.expenseutility.entityadapter.ImageSliderAdapter;
 import com.example.expenseutility.entityadapter.Suggestion;
+import com.example.expenseutility.entityadapter.SuggestionV2Adapter;
+import com.example.expenseutility.utility.Commons;
 import com.example.expenseutility.utility.CsvImportWorker;
 import com.example.expenseutility.utility.CustomSpinnerAdapter;
 import com.example.expenseutility.utility.SpinnerItem;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
+import com.tbuonomo.viewpagerdotsindicator.WormDotsIndicator;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -66,9 +85,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -77,6 +96,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,36 +105,159 @@ import java.util.regex.Pattern;
 
 public class FirstFragment extends Fragment {
 
+    private static final String TAG = "RealtimeDBImages";
+    private static final int PICK_PDF_REQUEST = 1;
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 2MB in bytes
+    private static final int REQUEST_CODE_PHOTO = 200;
+    private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
+    private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+    private static final int CAMERA_REQUEST = 50;
     public static FragmentFirstBinding binding;
+    private static int BLINK_DURATION = 50;  // 100ms blink
+    private static int INTERVAL_DURATION = 4000;  // 2 seconds interval
+    private static ArrayAdapter<String> adapter;
+    private static String[] suggestionsList;
+    private static DatabaseHelper db2;
+    private static Set<String> partSet;
+    private ViewPager2 viewPager;
+    private WormDotsIndicator dotsIndicator;
+    private Handler sliderHandler = new Handler();
+    private DatabaseReference dbRef;
+    private ImageView imageView; // For demo, showing first image only
+    private ProgressBar progressBar;
+    // Images
+    private int[] images = {
+            R.drawable.sindhudurg_fort,
+            R.drawable.mahabaleshwar,
+            R.drawable.pratapgarh_fort,
+            R.drawable.tung,
+            R.drawable.kolaba,
+            R.drawable.beach
+    };
     private int val = 0;
     private String dateVal;
     private String dateTimeVal;
-    private static final int PICK_PDF_REQUEST = 1;
     private byte[] pdfBytes;
     private String fileName;
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 2MB in bytes
-    private static final int REQUEST_CODE_PHOTO = 200;
-
-    private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
-    private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
-
     private SpeechRecognizer speechRecognizer;
     private TextToSpeech textToSpeech;
     private Button startListeningButton;
-
     private CameraManager cameraManager;
     private String cameraId;
     private boolean isFlashOn = false;
     private Handler handler;
     private boolean isBlinking = false;
-    private static final int CAMERA_REQUEST = 50;
-    private static int BLINK_DURATION = 50;  // 100ms blink
-    private static int INTERVAL_DURATION = 4000;  // 2 seconds interval
     private SharedPreferences sharedPreferences;
-    private static ArrayAdapter<String> adapter;
-    private static String[] suggestionsList;
-    private static DatabaseHelper db2;
-    private static Set<String> partSet;
+
+    public static String capitalizeFirstLetter(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        // Capitalize the first letter and concatenate with the rest of the string
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
+
+    public static void refreshSuggList() {
+        List<Suggestion> suggestionList = db2.getAllSuggestions();
+        partSet.clear();
+        suggestionList.stream().forEach(i -> {
+            partSet.add(i.getDescription());
+        });
+
+        suggestionsList = new String[partSet.size()];
+        AtomicInteger i = new AtomicInteger();
+        partSet.stream().forEachOrdered(element -> {
+            suggestionsList[i.getAndIncrement()] = element;
+        });
+        adapter.notifyDataSetChanged();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static void saveToFirebase(String expenseCategory, String particulars, String amount, String dateTimeVal, String dateVal, String fileName, byte[] pdfBytes, String encodedPartDetails, boolean isHomeExpense) throws ParseException {
+
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+        String expenseId = database.push().getKey();
+        expenseId = dateVal + "/" + expenseId;
+        // Create Expense object
+        ExpenseItem expense = new ExpenseItem(expenseCategory, particulars, amount, dateTimeVal, dateVal, null, null, encodedPartDetails, isHomeExpense);
+
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date parsedDate = sdf.parse(dateVal);
+
+        SimpleDateFormat sdf1 = new SimpleDateFormat("MMM");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy");
+
+        int year = Integer.parseInt(sdf2.format(parsedDate));
+        String month = sdf1.format(parsedDate);
+
+        String subDir = month + "-" + year;
+
+        // Save data in "expenses" node with a unique id
+        if (expenseId != null) {
+
+            database.child(Build.MODEL + "/" + "expenses").child(String.valueOf(year + "/" + subDir)).child(expenseId).setValue(expense)
+                    .addOnSuccessListener(aVoid -> {
+                        // Success message
+                        Toast.makeText(FirstFragment.adapter.getContext(), "Expense saved in cloud.", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        // Error handling
+                        Toast.makeText(FirstFragment.adapter.getContext(), "Failed to save on cloud.", Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
+    // Function to extract values based on the pattern
+    private static String extractValue(String text, String regex) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    // Function to get today's date in a desired format
+    private static String extractTodayDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        return sdf.format(new Date());
+    }
+
+    public static String capitalize(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;  // Return as it is if the string is null or empty
+        }
+
+        // Capitalize the first character and make the rest lowercase
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
+
+    public static List<SpinnerItem> fetchAllSpinnerOptions(List<SpinnerItem> items) {
+        items.add(new SpinnerItem("Select Options", R.drawable.arrow_next_right_icon));
+        items.add(new SpinnerItem("Housing Expenses", R.drawable.house_to_rent_svgrepo_com));
+        items.add(new SpinnerItem("Transportation", R.drawable.ground_transportation_svgrepo_com));
+        items.add(new SpinnerItem("Food", R.drawable.meal_easter_svgrepo_com));
+        items.add(new SpinnerItem("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
+        items.add(new SpinnerItem("Fuel", R.drawable.fuel_station));
+        items.add(new SpinnerItem("Recharge", R.drawable.mobile_phone_recharge_svgrepo_com));
+        items.add(new SpinnerItem("Shopping", R.drawable.shopping_cart_svgrepo_com));
+        items.add(new SpinnerItem("Subscriptions", R.drawable.youtube_svgrepo_com));
+        items.add(new SpinnerItem("Debt Payments", R.drawable.money_svgrepo_com__1_));
+        items.add(new SpinnerItem("Entertainment", R.drawable.entertainment_svgrepo_com));
+        items.add(new SpinnerItem("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com));
+        items.add(new SpinnerItem("Grocery", R.drawable.shopping_basket));
+        items.add(new SpinnerItem("Clothing", R.drawable.clothes_clothing_formal_wear_svgrepo_com));
+        items.add(new SpinnerItem("Personal Care", R.drawable.personalcare__2_));
+        items.add(new SpinnerItem("Education", R.drawable.education_graduation_learning_school_study_svgrepo_com));
+        items.add(new SpinnerItem("Charity and Gifts", R.drawable.loving_charity_svgrepo_com));
+        items.add(new SpinnerItem("Travel", R.drawable.travel_svgrepo_com__1_));
+        items.add(new SpinnerItem("Insurance", R.drawable.employee_svgrepo_com));
+        items.add(new SpinnerItem("Childcare", R.drawable.woman_pushing_stroller_svgrepo_com));
+        items.add(new SpinnerItem("Miscellaneous", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
+        return items;
+    }
 
     @Override
     public View onCreateView(
@@ -127,15 +270,72 @@ public class FirstFragment extends Fragment {
 
     }
 
-
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         DatabaseHelper db = new DatabaseHelper(getContext());
         db2 = new DatabaseHelper(getContext());
         sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         populateSpinnerListItems();
+
+        GlossyButtonTest1 glossyButton1 = view.findViewById(R.id.glossyButton1);
+        glossyButton1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getContext(), "Clicked!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        int totalExpToday = (int) db2.getTotalExpenseForToday();
+
+        float monthlyIncome = sharedPreferences.getFloat("monthlyIncome", 0);
+        float dailyIncome = monthlyIncome / 30;
+
+        float per = ((totalExpToday / dailyIncome) * 100);
+        String formattedAmount = Commons.getFormattedCurrency(totalExpToday);
+//        binding.dayWiseText.setText(String.valueOf("DayWise(Today)"));
+        binding.daySpendText.setText(String.valueOf(formattedAmount));
+        binding.spendPercentageText.setText(String.valueOf(per == 0.0f ? "" : "(" + String.format("%.2f", per) + "%)"));
+
+        boolean showImageSliderPanel = sharedPreferences.getBoolean("showImageSliderPanel", false);
+
+        if (showImageSliderPanel) {
+            // Reference to "images" node
+            dbRef = FirebaseDatabase.getInstance().getReference(Build.MODEL + "/sliderImages");
+
+            fetchImageUrls();
+            viewPager = view.findViewById(R.id.viewPager);
+            dotsIndicator = view.findViewById(R.id.dotsIndicator);
+
+            ImageSliderAdapter imageSliderAdapter = new ImageSliderAdapter(getContext(), images);
+            viewPager.setAdapter(imageSliderAdapter);
+
+            dotsIndicator.attachTo(viewPager);
+
+            Runnable sliderRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    int next = (viewPager.getCurrentItem() + 1) % images.length;
+                    viewPager.setCurrentItem(next, true);
+                }
+            };
+
+            // Auto-slide
+            viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    super.onPageSelected(position);
+                    sliderHandler.removeCallbacks(sliderRunnable);
+                    sliderHandler.postDelayed(sliderRunnable, 3000); // 3 sec delay
+                }
+            });
+        }
+
+
+        Win7ProgressBar bar = view.findViewById(R.id.win7Progress);
+
+
         try {
-            monthlySpendingView(false, false);
+            monthlySpendingView(false, false, bar);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -147,7 +347,7 @@ public class FirstFragment extends Fragment {
             builder.setTitle("Data Import");
             builder.setMessage("Ready to import the CSV file?");
             builder.setPositiveButton("Ok", (dialog, which) -> scheduleCsvImport(getContext()))
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss()).create().show();
+                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss()).create().show();
 
 
         });
@@ -156,7 +356,7 @@ public class FirstFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 try {
-                    monthlySpendingView(true, false);
+                    monthlySpendingView(true, false, bar);
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
                 }
@@ -167,7 +367,7 @@ public class FirstFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 try {
-                    monthlySpendingView(false, true);
+                    monthlySpendingView(false, true, bar);
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
                 }
@@ -190,13 +390,32 @@ public class FirstFragment extends Fragment {
 
 
         suggestionsList = new String[partSet.size()];
-        AtomicInteger i= new AtomicInteger();
+        AtomicInteger i = new AtomicInteger();
         partSet.stream().forEachOrdered(element -> {
             suggestionsList[i.getAndIncrement()] = element;
         });
         // Set up the ArrayAdapter with suggestion data
-        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, suggestionsList);
+//        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, suggestionsList);
+//        binding.etParticulars.setAdapter(adapter);
+
+        adapter = new SuggestionV2Adapter(getContext(), ExpenseConstants.SUGGESTION_LIST);
         binding.etParticulars.setAdapter(adapter);
+
+        // Customize dropdown appearance
+//        binding.etParticulars.setDropDownBackgroundDrawable(getResources().getDrawable(R.drawable.dropdown_background));
+        binding.etParticulars.setDropDownVerticalOffset(8);
+        binding.etParticulars.setDropDownHorizontalOffset(0);
+        binding.etParticulars.setDropDownWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        // Set threshold - show suggestions after 1 character
+        binding.etParticulars.setThreshold(1);
+
+        // Optional: Add item click listener
+        binding.etParticulars.setOnItemClickListener((parent, v, position, id) -> {
+            String selectedItem = (String) parent.getItemAtPosition(position);
+            binding.etParticulars.setText(selectedItem);
+        });
+
         adapter.notifyDataSetChanged();
 
 
@@ -255,17 +474,17 @@ public class FirstFragment extends Fragment {
             @Override
             public boolean onLongClick(View v) {
                 // Show the Snackbar with details
-                float income = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", 87000.0f);
+                float income = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
                 double todaysExp = db.getTotalExpenseForToday();
-                double todPer = (todaysExp/(income/30))*100;
+                double todPer = (todaysExp / (income / 30)) * 100;
                 Snackbar.make(v, "Todays expense ", 4000)
-                        .setAction("\u20B9"+(int) todaysExp +" ("+todPer+"%)", v1 -> {})
+                        .setAction("\u20B9" + (int) todaysExp + " (" + todPer + "%)", v1 -> {
+                        })
                         .show();
                 return true;
             }
         });
-
 
 
         // Check if camera permission is granted
@@ -318,7 +537,7 @@ public class FirstFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(before > 0 && s.toString().length() <= 0){
+                if (before > 0 && s.toString().length() <= 0) {
                     binding.etParticulars.setError("Particulars field is empty");
                 }
             }
@@ -337,7 +556,7 @@ public class FirstFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(before > 0 && s.toString().length() <= 0){
+                if (before > 0 && s.toString().length() <= 0) {
                     binding.etAmount.setError("Amount field is empty");
                 }
             }
@@ -356,7 +575,7 @@ public class FirstFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(before > 0 && s.toString().length() <= 0){
+                if (before > 0 && s.toString().length() <= 0) {
                     binding.etDateTime.setError("Date Time field is empty");
                 } else {
                     binding.etDateTime.setError(null);
@@ -377,34 +596,40 @@ public class FirstFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 String particulars = binding.etParticulars.getText().toString();
+                String partDetails = binding.etPartDetails.getText().toString();
                 String amount = binding.etAmount.getText().toString();
                 SpinnerItem selectedItem = (SpinnerItem) binding.spinnerOptions.getSelectedItem();
                 String expenseCategory = selectedItem.getText();
+                boolean isHomeExpense = binding.homeCheckBox.isChecked();
+
 
                 particulars = capitalizeFirstLetter(particulars);
+                String encodedPartDetails = Commons.encryptString(partDetails);
 
-                if(validateFields(expenseCategory,particulars, amount, dateTimeVal, dateVal)){
+                if (validateFields(expenseCategory, particulars, amount, dateTimeVal, dateVal)) {
                     boolean res = false;
                     try {
-                        res = db.insertExpense(expenseCategory,particulars, amount, dateTimeVal, dateVal, fileName, pdfBytes, null);
+
+
+                        res = db.insertExpense(expenseCategory, particulars, amount, dateTimeVal, dateVal, fileName, pdfBytes, null, encodedPartDetails, isHomeExpense);
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     } catch (NoSuchFieldException e) {
                         throw new RuntimeException(e);
                     }
-                    if(res) {
+                    if (res) {
                         //save data now into firebase
 
                         try {
-                            saveToFirebase(expenseCategory,particulars, amount, dateTimeVal, dateVal, fileName, pdfBytes);
+                            saveToFirebase(expenseCategory, particulars, amount, dateTimeVal, dateVal, fileName, pdfBytes, encodedPartDetails, isHomeExpense);
                         } catch (ParseException e) {
                             throw new RuntimeException(e);
                         }
 
                         resetFields();
                         Toast.makeText(getContext(), "Expense added", Toast.LENGTH_SHORT).show();
-                                NavHostFragment.findNavController(FirstFragment.this)
-                                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
+                        NavHostFragment.findNavController(FirstFragment.this)
+                                .navigate(R.id.action_FirstFragment_to_SecondFragment);
 
                     } else {
                         Toast.makeText(getContext(), "Expense save failed !", Toast.LENGTH_SHORT).show();
@@ -421,42 +646,41 @@ public class FirstFragment extends Fragment {
                 binding.etDateTime.setText("");
                 binding.spinnerOptions.setSelection(0);
                 binding.chooseFileText.setText("");
+                binding.etPartDetails.setText("");
+                binding.homeCheckBox.setChecked(false);
                 clearErrors();
             }
-
-
-
 
 
             private boolean validateFields(String spinnerItem, String particulars, String amount, String dateTimeVal, String dateVal) {
                 boolean isValid = true;
 
-                if(spinnerItem == null || spinnerItem.equalsIgnoreCase("") ||
-                        spinnerItem.equalsIgnoreCase("Select Options") || spinnerItem.equalsIgnoreCase("0") ){
+                if (spinnerItem == null || spinnerItem.equalsIgnoreCase("") ||
+                        spinnerItem.equalsIgnoreCase("Select Options") || spinnerItem.equalsIgnoreCase("0")) {
                     isValid = false;
                 }
 
-                if(particulars == null || particulars.equalsIgnoreCase("")){
+                if (particulars == null || particulars.equalsIgnoreCase("")) {
                     binding.etParticulars.setError("Particulars field is empty");
                     isValid = false;
                 }
 
-                if(amount == null || amount.equalsIgnoreCase("") || amount.equalsIgnoreCase("0")){
+                if (amount == null || amount.equalsIgnoreCase("") || amount.equalsIgnoreCase("0")) {
                     binding.etAmount.setError("Amount field is empty");
                     isValid = false;
                 }
 
-                if(dateTimeVal == null || dateTimeVal.equalsIgnoreCase("")){
+                if (dateTimeVal == null || dateTimeVal.equalsIgnoreCase("")) {
                     binding.etDateTime.setError("Date Time field is empty");
                     isValid = false;
                 }
 
-                if(dateVal == null || dateVal.equalsIgnoreCase("")){
+                if (dateVal == null || dateVal.equalsIgnoreCase("")) {
                     isValid = false;
                 }
 
 
-                if(dateVal == null || dateVal.equalsIgnoreCase("")){
+                if (dateVal == null || dateVal.equalsIgnoreCase("")) {
                     isValid = false;
                 }
 
@@ -468,16 +692,17 @@ public class FirstFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Cursor data = db.getAllExpenseData();
-                if(data.getCount() <= 0) {
+                if (data.getCount() <= 0) {
                     Toast.makeText(getContext(), "No data to show", Toast.LENGTH_SHORT).show();
                 } else {
                     NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
+                            .navigate(R.id.action_FirstFragment_to_SecondFragment);
                 }
             }
         });
 
         binding.monthSpendDetailsBtn.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
 
@@ -497,7 +722,6 @@ public class FirstFragment extends Fragment {
         });
 
 
-
         binding.flashLightBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -514,8 +738,6 @@ public class FirstFragment extends Fragment {
         });
 
 
-
-
         binding.launchCaptureActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -530,6 +752,100 @@ public class FirstFragment extends Fragment {
 
         binding.voiceAssistantBtn.setOnClickListener(v -> launchVoiceAssistant());
 
+
+        binding.remainingBudgetText.setOnLongClickListener(v -> {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setTitle("Enter Password");
+
+            // Set up input field
+            final EditText input = new EditText(getContext());
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            input.setHint("Password");
+
+            builder.setView(input);
+
+            // Set up buttons
+            builder.setPositiveButton("OK", (dialog, which) -> {
+                String enteredPassword = input.getText().toString().trim();
+                if (enteredPassword.equals("rohit1094")) {
+                    performSecureAction(); // call your function here
+                } else {
+                    Toast.makeText(getContext(), "Incorrect Password", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+            builder.show();
+
+            return true;
+        });
+
+
+    }
+
+    private void fetchImageUrls() {
+        Random random = new Random();
+        int index = random.nextInt(10);
+        binding.progressBarImage.setVisibility(View.VISIBLE); // show loader
+        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    for (DataSnapshot ds : snapshot.getChildren()) {
+                        if (ds.getKey().equals("" + index)) {
+
+                            String url = ds.getValue(String.class);
+                            Log.d(TAG, "Image URL: " + url);
+
+                            Picasso.get()
+                                    .load(url)
+                                    .into(binding.imageView, new Callback() {
+                                        @Override
+                                        public void onSuccess() {
+                                            binding.progressBarImage.setVisibility(View.GONE); // hide loader
+                                        }
+
+                                        @Override
+                                        public void onError(Exception e) {
+                                            binding.progressBarImage.setVisibility(View.GONE);
+                                            Toast.makeText(getContext(), "Image load failed!", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                            break; // remove this if you want all images
+
+                        }
+                    }
+                } else {
+                    Toast.makeText(getContext(), "No images found!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void performSecureAction() {
+        String remPerText = binding.remainingBudgetText.getText().toString();
+        if (remPerText != null || remPerText != "") {
+            remPerText = remPerText.replace("%", "");
+        }
+        float monthlyIncome = sharedPreferences.getFloat("monthlyIncome", 0);
+        int finalVal = (int) (monthlyIncome * (Float.parseFloat(remPerText) / 100));
+        binding.remainingBudgetText.setText("\u20B9" + finalVal);
+
+        String finalRemPerText = remPerText;
+        new Handler().postDelayed(() -> resetRemainingBudgetText(finalRemPerText), 2000);
+
+
+    }
+
+    private void resetRemainingBudgetText(String remPerText) {
+        binding.remainingBudgetText.setText(remPerText + "%");
     }
 
     private void animateProgressBar(int start, int end, int duration) {
@@ -538,15 +854,15 @@ public class FirstFragment extends Fragment {
         animation.start();
     }
 
-    private void monthlySpendingView(boolean prev, boolean next) throws ParseException {
+    private void monthlySpendingView(boolean prev, boolean next, Win7ProgressBar bar) throws ParseException {
         String month = new SimpleDateFormat("yyyy-MM").format(new Date());
         String monthYearText = new SimpleDateFormat("MMMM yyyy").format(new Date());
 
         List<ExpenseItem> items;
-        if(prev) {
+        if (prev) {
             String monthStr = sharedPreferences.getString("dateStr", month);
             Date d = new SimpleDateFormat("yyyy-MM").parse(monthStr);
-            d.setMonth(d.getMonth()-1);
+            d.setMonth(d.getMonth() - 1);
             month = new SimpleDateFormat("yyyy-MM").format(d);
             sharedPreferences.edit().putString("dateStr", month).apply();
 
@@ -554,11 +870,11 @@ public class FirstFragment extends Fragment {
             items = db2.getMonthData(month);
             binding.monthYearText.setText(String.valueOf(monthYearText));
 
-        } else if(next) {
+        } else if (next) {
             String monthStr = sharedPreferences.getString("dateStr", month);
             Date d = new SimpleDateFormat("yyyy-MM").parse(monthStr);
-            if(!d.before(new Date())) {
-                d.setMonth(d.getMonth()+1);
+            if (!d.before(new Date())) {
+                d.setMonth(d.getMonth() + 1);
             } else {
                 d.setMonth(new Date().getMonth());
             }
@@ -577,13 +893,29 @@ public class FirstFragment extends Fragment {
 //        List<ExpenseItem> items = db2.getMonthData(month);
         binding.monthYearText.setText(String.valueOf(monthYearText));
         long totalExpAmount = items.stream().mapToLong(ExpenseItem::getExpenseAmount).sum();
-        double per = ((double) totalExpAmount / 86000) * 100;
+        double per = ((double) totalExpAmount / ANN_INCOME) * 100;
         binding.spendingProgressBar.setProgress((int) per, true);
-        binding.spendingPercentageText.setText(String.format("%.2f",per)+"%");
-        binding.totalSpentText.setText(String.valueOf("\u20B9"+totalExpAmount));
+        binding.spendingPercentageText.setText(String.format("%.2f", per) + "%");
+        int roundedAmount = (int) totalExpAmount;
+
+        NumberFormat formatter = NumberFormat.getInstance(new Locale("en", "IN"));
+        String formattedAmount = "₹" + formatter.format(roundedAmount);
+
+        binding.totalSpentText.setText(String.valueOf(formattedAmount));
         binding.monthlySalaryText.setText(String.valueOf("100%"));
-        binding.remainingBudgetText.setText(String.format("%.2f",(100-per))+"%");
+        binding.remainingBudgetText.setText(String.format("%.2f", (100 - per)) + "%");
         animateProgressBar(0, (int) per, 1500); // duration in ms
+        // Animate filling up
+        new Thread(() -> {
+            for (int i = 0; i <= per; i++) {
+                int finalI = i;
+                requireActivity().runOnUiThread(() -> bar.setProgress(finalI));
+                try {
+                    Thread.sleep(100);
+                } catch (Exception ignored) {
+                }
+            }
+        }).start();
 
     }
 
@@ -596,15 +928,15 @@ public class FirstFragment extends Fragment {
         UUID workId = oneTimeRequest.getId();
 
         WorkManager.getInstance(context).getWorkInfoByIdLiveData(workId)
-                .observe(this, workInfo -> {
+                .observe(getViewLifecycleOwner(), workInfo -> {
                     if (workInfo != null && workInfo.getProgress() != null) {
                         binding.progressBar.setVisibility(View.VISIBLE);
                         int progress = workInfo.getProgress().getInt("progress", 0);
                         int total = workInfo.getProgress().getInt("total", 0);
-                        int per = workInfo.getProgress().getInt("per",0 );
+                        int per = workInfo.getProgress().getInt("per", 0);
 
 
-                        binding.importProgressTextView.setText("Imported " + progress + " of " + total + " rows "+ per+"% done");
+                        binding.importProgressTextView.setText("Imported " + progress + " of " + total + " rows " + per + "% done");
                         binding.progressBar.setProgress(per);
                         if (workInfo.getState().isFinished()) {
                             binding.importProgressTextView.setText("✅ Import finished!");
@@ -612,7 +944,6 @@ public class FirstFragment extends Fragment {
                         }
                     }
                 });
-
 
 
 //        *** Repeats on specific time
@@ -631,30 +962,6 @@ public class FirstFragment extends Fragment {
         // Show a toast notification when the scheduling is done
         Toast.makeText(context, "CSV Import scheduler started", Toast.LENGTH_SHORT).show();
 
-    }
-
-    public static String capitalizeFirstLetter(String input) {
-        if (input == null || input.isEmpty()) {
-            return input;
-        }
-
-        // Capitalize the first letter and concatenate with the rest of the string
-        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
-    }
-
-    public static void refreshSuggList() {
-        List<Suggestion> suggestionList = db2.getAllSuggestions();
-        partSet.clear();
-        suggestionList.stream().forEach(i -> {
-            partSet.add(i.getDescription());
-        });
-
-        suggestionsList = new String[partSet.size()];
-        AtomicInteger i= new AtomicInteger();
-        partSet.stream().forEachOrdered(element -> {
-            suggestionsList[i.getAndIncrement()] = element;
-        });
-        adapter.notifyDataSetChanged();
     }
 
     private void startBlinkingPattern() {
@@ -688,43 +995,6 @@ public class FirstFragment extends Fragment {
             isFlashOn = turnOn;
         } catch (CameraAccessException e) {
             e.printStackTrace();
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public static void saveToFirebase(String expenseCategory, String particulars, String amount, String dateTimeVal, String dateVal, String fileName, byte[] pdfBytes) throws ParseException {
-
-        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-        String expenseId = database.push().getKey();
-        expenseId = dateVal+"/"+expenseId;
-        // Create Expense object
-        ExpenseItem expense = new ExpenseItem(expenseCategory, particulars, amount, dateTimeVal, dateVal, null, null);
-
-
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date parsedDate = sdf.parse(dateVal);
-
-        SimpleDateFormat sdf1 = new SimpleDateFormat("MMM");
-        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy");
-
-        int year = Integer.parseInt(sdf2.format(parsedDate));
-        String month = sdf1.format(parsedDate);
-
-        String subDir = month+"-"+year;
-
-        // Save data in "expenses" node with a unique id
-        if (expenseId != null) {
-
-            database.child(Build.MODEL+"/"+"expenses").child(String.valueOf(year+"/"+subDir)).child(expenseId).setValue(expense)
-            .addOnSuccessListener(aVoid -> {
-                // Success message
-                Toast.makeText(FirstFragment.adapter.getContext(), "Expense saved in cloud.", Toast.LENGTH_SHORT).show();
-            })
-            .addOnFailureListener(e -> {
-                // Error handling
-                Toast.makeText(FirstFragment.adapter.getContext(), "Failed to save on cloud.", Toast.LENGTH_SHORT).show();
-            });
         }
     }
 
@@ -811,7 +1081,6 @@ public class FirstFragment extends Fragment {
                     System.out.println("Expense Date: " + date);
 
 
-
                     // Reply via Text-to-Speech
                     String response = generateReply(recognizedText);
                     try {
@@ -840,22 +1109,6 @@ public class FirstFragment extends Fragment {
         speechRecognizer.startListening(intent);
     }
 
-    // Function to extract values based on the pattern
-    private static String extractValue(String text, String regex) {
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
-    }
-
-    // Function to get today's date in a desired format
-    private static String extractTodayDate() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        return sdf.format(new Date());
-    }
-
     // Generate a response based on recognized speech
     private String generateReply(String recognizedText) {
         if (recognizedText.toLowerCase().contains("rohit")) {
@@ -867,14 +1120,14 @@ public class FirstFragment extends Fragment {
     // Speak out the response using TextToSpeech
     private void speak(String message, String category, String amount, String date) throws NoSuchFieldException, IllegalAccessException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if(category !=null && amount !=null && date !=null){
+            if (category != null && amount != null && date != null) {
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("Expense category: "+category+ "\nExpense Amount: "+amount+"\nExpense Date: "+date);
+                stringBuilder.append("Expense category: " + category + "\nExpense Amount: " + amount + "\nExpense Date: " + date);
 
                 DatabaseHelper db = new DatabaseHelper(getContext());
 
-                boolean res = db.insertExpense(capitalize(category),category,amount,date,date,null,null,null);
-                if(res) {
+                boolean res = db.insertExpense(capitalize(category), category, amount, date, date, null, null, null, null, false);
+                if (res) {
                     Toast.makeText(getContext(), "Expense added", Toast.LENGTH_SHORT).show();
 //                    NavHostFragment.findNavController(FirstFragment.this)
 //                            .navigate(R.id.action_FirstFragment_to_SecondFragment);
@@ -887,15 +1140,6 @@ public class FirstFragment extends Fragment {
         } else {
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null);
         }
-    }
-
-    public static String capitalize(String input) {
-        if (input == null || input.isEmpty()) {
-            return input;  // Return as it is if the string is null or empty
-        }
-
-        // Capitalize the first character and make the rest lowercase
-        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
     }
 
     @Override
@@ -922,8 +1166,6 @@ public class FirstFragment extends Fragment {
         }
     }
 
-
-
     private void openFileChooser() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -939,18 +1181,18 @@ public class FirstFragment extends Fragment {
             try {
 
                 InputStream inputStream = getContext().getContentResolver().openInputStream(pdfUri);
-                if(inputStream != null) {
+                if (inputStream != null) {
                     int fileSize = inputStream.available();
                     inputStream.close();
                     if (fileSize <= MAX_FILE_SIZE) {
                         pdfBytes = readPdfFromUri(pdfUri);
                         fileName = getFileName(pdfUri);
                         String fileNameUI = fileName;
-                        fileNameUI = fileNameUI.length()>20? fileNameUI.substring(0,20)+".."+fileNameUI.substring(fileNameUI.lastIndexOf(".")) :fileNameUI;
+                        fileNameUI = fileNameUI.length() > 20 ? fileNameUI.substring(0, 20) + ".." + fileNameUI.substring(fileNameUI.lastIndexOf(".")) : fileNameUI;
                         binding.chooseFileText.setText(fileNameUI);
                     } else {
                         Toast.makeText(getContext(), "File size exceeds 2MB limit.", Toast.LENGTH_SHORT).show();
-                        pdfBytes= null;
+                        pdfBytes = null;
                         fileName = "";
                         binding.chooseFileText.setText("");
                     }
@@ -970,7 +1212,7 @@ public class FirstFragment extends Fragment {
                 Uri fileUri = Uri.fromFile(file);
                 try {
                     InputStream inputStream = getContext().getContentResolver().openInputStream(fileUri);
-                    if(inputStream != null) {
+                    if (inputStream != null) {
                         int fileSize = 0;
 
                         fileSize = inputStream.available();
@@ -979,11 +1221,11 @@ public class FirstFragment extends Fragment {
                             pdfBytes = readPdfFromUri(fileUri);
                             fileName = getFileName(fileUri);
                             String fileNameUI = fileName;
-                            fileNameUI = fileNameUI.length()>20? fileNameUI.substring(0,20)+".."+fileNameUI.substring(fileNameUI.lastIndexOf(".")) :fileNameUI;
+                            fileNameUI = fileNameUI.length() > 20 ? fileNameUI.substring(0, 20) + ".." + fileNameUI.substring(fileNameUI.lastIndexOf(".")) : fileNameUI;
                             binding.chooseFileText.setText(fileNameUI);
                         } else {
                             Toast.makeText(getContext(), "File size exceeds 2MB limit.", Toast.LENGTH_SHORT).show();
-                            pdfBytes= null;
+                            pdfBytes = null;
                             fileName = "";
                             binding.chooseFileText.setText("");
                         }
@@ -1032,9 +1274,9 @@ public class FirstFragment extends Fragment {
     }
 
     private void clearErrors() {
-            binding.etParticulars.setError(null);
-            binding.etAmount.setError(null);
-            binding.etDateTime.setError(null);
+        binding.etParticulars.setError(null);
+        binding.etAmount.setError(null);
+        binding.etDateTime.setError(null);
     }
 
     private void populateSpinnerListItems() {
@@ -1043,34 +1285,8 @@ public class FirstFragment extends Fragment {
         fetchAllSpinnerOptions(items);
 
 
-
         CustomSpinnerAdapter adapter = new CustomSpinnerAdapter(getContext(), items);
         binding.spinnerOptions.setAdapter(adapter);
-    }
-
-    public static List<SpinnerItem> fetchAllSpinnerOptions(List<SpinnerItem> items) {
-        items.add(new SpinnerItem("Select Options", R.drawable.arrow_next_right_icon));
-        items.add(new SpinnerItem("Housing Expenses", R.drawable.house_to_rent_svgrepo_com));
-        items.add(new SpinnerItem("Transportation", R.drawable.ground_transportation_svgrepo_com));
-        items.add(new SpinnerItem("Food", R.drawable.meal_easter_svgrepo_com));
-        items.add(new SpinnerItem("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
-        items.add(new SpinnerItem("Fuel", R.drawable.fuel_station));
-        items.add(new SpinnerItem("Recharge", R.drawable.mobile_phone_recharge_svgrepo_com));
-        items.add(new SpinnerItem("Shopping", R.drawable.shopping_cart_svgrepo_com));
-        items.add(new SpinnerItem("Subscriptions", R.drawable.youtube_svgrepo_com));
-        items.add(new SpinnerItem("Debt Payments", R.drawable.money_svgrepo_com__1_));
-        items.add(new SpinnerItem("Entertainment", R.drawable.entertainment_svgrepo_com));
-        items.add(new SpinnerItem("Savings and Investments", R.drawable.piggybank_pig_svgrepo_com));
-        items.add(new SpinnerItem("Grocery", R.drawable.shopping_basket));
-        items.add(new SpinnerItem("Clothing", R.drawable.clothes_clothing_formal_wear_svgrepo_com));
-        items.add(new SpinnerItem("Personal Care", R.drawable.personalcare__2_));
-        items.add(new SpinnerItem("Education", R.drawable.education_graduation_learning_school_study_svgrepo_com));
-        items.add(new SpinnerItem("Charity and Gifts", R.drawable.loving_charity_svgrepo_com));
-        items.add(new SpinnerItem("Travel", R.drawable.travel_svgrepo_com__1_));
-        items.add(new SpinnerItem("Insurance", R.drawable.employee_svgrepo_com));
-        items.add(new SpinnerItem("Childcare and Education", R.drawable.woman_pushing_stroller_svgrepo_com));
-        items.add(new SpinnerItem("Miscellaneous", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
-        return items;
     }
 
     private void showDateTimeDialog() {
@@ -1088,9 +1304,9 @@ public class FirstFragment extends Fragment {
                             (TimePicker view1, int hourOfDay, int minute) -> {
                                 calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                                 calendar.set(Calendar.MINUTE, minute);
-                                String dateTime = new SimpleDateFormat("dd").format(calendar.getTime()) + "-" + (String.format("%02d",month + 1) ) + "-" + year + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
+                                String dateTime = new SimpleDateFormat("dd").format(calendar.getTime()) + "-" + (String.format("%02d", month + 1)) + "-" + year + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
                                 dateVal = year + "-" + new SimpleDateFormat("MM").format(calendar.getTime()) + "-" + new SimpleDateFormat("dd").format(calendar.getTime());
-                                dateTimeVal = year + "-" + (String.format("%02d",month + 1) ) + "-" + new SimpleDateFormat("dd").format(calendar.getTime()) + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
+                                dateTimeVal = year + "-" + (String.format("%02d", month + 1)) + "-" + new SimpleDateFormat("dd").format(calendar.getTime()) + " " + new SimpleDateFormat("HH").format(calendar.getTime()) + ":" + new SimpleDateFormat("mm").format(calendar.getTime());
                                 binding.etDateTime.setText(dateTime);
                             },
                             calendar.get(Calendar.HOUR_OF_DAY),
@@ -1111,8 +1327,6 @@ public class FirstFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
-
-
 
 
 }

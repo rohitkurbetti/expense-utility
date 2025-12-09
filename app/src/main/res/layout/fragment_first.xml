@@ -14,22 +14,90 @@
 
         <!-- Monthly Overview Card -->
         <androidx.cardview.widget.CardView
-            android:id="@+id/monthlyCardView"
-            android:layout_width="match_parent"
+            android:id="@+id/imageSwitcherLayout"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:layout_marginTop="10dp"
+            android:orientation="vertical"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
+
+            <!-- Auto Image Slider at Top -->
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewPager"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="@drawable/rounded_background"
+                android:clipToOutline="true"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center"
+                android:scaleType="center" />
+
+
+        </androidx.cardview.widget.CardView>
+
+
+        <LinearLayout
+            android:id="@+id/dotsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:layout_margin="8dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageSwitcherLayout">
+
+
+            <!-- Dots Indicator -->
+            <com.tbuonomo.viewpagerdotsindicator.WormDotsIndicator
+                android:id="@+id/dotsIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:dotsSize="8dp"
+                app:dotsStrokeColor="#909090"
+                app:dotsStrokeWidth="1dp" />
+
+
+            <ProgressBar
+                android:id="@+id/progressBarImage"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Monthly Overview Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/monthlyCardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dotsLayout">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="24dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -70,25 +138,86 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <TextView
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight=".8"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Monthly Salary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/monthlySalaryText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="$5,000"
+                            android:textColor="@color/bluePrimary"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Monthly Salary"
-                        android:textSize="12sp" />
+                        android:layout_gravity="center_vertical"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/monthlySalaryText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="$5,000"
-                        android:textColor="@color/bluePrimary"
-                        android:textSize="24sp"
-                        android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/dayWiseText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:text="DayWise"
+                            android:textColor="?attr/colorPrimaryDark"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+
+                            <TextView
+                                android:id="@+id/daySpendText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="end"
+                                android:layout_marginEnd="2dp"
+                                android:text="daySpend"
+                                android:textAlignment="textEnd"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/spendPercentageText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:text="per"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
 
                 </LinearLayout>
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -195,24 +324,102 @@
                         android:layout_width="match_parent"
                         android:layout_height="12dp"
                         android:layout_marginTop="16dp"
+                        android:indeterminate="false"
                         android:max="100"
                         android:progress="70"
                         android:progressDrawable="@drawable/custom_progress"
-                        android:indeterminate="false"
-                        />
+                        android:visibility="gone" />
 
+                    <com.example.expenseutility.customs.Win7ProgressBar
+                        android:id="@+id/win7Progress"
+                        android:layout_width="match_parent"
+                        android:layout_height="25dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="4dp" />
 
                     <ProgressBar
-                        android:visibility="gone"
                         android:id="@+id/customProgressBar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
                         android:layout_height="12dp"
                         android:layout_marginTop="16dp"
-                        android:progressDrawable="@drawable/custom_progress"
+                        android:indeterminate="false"
                         android:max="100"
                         android:progress="70"
-                        android:indeterminate="false"/>
+                        android:progressDrawable="@drawable/custom_progress"
+                        android:visibility="gone" />
+
+                    <!-- Button background -->
+                    <FrameLayout
+                        android:id="@+id/customButton"
+                        android:layout_width="220dp"
+                        android:layout_height="60dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/btn_green_glossy"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:visibility="gone">
+
+                        <!-- Black outline text -->
+                        <TextView
+                            android:id="@+id/btnTextOutline"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:shadowColor="#000000"
+                            android:shadowDx="0"
+                            android:shadowDy="0"
+                            android:shadowRadius="3"
+                            android:text="ON"
+                            android:textColor="#000000"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <!-- White main text -->
+                        <TextView
+                            android:id="@+id/btnTextMain"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="ON"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+
+                    <com.example.expenseutility.customs.GlossyButton1
+                        android:id="@+id/glossyBtn"
+                        android:layout_width="220dp"
+                        android:layout_height="60dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/btn_green_glossy"
+                        android:text="START"
+                        android:textColor="@color/cardview_light_background"
+                        android:textSize="22sp"
+                        android:visibility="gone" />
+
+                    <com.example.expenseutility.customs.GlossyButton1
+                        android:id="@+id/glossyBtn1"
+                        android:layout_width="220dp"
+                        android:layout_height="60dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/btn_green_glossy"
+                        android:elevation="4dp"
+                        android:text="STOP"
+                        android:textColor="@color/cardview_light_background"
+                        android:textSize="22sp"
+                        android:visibility="gone" />
+
+                    <com.example.expenseutility.customs.GlossyButtonTest1
+                        android:id="@+id/glossyButton1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="CLICK ME"
+                        android:visibility="gone" />
+
 
                 </LinearLayout>
 
@@ -220,20 +427,37 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Spinner -->
-        <Spinner
-            android:id="@+id/spinnerOptions"
+        <LinearLayout
+            android:id="@+id/spinnerOptionsLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="5dp"
+            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="30dp"
-            android:entries="@array/expense_categories"
-            android:gravity="center_vertical"
-            android:importantForAccessibility="yes"
-            android:minHeight="48dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/monthlyCardView" />
+            app:layout_constraintTop_toBottomOf="@+id/monthlyCardView"
+            tools:layout_editor_absoluteX="16dp">
+
+            <CheckBox
+                android:id="@+id/homeCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home" />
+
+            <!-- Spinner -->
+            <Spinner
+                android:id="@+id/spinnerOptions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="5dp"
+                android:entries="@array/expense_categories"
+                android:gravity="center_vertical"
+                android:importantForAccessibility="yes"
+                android:minHeight="48dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/monthlyCardView" />
+
+        </LinearLayout>
+
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/et_particularsM"
@@ -245,39 +469,101 @@
             android:hint="Enter expense here"
             app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
             app:endIconMode="clear_text"
-            app:layout_constraintTop_toBottomOf="@+id/spinnerOptions">
+            app:layout_constraintTop_toBottomOf="@+id/spinnerOptionsLayout">
 
             <AutoCompleteTextView
                 android:id="@+id/et_particulars"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLength="20"
+                android:maxLength="15"
                 android:paddingHorizontal="15dp"
                 android:paddingVertical="15dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/et_amountM"
+            android:id="@+id/et_part_detailsM"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="20dp"
-            android:hint="Enter amount here"
+            android:hint="Enter description"
             app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
             app:endIconMode="clear_text"
             app:layout_constraintTop_toBottomOf="@+id/et_particularsM">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_amount"
+                android:id="@+id/et_part_details"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
+                android:gravity="top|start"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="20"
+                android:minLines="3"
                 android:paddingHorizontal="10dp"
-                android:paddingVertical="15dp" />
+                android:paddingVertical="15dp"
+                android:singleLine="false" />
 
         </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:id="@+id/amountDateLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@+id/et_part_detailsM">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/et_amountM"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight=".5"
+                android:hint="Enter amount"
+                app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
+                app:endIconMode="clear_text">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="15dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/et_date_timeM"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="20dp"
+                android:layout_weight=".5"
+                android:hint="Date and Time"
+                app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
+                app:endIconMode="clear_text"
+                app:layout_constraintTop_toBottomOf="@+id/et_amountM">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_date_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="15dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
 
         <!--<EditText
             android:visibility="gone"
@@ -293,29 +579,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/et_particularsM" />-->
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/et_date_timeM"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="20dp"
-            android:hint="Select Date and Time"
-            app:endIconDrawable="@drawable/close_circle_svgrepo_com__1_"
-            app:endIconMode="clear_text"
-            app:layout_constraintTop_toBottomOf="@+id/et_amountM">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_date_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:focusable="false"
-                android:inputType="none"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="15dp" />
-
-        </com.google.android.material.textfield.TextInputLayout>
 
         <!--<EditText
             android:id="@+id/et_date_time"
@@ -352,7 +615,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/et_date_timeM">
+            app:layout_constraintTop_toBottomOf="@+id/amountDateLayout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/chooseFileText"

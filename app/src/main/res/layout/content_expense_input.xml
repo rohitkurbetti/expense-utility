@@ -8,10 +8,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:padding="16dp"
         android:elevation="6dp"
+        android:padding="16dp"
         android:radius="12dp">
-
 
 
         <LinearLayout
@@ -21,69 +20,89 @@
             android:padding="16dp">
 
             <TextView
-                android:text="Amount"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:text="Amount" />
+
             <TextView
                 android:id="@+id/textAmount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
             <TextView
-                android:text="Date Time"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:text="Date Time" />
+
             <TextView
                 android:id="@+id/textDateTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
-
-            <!-- Spinner -->
-            <Spinner
-                android:id="@+id/spinnerCategory"
-                android:layout_marginTop="30dp"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="5dp"
-                android:gravity="center_vertical"
-                android:entries="@array/expense_categories"
-                android:importantForAccessibility="yes"
-                android:minHeight="48dp"
-                android:layout_marginVertical="8dp"
-                />
+                android:gravity="center_vertical">
+
+                <CheckBox
+                    android:id="@+id/homeCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home" />
+
+                <!-- Spinner -->
+                <Spinner
+                    android:id="@+id/spinnerCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_marginVertical="8dp"
+                    android:layout_marginTop="30dp"
+                    android:entries="@array/expense_categories"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="yes"
+                    android:minHeight="48dp" />
+
+            </LinearLayout>
+
             <EditText
-                android:visibility="gone"
                 android:id="@+id/editCategory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Category"/>
+                android:hint="Category"
+                android:visibility="gone" />
 
             <EditText
                 android:id="@+id/editParticulars"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Particulars"/>
+                android:hint="Particulars" />
+
+            <EditText
+                android:id="@+id/editParticularsDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Description"
+                android:singleLine="false" />
 
             <Button
                 android:id="@+id/btnSave"
-                android:layout_marginTop="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Save"/>
+                android:layout_marginTop="8dp"
+                android:text="Save" />
 
             <Button
                 android:id="@+id/btnCancel"
-                android:layout_marginTop="4dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cancel"/>
+                android:layout_marginTop="4dp"
+                android:text="Cancel" />
 
 
         </LinearLayout>
-
 
 
     </androidx.cardview.widget.CardView>

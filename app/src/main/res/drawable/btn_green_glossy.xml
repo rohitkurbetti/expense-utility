@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Outer black/dark border -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="9dp"/>
+            <solid android:color="#D9222222"/>
+        </shape>
+    </item>
+
+    <!-- Green body inset (shows rim) -->
+    <item android:left="2dp" android:top="2dp" android:right="2dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="7dp"/>
+            <gradient
+                android:startColor="?attr/colorPrimary"
+                android:centerColor="?attr/colorPrimary"
+                android:endColor="?attr/colorPrimaryDark"
+                android:angle="270"/>
+        </shape>
+    </item>
+
+    <!-- Glossy top overlay (only covers upper half) -->
+    <item android:left="7dp" android:top="8dp" android:right="7dp" android:bottom="25dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="7dp"/>
+            <gradient
+                android:startColor="#E7FFFFFF"
+                android:endColor="#32FFFFFF"
+                android:angle="270"/>
+        </shape>
+    </item>
+</layer-list>

@@ -1,5 +1,7 @@
 package com.example.expenseutility;
 
+import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
+
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -68,7 +70,7 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         map.put("Charity and Gifts", R.drawable.loving_charity_svgrepo_com);
         map.put("Travel", R.drawable.travel_svgrepo_com__1_);
         map.put("Insurance", R.drawable.employee_svgrepo_com);
-        map.put("Childcare and Education", R.drawable.woman_pushing_stroller_svgrepo_com);
+        map.put("Childcare", R.drawable.woman_pushing_stroller_svgrepo_com);
         map.put("Miscellaneous", R.drawable.notebook_miscellaneous_svgrepo_com);
         map.put("Fuel", R.drawable.fuel_station);
         map.put("Grocery", R.drawable.shopping_basket);
@@ -77,8 +79,8 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
             ExpenseItem expenseItem = (ExpenseItem) getArguments().getSerializable(ARG_OBJECT);
             if (expenseItem != null) {
                 binding.expAmountTxt.setText(String.valueOf("\u20B9"+expenseItem.getExpenseAmount()));
-                binding.dailyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/(sharedPreferences.getFloat("monthlyIncome",87000f)/30))*100)+"%");
-                binding.monthlyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/sharedPreferences.getFloat("monthlyIncome",87000f))*100)+"%");
+                binding.dailyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/(sharedPreferences.getFloat("monthlyIncome",ANN_INCOME)/30))*100)+"%");
+                binding.monthlyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/sharedPreferences.getFloat("monthlyIncome",ANN_INCOME))*100)+"%");
                 binding.imageViewCategory.setImageDrawable(getResources().getDrawable(map.get(expenseItem.getExpenseCategory())));
 
                 if(expenseItem.getFileBytes() != null){

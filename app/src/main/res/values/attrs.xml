@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="Win7ProgressBar">
+        <attr name="w7_max" format="integer" />
+        <attr name="w7_progress" format="integer" />
+        <attr name="w7_indeterminate" format="boolean" />
+    </declare-styleable>
+</resources>

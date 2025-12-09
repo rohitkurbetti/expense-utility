@@ -36,6 +36,12 @@
         android:theme="@style/Theme.ExpenseUtility"
         tools:targetApi="31">
         <activity
+            android:name=".ReportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ImageDetectionActivity"
             android:exported="false" />
         <activity
@@ -80,6 +86,22 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Add intent filters to handle incoming intents -->
+            <intent-filter>
+                <action android:name="com.example.expenseutility.ACTION_PROCESS_DATA" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="content" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
 

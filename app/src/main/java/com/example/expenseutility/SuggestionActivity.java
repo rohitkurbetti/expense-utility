@@ -13,6 +13,7 @@ import android.widget.ListView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.example.expenseutility.constants.ExpenseConstants;
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.entityadapter.Suggestion;
 import com.example.expenseutility.entityadapter.SuggestionAdapter;
@@ -70,7 +71,12 @@ public class SuggestionActivity extends AppCompatActivity {
         suggestionsList = db.getAllSuggestions();
 
         if(suggestionsList.isEmpty()) {
+
             Set<String> suggList = sharedPreferences.getStringSet("partSuggestionsList", new HashSet<>());
+
+            if(suggList.isEmpty()) {
+                suggList.addAll(ExpenseConstants.SUGGESTION_LIST);
+            }
 
             suggList.forEach(s -> {
                 db.addSuggestion(s);

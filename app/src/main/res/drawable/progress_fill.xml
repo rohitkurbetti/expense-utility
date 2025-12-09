@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Base green fill -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="6dp"/>
+            <gradient
+                android:startColor="#00AA00"
+                android:centerColor="#33DD33"
+                android:endColor="#00AA00"
+                android:angle="0"/>
+        </shape>
+    </item>
+
+    <!-- Moving highlight (Windows 7 glossy effect) -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="6dp"/>
+            <gradient
+                android:startColor="#80FFFFFF"
+                android:centerColor="#20FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="0"
+                android:type="linear"/>
+        </shape>
+    </item>
+</layer-list>

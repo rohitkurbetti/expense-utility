@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<clip xmlns:android="http://schemas.android.com/apk/res/android"
+    android:clipOrientation="horizontal"
+    android:gravity="left">
+
+    <bitmap
+        android:src="@drawable/win7_progress_stripe"
+        android:tileMode="repeat" />
+</clip>

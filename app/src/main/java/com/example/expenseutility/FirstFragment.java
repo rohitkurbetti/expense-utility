@@ -241,6 +241,7 @@ public class FirstFragment extends Fragment {
         items.add(new SpinnerItem("Food", R.drawable.meal_easter_svgrepo_com));
         items.add(new SpinnerItem("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com));
         items.add(new SpinnerItem("Fuel", R.drawable.fuel_station));
+        items.add(new SpinnerItem("Stationary", R.drawable.diary_education_learning_pencil_school_study_svgrepo_com));
         items.add(new SpinnerItem("Recharge", R.drawable.mobile_phone_recharge_svgrepo_com));
         items.add(new SpinnerItem("Shopping", R.drawable.shopping_cart_svgrepo_com));
         items.add(new SpinnerItem("Subscriptions", R.drawable.youtube_svgrepo_com));

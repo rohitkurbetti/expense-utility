@@ -19,4 +19,24 @@
     <color name="bluecolor">#1F9CFD</color>
     <color name="darkbluecolor">#47AEFF</color>
 
+    <!-- Custom colors -->
+    <color name="gray_300">#FFE0E0E0</color>
+    <color name="gray_600">#FF757575</color>
+    <color name="gray_700">#FF616161</color>
+
+    <!-- Accent Color -->
+    <color name="accent_color">#4CAF50</color>
+
+    <!-- Text Colors -->
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+
+    <!-- Divider Color -->
+    <color name="divider_color">#E0E0E0</color>
+
+    <!-- Status Colors -->
+    <color name="success_green">#4CAF50</color>
+    <color name="warning_orange">#FF9800</color>
+    <color name="error_red">#F44336</color>
+
 </resources>

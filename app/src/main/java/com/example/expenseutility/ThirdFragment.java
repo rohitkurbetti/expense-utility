@@ -1,6 +1,7 @@
 package com.example.expenseutility;
 
 import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
+import static com.example.expenseutility.constants.ExpenseConstants.EXPENSE_CATEGORY_CHIPS;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
@@ -163,11 +164,8 @@ public class ThirdFragment extends Fragment {
         });
 
         ChipGroup chipGroup = view.findViewById(R.id.chip_group);
-        String[] categories = {"Today's expenses", "Housing Expenses", "Transportation", "Food", "Healthcare", "Fuel", "Debt Payments", "Entertainment"
-                , "Savings and Investments", "Grocery", "Clothing and Personal Care",
-                "Education", "Charity and Gifts", "Travel", "Insurance", "Childcare", "Miscellaneous"};
 
-        for (String category : categories) {
+        for (String category : EXPENSE_CATEGORY_CHIPS) {
             Chip chip = (Chip) getLayoutInflater().inflate(R.layout.chip_item, chipGroup, false);
             chip.setText(category);
             chip.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

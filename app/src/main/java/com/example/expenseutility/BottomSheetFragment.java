@@ -18,20 +18,16 @@ import androidx.core.content.FileProvider;
 
 import com.example.expenseutility.databinding.BottomSheetLayoutBinding;
 import com.example.expenseutility.entityadapter.ExpenseItem;
-import com.example.expenseutility.utility.SpinnerItem;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class BottomSheetFragment extends BottomSheetDialogFragment {
 
-    private BottomSheetLayoutBinding binding;
-
     private static final String ARG_OBJECT = "arg_object";
+    private BottomSheetLayoutBinding binding;
     private SharedPreferences sharedPreferences;
 
     public static BottomSheetFragment newInstance(ExpenseItem myObject) {
@@ -57,6 +53,7 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         map.put("Housing Expenses", R.drawable.house_to_rent_svgrepo_com);
         map.put("Transportation", R.drawable.ground_transportation_svgrepo_com);
         map.put("Food", R.drawable.meal_easter_svgrepo_com);
+        map.put("Stationary", R.drawable.diary_education_learning_pencil_school_study_svgrepo_com);
         map.put("Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com);
         map.put("Recharge", R.drawable.mobile_phone_recharge_svgrepo_com);
         map.put("Shopping", R.drawable.shopping_cart_svgrepo_com);
@@ -78,12 +75,12 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
         if (getArguments() != null) {
             ExpenseItem expenseItem = (ExpenseItem) getArguments().getSerializable(ARG_OBJECT);
             if (expenseItem != null) {
-                binding.expAmountTxt.setText(String.valueOf("\u20B9"+expenseItem.getExpenseAmount()));
-                binding.dailyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/(sharedPreferences.getFloat("monthlyIncome",ANN_INCOME)/30))*100)+"%");
-                binding.monthlyIncomeTxt.setText(String.format("%.2f",((double) expenseItem.getExpenseAmount()/sharedPreferences.getFloat("monthlyIncome",ANN_INCOME))*100)+"%");
+                binding.expAmountTxt.setText(String.valueOf("\u20B9" + expenseItem.getExpenseAmount()));
+                binding.dailyIncomeTxt.setText(String.format("%.2f", ((double) expenseItem.getExpenseAmount() / (sharedPreferences.getFloat("monthlyIncome", ANN_INCOME) / 30)) * 100) + "%");
+                binding.monthlyIncomeTxt.setText(String.format("%.2f", ((double) expenseItem.getExpenseAmount() / sharedPreferences.getFloat("monthlyIncome", ANN_INCOME)) * 100) + "%");
                 binding.imageViewCategory.setImageDrawable(getResources().getDrawable(map.get(expenseItem.getExpenseCategory())));
 
-                if(expenseItem.getFileBytes() != null){
+                if (expenseItem.getFileBytes() != null) {
                     binding.btnDownloadFile.setVisibility(View.VISIBLE);
                     binding.btnDownloadFile.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -109,9 +106,6 @@ public class BottomSheetFragment extends BottomSheetDialogFragment {
 
             }
         }
-
-
-
 
 
         binding.closeButton.setOnClickListener(v -> dismiss());

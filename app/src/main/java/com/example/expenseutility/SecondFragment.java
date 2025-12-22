@@ -50,14 +50,19 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.FragmentSecondBinding;
+import com.example.expenseutility.dto.ExpenseMonth;
 import com.example.expenseutility.entityadapter.ExpenseDetailsAdapter;
 import com.example.expenseutility.entityadapter.ExpenseItem;
+import com.example.expenseutility.entityadapter.ExpenseMonthAdapter;
 import com.example.expenseutility.python.TFLiteModel;
 import com.example.expenseutility.utility.Commons;
 import com.example.expenseutility.utility.CustomSpinnerAdapter;
+import com.example.expenseutility.utility.ExpenseGroupingUtility;
 import com.example.expenseutility.utility.SpinnerItem;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -83,6 +88,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class SecondFragment extends Fragment {
@@ -109,6 +115,11 @@ public class SecondFragment extends Fragment {
     private EditText chooseFileTextEdit;
     private ListView expenseDetailsListView;
     private ListView listViewTest;
+    private ImageButton expMonthtoggle;
+    private RecyclerView recyclerView;
+    private ExpenseMonthAdapter adapter;
+    private List<ExpenseMonth> expenseList;
+    private LinearLayout expenseMonthLayout;
 
     public static void callOnClickListener(Context context, String delId, int position, ExpenseItem expenseItem) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -217,6 +228,58 @@ public class SecondFragment extends Fragment {
         linearLayout = view.findViewById(R.id.linearLayout);
         expenseDetailsLayout = view.findViewById(R.id.expenseDetailsLayout);
         expenseDetailsListView = view.findViewById(R.id.expenseDetailsListView);
+        expMonthtoggle = view.findViewById(R.id.expMonthtoggle);
+//        expenseMonthLayout = view.findViewById(R.id.expenseMonthLayout);
+        AtomicBoolean isEnabled = new AtomicBoolean(false);
+
+
+        expMonthtoggle.setOnClickListener(v -> {
+//            if (!isEnabled.get()) {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setTitle("Expand Month");
+            builder.setIcon(R.drawable.calendar_svgrepo_com);
+            builder.setCancelable(false);
+            View view1 = getLayoutInflater().inflate(R.layout.alert_diag_month_expense_layout, null, false);
+            builder.setView(view1);
+
+
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+
+
+            // Initialize RecyclerView
+            recyclerView = view1.findViewById(R.id.recyclerViewMonth);
+            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+            // Create sample data
+            expenseList = new ArrayList<>();
+
+            // Group expenses by month using the utility
+            expenseList = ExpenseGroupingUtility.groupExpensesByMonth(expenseItems);
+
+            expenseList.stream().findFirst().ifPresent(expenseMonth -> {
+                expenseMonth.setExpanded(true);
+            });
+
+            // Setup adapter
+            adapter = new ExpenseMonthAdapter(getContext(), expenseList);
+            recyclerView.setAdapter(adapter);
+
+
+//            isEnabled.set(true);
+//            } else {
+//                isEnabled.set(false);
+//                expenseMonthLayout.setVisibility(View.GONE);
+//            }
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        });
+
 
         progressBar = new ProgressBar(getContext());
         try {

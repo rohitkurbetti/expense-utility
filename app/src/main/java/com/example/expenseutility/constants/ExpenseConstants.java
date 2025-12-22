@@ -2,13 +2,32 @@ package com.example.expenseutility.constants;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class ExpenseConstants {
 
     public static final float ANN_INCOME = 86000.0f;
+
+    public static final String[] EXPENSE_CATEGORY_CHIPS = {
+            "Today's expenses",
+            "Housing Expenses",
+            "Transportation",
+            "Food",
+            "Healthcare",
+            "Fuel",
+            "Stationary",
+            "Debt Payments",
+            "Entertainment",
+            "Savings and Investments",
+            "Grocery",
+            "Clothing and Personal Care",
+            "Education",
+            "Charity and Gifts",
+            "Travel",
+            "Insurance",
+            "Childcare",
+            "Miscellaneous"
+    };
     public static final List<String> SUGGESTION_LIST = Collections.unmodifiableList(Arrays.asList(
             "Taxi", "Fuel", "Mortgage", "Coffee", "Tea", "Juice", "Soda", "Alcohol",
             "Wine", "Beer", "Tobacco", "Cigarettes", "Newspaper", "Magazine", "Park",

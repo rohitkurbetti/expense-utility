@@ -26,6 +26,7 @@ import androidx.annotation.RequiresApi;
 
 import com.example.expenseutility.R;
 import com.example.expenseutility.utility.Commons;
+import com.example.expenseutility.utility.TransactionParser;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.text.SimpleDateFormat;
@@ -73,7 +74,7 @@ public class ExpenseDetailsAdapter extends BaseAdapter {
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        
+
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.expense_details_item, parent, false);
         }
@@ -104,7 +105,10 @@ public class ExpenseDetailsAdapter extends BaseAdapter {
 
 
         expenseIdTxt.setText(String.valueOf(expenseItem.getId()));
-        expenseParticularsTxt.setText(String.valueOf(expenseItem.getExpenseParticulars()));
+
+        String parsedParticulars = TransactionParser.parseTransactions(expenseItem.getExpenseParticulars());
+
+        expenseParticularsTxt.setText(String.valueOf(parsedParticulars));
 
         if (expenseItem.getPartDetails() != null && !expenseItem.getPartDetails().isEmpty()) {
             expenseParticularsTxt.setPaintFlags(expenseParticularsTxt.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);

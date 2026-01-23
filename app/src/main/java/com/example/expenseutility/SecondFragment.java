@@ -49,6 +49,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -284,9 +286,7 @@ public class SecondFragment extends Fragment {
         progressBar = new ProgressBar(getContext());
         try {
             populateTable1();
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
 
@@ -294,14 +294,22 @@ public class SecondFragment extends Fragment {
             String date = getArguments().getString("date");
 
             List<ExpenseItem> filteredList = expenseItems.stream().filter(expenseItem -> expenseItem.getExpenseDate().contains(date)).collect(Collectors.toList());
+            if (filteredList.isEmpty()) {
+                Toast.makeText(getContext(), "No expenses found", Toast.LENGTH_SHORT).show();
+                if (getView() != null) {
+                    NavController navController = Navigation.findNavController(getView());
+                    navController.navigateUp(); // Goes back to previous fragment
+                }
+            } else {
 
-            long monthExpSum = filteredList.stream().mapToLong(ExpenseItem::getExpenseAmount).sum();
-            NumberFormat formatter = NumberFormat.getInstance(new Locale("en", "IN"));
-            int roundedAmount = (int) monthExpSum;
+                long monthExpSum = filteredList.stream().mapToLong(ExpenseItem::getExpenseAmount).sum();
+                NumberFormat formatter = NumberFormat.getInstance(new Locale("en", "IN"));
+                int roundedAmount = (int) monthExpSum;
 
-            String formattedAmount = "₹" + formatter.format(roundedAmount);
-            binding.tvHeading1.setText("Total  " + formattedAmount);
-            expenseDetailsAdapter.filterMonthlyList(getContext(), filteredList);
+                String formattedAmount = "₹" + formatter.format(roundedAmount);
+                binding.tvHeading1.setText("Total  " + formattedAmount);
+                expenseDetailsAdapter.filterMonthlyList(getContext(), filteredList);
+            }
 
         }
 

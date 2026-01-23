@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorOnSurfaceInverse"
+    tools:context=".NestedViewActivity">
+
+    <!-- Header -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/header_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Expense Manager"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_current_selection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Select a year to begin"
+                android:textColor="#858383"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Main Content Area -->
+    <HorizontalScrollView
+        android:id="@+id/horizontal_scroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_card">
+
+        <LinearLayout
+            android:id="@+id/columns_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <!-- Year Column -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/year_column"
+                android:layout_width="300dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="4dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#6200EE"
+                        android:padding="16dp"
+                        android:text="Years"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_years"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="8dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Month Column -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/month_column"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="4dp"
+                android:visibility="gone"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#3700B3"
+                        android:padding="16dp"
+                        android:text="Months"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_months"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="8dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Category Column -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/category_column"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="4dp"
+                android:visibility="gone"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#03DAC5"
+                        android:padding="16dp"
+                        android:text="Categories"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_categories"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="8dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Details Column -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/details_column"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_details_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#018786"
+                        android:padding="16dp"
+                        android:text="Expense Details"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:id="@+id/details_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
+                    </ScrollView>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,6 +4,7 @@ import static android.app.Activity.RESULT_OK;
 import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
 
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.net.Uri;
@@ -32,6 +34,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -93,6 +96,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -112,6 +116,7 @@ public class FirstFragment extends Fragment {
     private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     private static final int CAMERA_REQUEST = 50;
+
     public static FragmentFirstBinding binding;
     private static int BLINK_DURATION = 50;  // 100ms blink
     private static int INTERVAL_DURATION = 4000;  // 2 seconds interval
@@ -260,6 +265,65 @@ public class FirstFragment extends Fragment {
         return items;
     }
 
+    public static void updateLimitText(String limitVal) {
+        hideDailyLimitPB();
+        if (binding != null) {
+            binding.limitTextView.setText(String.valueOf("\u20B9" + limitVal));
+
+            double left, right;
+            left = 200;
+            right = 217;
+
+            if (left > right) {
+                // red
+                binding.unitActionTextView.setTextColor(Color.RED);
+                binding.updateActionImageView.setImageResource(R.drawable.arrow_small_down_svgrepo_com);
+
+            } else if (left < right) {
+                // green
+                binding.unitActionTextView.setTextColor(Color.GREEN);
+                binding.updateActionImageView.setImageResource(R.drawable.arrow_small_up_svgrepo_com);
+            } else {
+                binding.unitActionTextView.setTextColor(Color.GRAY);
+
+            }
+
+            double div = (right / left) * 100d;
+            double percChange = div - 100d;
+
+
+            binding.unitActionTextView.setText(String.valueOf("(" + String.format("%.1f", percChange) + "%)"));
+
+
+        }
+    }
+
+    public static void showDailyLimitPB() {
+        if (binding != null) {
+            binding.dailyLimitPB.setVisibility(View.VISIBLE);
+
+            ObjectAnimator rotationAnimator;
+            rotationAnimator = ObjectAnimator.ofFloat(binding.dailyLimitPB, "rotation", 0f, 1120f);
+            rotationAnimator.setDuration(1000); // 400ms per rotation (faster)
+            rotationAnimator.setRepeatCount(ValueAnimator.INFINITE);
+            rotationAnimator.setInterpolator(new LinearInterpolator());
+            rotationAnimator.start();
+
+            binding.limitTextView.setVisibility(View.GONE);
+        }
+    }
+
+    public static void hideDailyLimitPB() {
+        if (binding != null) {
+
+            binding.dailyLimitPB.setVisibility(View.GONE);
+            binding.limitTextView.setVisibility(View.VISIBLE);
+
+
+        }
+    }
+
+
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container,
@@ -273,6 +337,7 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ((MainActivity) requireActivity()).reCalculateDailyLimit("from onViewCreated");
         DatabaseHelper db = new DatabaseHelper(getContext());
         db2 = new DatabaseHelper(getContext());
         sharedPreferences = getContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -603,19 +668,14 @@ public class FirstFragment extends Fragment {
                 String expenseCategory = selectedItem.getText();
                 boolean isHomeExpense = binding.homeCheckBox.isChecked();
 
-
                 particulars = capitalizeFirstLetter(particulars);
                 String encodedPartDetails = Commons.encryptString(partDetails);
 
                 if (validateFields(expenseCategory, particulars, amount, dateTimeVal, dateVal)) {
                     boolean res = false;
                     try {
-
-
                         res = db.insertExpense(expenseCategory, particulars, amount, dateTimeVal, dateVal, fileName, pdfBytes, null, encodedPartDetails, isHomeExpense);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    } catch (NoSuchFieldException e) {
+                    } catch (IllegalAccessException | NoSuchFieldException e) {
                         throw new RuntimeException(e);
                     }
                     if (res) {
@@ -629,6 +689,7 @@ public class FirstFragment extends Fragment {
 
                         resetFields();
                         Toast.makeText(getContext(), "Expense added", Toast.LENGTH_SHORT).show();
+//                        ((MainActivity) requireActivity()).reCalculateDailyLimit("from Expense Added");
                         NavHostFragment.findNavController(FirstFragment.this)
                                 .navigate(R.id.action_FirstFragment_to_SecondFragment);
 
@@ -638,7 +699,6 @@ public class FirstFragment extends Fragment {
                 } else {
                     Toast.makeText(getContext(), "Please provide valid input", Toast.LENGTH_SHORT).show();
                 }
-
             }
 
             private void resetFields() {
@@ -874,7 +934,21 @@ public class FirstFragment extends Fragment {
         } else if (next) {
             String monthStr = sharedPreferences.getString("dateStr", month);
             Date d = new SimpleDateFormat("yyyy-MM").parse(monthStr);
-            if (!d.before(new Date())) {
+            Date now = new Date();
+
+            GregorianCalendar calendar = new GregorianCalendar();
+            calendar.setTime(now);
+            calendar.set(Calendar.DAY_OF_MONTH, 1);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.clear(Calendar.MINUTE);
+            calendar.clear(Calendar.SECOND);
+            calendar.clear(Calendar.MILLISECOND);
+
+            Date firstDayOfMonth = calendar.getTime();
+
+            if (!d.before(firstDayOfMonth)) {
+                d.setMonth(d.getMonth());
+            } else if (d.before(firstDayOfMonth)) {
                 d.setMonth(d.getMonth() + 1);
             } else {
                 d.setMonth(new Date().getMonth());

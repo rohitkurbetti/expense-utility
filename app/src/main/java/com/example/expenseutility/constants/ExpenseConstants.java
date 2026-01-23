@@ -1,13 +1,16 @@
 package com.example.expenseutility.constants;
 
+import com.example.expenseutility.R;
+
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ExpenseConstants {
 
     public static final float ANN_INCOME = 86000.0f;
-
     public static final String[] EXPENSE_CATEGORY_CHIPS = {
             "Today's expenses",
             "Housing Expenses",
@@ -259,5 +262,42 @@ public class ExpenseConstants {
             "Anniversary", "Gift", "Vacation", "Booking", "Event", "Tickets",
             "Repayment", "Credit", "Card"
     ));
+    public static final Map<String, Integer> EXPENSE_CATEGORY_ICONS = createExpenseCategoryIcons();
+    public static final List<String> BUDGET_YEARS = Arrays.asList("2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032");
+    public static final String[] BUDGET_MONTHS = {
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+    };
+
+    private static Map<String, Integer> createExpenseCategoryIcons() {
+        Map<String, Integer> map = new HashMap<>();
+        addCategory(map, "Housing Expenses", R.drawable.house_to_rent_svgrepo_com);
+        addCategory(map, "Transportation", R.drawable.ground_transportation_svgrepo_com);
+        addCategory(map, "Food", R.drawable.meal_easter_svgrepo_com);
+        addCategory(map, "Stationary", R.drawable.diary_education_learning_pencil_school_study_svgrepo_com);
+        addCategory(map, "Healthcare", R.drawable.healthcare_hospital_medical_9_svgrepo_com);
+        addCategory(map, "Recharge", R.drawable.mobile_phone_recharge_svgrepo_com);
+        addCategory(map, "Shopping", R.drawable.shopping_cart_svgrepo_com);
+        addCategory(map, "Subscriptions", R.drawable.youtube_svgrepo_com);
+        addCategory(map, "Debt Payments", R.drawable.money_svgrepo_com__1_);
+        addCategory(map, "Entertainment", R.drawable.entertainment_svgrepo_com);
+        addCategory(map, "Savings and Investments", R.drawable.piggybank_pig_svgrepo_com);
+        addCategory(map, "Clothing", R.drawable.clothes_clothing_formal_wear_svgrepo_com);
+        addCategory(map, "Personal Care", R.drawable.personalcare__2_);
+        addCategory(map, "Education", R.drawable.education_graduation_learning_school_study_svgrepo_com);
+        addCategory(map, "Charity and Gifts", R.drawable.loving_charity_svgrepo_com);
+        addCategory(map, "Travel", R.drawable.travel_svgrepo_com__1_);
+        addCategory(map, "Insurance", R.drawable.employee_svgrepo_com);
+        addCategory(map, "Childcare", R.drawable.woman_pushing_stroller_svgrepo_com);
+        addCategory(map, "Miscellaneous", R.drawable.notebook_miscellaneous_svgrepo_com);
+        addCategory(map, "Fuel", R.drawable.fuel_station);
+        addCategory(map, "Grocery", R.drawable.shopping_basket);
+
+        return Collections.unmodifiableMap(map);
+    }
+
+    private static void addCategory(Map<String, Integer> map, String category, Integer iconResId) {
+        map.put(category, iconResId);
+    }
 
 }

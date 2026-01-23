@@ -72,6 +72,7 @@
         android:id="@+id/suggestionsConfig"
         android:orderInCategory="100"
         android:title="Configurations"
+        android:visible="false"
         app:showAsAction="never" />
 
     <item
@@ -84,6 +85,7 @@
         android:id="@+id/csvStatementImport"
         android:orderInCategory="100"
         android:title="Import from Statement"
+        android:visible="false"
         app:showAsAction="never" />
 
 
@@ -112,6 +114,7 @@
         android:icon="@drawable/displaysettings"
         android:orderInCategory="100"
         android:title="Settings"
+        android:visible="false"
         app:showAsAction="never" />
 
     <item
@@ -124,8 +127,39 @@
     <item
         android:id="@+id/report"
         android:orderInCategory="100"
-        android:title="Report"
-         />
+        android:title="Report" />
+
+    <item
+        android:id="@+id/dataActivity"
+        android:orderInCategory="100"
+        android:title="New Activity"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/nestedViewActivity"
+        android:orderInCategory="100"
+        android:title="Expense Summary" />
+
+    <item
+        android:id="@+id/criticalFireBaseImport"
+        android:orderInCategory="100"
+        android:title="Critical Firebase Import" />
+
+    <item
+        android:visible="false"
+        android:id="@+id/newUI"
+        android:orderInCategory="100"
+        android:title="newUI" />
+
+    <item
+        android:id="@+id/budget"
+        android:orderInCategory="100"
+        android:title="Set Budget" />
+
+    <item
+        android:id="@+id/statementImport"
+        android:orderInCategory="100"
+        android:title="Statement Parser" />
 
 
 </menu>

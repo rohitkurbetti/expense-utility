@@ -44,7 +44,7 @@ dependencies {
 //    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     implementation libs.activity
     implementation 'com.github.AnyChart:AnyChart-Android:1.1.2'
-    implementation 'com.android.support:multidex:1.0.3'
+//    implementation 'com.android.support:multidex:1.0.3'
 
     //qr code
     implementation 'com.google.zxing:core:3.4.1'
@@ -54,6 +54,7 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
     implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     implementation libs.firebase.database
+    implementation libs.gridlayout
 
     def camerax_version = "1.0.0"
     implementation "androidx.camera:camera-core:${camerax_version}"

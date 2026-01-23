@@ -14,6 +14,7 @@ import com.example.expenseutility.entityadapter.Suggestion;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -39,10 +40,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String COLUMN_PART_DETAILS = "partDetails";
     private static final String COLUMN_HOME_EXPENSE = "isHomeExpense";
-
+    private static DatabaseHelper instance;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    public static synchronized DatabaseHelper getInstance(Context context) {
+        if (instance == null) {
+            instance = new DatabaseHelper(context.getApplicationContext());
+        }
+        return instance;
     }
 
     @Override
@@ -166,6 +174,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         String query = "SELECT SUM(" + COLUMN_AMOUNT + ") as total FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + "=?";
         Cursor cursor = db.rawQuery(query, new String[]{todayDate});
+
+        if (cursor.moveToFirst()) {
+            totalExpense = cursor.getDouble(0);
+        }
+        cursor.close();
+        db.close();
+
+        return totalExpense;
+    }
+
+    public double getTotalExpenseForCurrentMonth() {
+        double totalExpense = 0;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+        int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+
+        String yearStr = String.valueOf(year);
+        String monthStr = String.format("%02d", month);
+
+        String param = yearStr + "-" + monthStr;
+        String query = "SELECT SUM(" + COLUMN_AMOUNT + ") as total FROM " + TABLE_NAME + " WHERE " + COLUMN_DATE + " like '" + param + "%'";
+        Cursor cursor = db.rawQuery(query, null);
 
         if (cursor.moveToFirst()) {
             totalExpense = cursor.getDouble(0);
@@ -328,6 +359,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
+    public List<ExpenseItem> getAllExpensesDataList() {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+
+        List<ExpenseItem> expenseItemList = new ArrayList<>();
+
+        while (sqlRows.moveToNext()) {
+            int id = sqlRows.getInt(0);
+            String expCat = sqlRows.getString(1);
+            String pert = sqlRows.getString(2);
+            long amt = sqlRows.getInt(3);
+            String dtm = sqlRows.getString(4);
+            String dt = sqlRows.getString(5);
+            String flnm = sqlRows.getString(6);
+
+            ExpenseItem item = new ExpenseItem(id, pert, amt, dt, expCat, flnm, null);
+            expenseItemList.add(item);
+        }
+
+        return expenseItemList;
+
+    }
+
     public List<ExpenseItem> getExpenseDataList(String monthFilter) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor sqlRows;
@@ -359,6 +414,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return expenseItemList;
 
+    }
+
+    public List<ExpenseItem> getExpenseDataListRange(String fromDate, String toDate) {
+        List<ExpenseItem> expenseItemList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor sqlRows;
+        sqlRows = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE " +
+                COLUMN_DATE + " >= ? and " + COLUMN_DATE + " <= ? ", new String[]{fromDate, toDate});
+
+        while (sqlRows.moveToNext()) {
+            int id = sqlRows.getInt(0);
+            String expCat = sqlRows.getString(1);
+            String pert = sqlRows.getString(2);
+            long amt = sqlRows.getInt(3);
+            String dtm = sqlRows.getString(4);
+            String dt = sqlRows.getString(5);
+            String flnm = sqlRows.getString(6);
+            int isHomeExpense = sqlRows.getInt(9);
+
+            ExpenseItem item = new ExpenseItem(id, pert, amt, dt, expCat, flnm, null, null, isHomeExpense == 1);
+            expenseItemList.add(item);
+        }
+
+        return expenseItemList;
+    }
+
+    public boolean checkifExistsFromStatement(String expCategory, String particulars, String expAmt, String expDate) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT id from " + TABLE_NAME + " where " + COLUMN_AMOUNT + "=? and " + COLUMN_EXPENSE_CATEGORY + " =? " +
+                " and " + COLUMN_PARTICULARS + " =? and " + COLUMN_DATE + " =? ";
+        Cursor cursor = db.rawQuery(query, new String[]{expAmt, expCategory, particulars, expDate});
+        boolean isExists = false;
+        if (cursor.getCount() > 0) {
+            isExists = true;
+        }
+        return isExists;
     }
 }
 

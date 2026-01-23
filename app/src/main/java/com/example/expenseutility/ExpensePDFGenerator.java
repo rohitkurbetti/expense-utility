@@ -260,6 +260,7 @@ public class ExpensePDFGenerator {
     }
 
     private void addCategoryBreakdown(Document document, List<ExpenseItem> expenseItems) throws DocumentException {
+
         Paragraph sectionTitle = new Paragraph("CATEGORY BREAKDOWN", headerFont);
         sectionTitle.setSpacingBefore(10);
         sectionTitle.setSpacingAfter(15);
@@ -288,7 +289,7 @@ public class ExpensePDFGenerator {
         addTableHeader(categoryTable, "Home");
         addTableHeader(categoryTable, "Personal");
         addTableHeader(categoryTable, "Count");
-        addTableHeader(categoryTable, "Avg/Item");
+        addTableHeader(categoryTable, "Percentage");
 
         // Calculate grand total
         long grandTotal = expenseItems.stream()
@@ -305,7 +306,8 @@ public class ExpensePDFGenerator {
             alternateRow = !alternateRow;
 
             // Calculate average per item
-            long avgPerItem = stats.itemCount > 0 ? stats.totalAmount / stats.itemCount : 0;
+            double avgPerItem = stats.itemCount > 0 ? ((double) stats.totalAmount / grandTotal) * 100 : 0;
+
 
             // Add cells
             addTableCell(categoryTable, category, rowColor, Element.ALIGN_LEFT);
@@ -313,7 +315,7 @@ public class ExpensePDFGenerator {
             addTableCell(categoryTable, formatCurrency(stats.homeTotal), rowColor, Element.ALIGN_RIGHT);
             addTableCell(categoryTable, formatCurrency(stats.personalTotal), rowColor, Element.ALIGN_RIGHT);
             addTableCell(categoryTable, String.valueOf(stats.itemCount), rowColor, Element.ALIGN_CENTER);
-            addTableCell(categoryTable, formatCurrency(avgPerItem), rowColor, Element.ALIGN_RIGHT);
+            addTableCell(categoryTable, formatPercentage(avgPerItem), rowColor, Element.ALIGN_RIGHT);
         }
 
         // Add total row
@@ -327,17 +329,21 @@ public class ExpensePDFGenerator {
                 .mapToLong(item -> item.getExpenseAmount() != null ? item.getExpenseAmount() : 0)
                 .sum();
 
-        long totalAvg = expenseItems.size() > 0 ? grandTotal / expenseItems.size() : 0;
 
         addTableCell(categoryTable, "TOTAL", COLOR_PRIMARY, Element.ALIGN_LEFT);
         addTableCell(categoryTable, formatCurrency(grandTotal), COLOR_PRIMARY, Element.ALIGN_RIGHT);
         addTableCell(categoryTable, formatCurrency(totalHome), COLOR_PRIMARY, Element.ALIGN_RIGHT);
         addTableCell(categoryTable, formatCurrency(totalPersonal), COLOR_PRIMARY, Element.ALIGN_RIGHT);
         addTableCell(categoryTable, String.valueOf(expenseItems.size()), COLOR_PRIMARY, Element.ALIGN_CENTER);
-        addTableCell(categoryTable, formatCurrency(totalAvg), COLOR_PRIMARY, Element.ALIGN_RIGHT);
+        addTableCell(categoryTable, formatPercentage(100), COLOR_PRIMARY, Element.ALIGN_RIGHT);
 
         document.add(categoryTable);
         addSeparator(document);
+    }
+
+    private String formatPercentage(double avgPerItem) {
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+        return df.format(avgPerItem) + "%";
     }
 
     private void addExpenseDetails(Document document, List<ExpenseItem> expenseItems) throws DocumentException {

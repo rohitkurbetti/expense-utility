@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".BudgetActivity">
+
+    <!-- App Bar with Back Button -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:subtitle="Manage your monthly budgets"
+            app:title="Budget Manager" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Empty State View -->
+    <LinearLayout
+        android:id="@+id/emptyView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="20dp"
+            android:src="@drawable/ic_empty_budget" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Budgets Created"
+            android:textColor="@color/gray_600"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Tap the + button to add your first budget"
+            android:textColor="@color/gray_500"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- List View -->
+    <ListView
+        android:id="@+id/listViewBudgets"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@color/gray_200"
+        android:dividerHeight="1dp" />
+
+    <!-- Floating Action Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddBudget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="20dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:src="@drawable/ic_add"
+        app:tint="@color/white" />
+
+</LinearLayout>

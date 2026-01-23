@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:fitsSystemWindows="true"
+    tools:context=".NewUI">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- App Header with Back Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp">
+
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:padding="8dp"
+                android:src="@drawable/ic_back" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingHorizontal="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Hello, User!"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Expense Dashboard"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnNotifications"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Notifications"
+                android:padding="8dp"
+                android:src="@drawable/ic_notifications" />
+        </LinearLayout>
+
+        <!-- Balance Overview Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Current Balance"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvCurrentBalance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="$4,850.00"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif"
+                            android:text="Income"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvMonthlyIncome"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="$5,000"
+                            android:textColor="@color/success"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:background="?attr/colorOutline" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif"
+                            android:text="Expenses"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvMonthlyExpenses"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="$150"
+                            android:textColor="@color/error"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Monthly Budget Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/monthlyCardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <!-- Month Selector -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="Monthly Budget"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPreviousMonth"
+                            style="@style/Widget.Material3.Button.IconButton"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            app:icon="@drawable/ic_chevron_left"
+                            app:iconTint="?attr/colorOnSurfaceVariant" />
+
+                        <TextView
+                            android:id="@+id/tvMonthYear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="12dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Dec 2024"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnNextMonth"
+                            style="@style/Widget.Material3.Button.IconButton"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            app:icon="@drawable/ic_chevron_right"
+                            app:iconTint="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Progress Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif"
+                            android:text="Budget Usage"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvBudgetPercentage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="30%"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressBudget"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="12dp"
+                        android:indeterminate="false"
+                        android:max="100"
+                        android:progress="30"
+                        app:trackColor="?attr/colorSurfaceVariant"
+                        app:trackCornerRadius="4dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvRemainingBudget"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="$4,850 left"
+                            android:textColor="@color/success"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvSpentBudget"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="$150 spent"
+                            android:textColor="@color/error"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- View Details Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnViewDetails"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="24dp"
+                    android:text="View Budget Details" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Quick Actions -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="Quick Actions"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddExpenseQuick"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="Add Expense"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewReport"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="View Report"
+                app:icon="@drawable/ic_analytics"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp" />
+        </LinearLayout>
+
+        <!-- Add Expense Form -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardExpenseForm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:visibility="gone"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Add New Expense"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <!-- Category Selection -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:fontFamily="sans-serif"
+                    android:text="Category"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipFood"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Food"
+                        android:textColor="@android:color/white"
+                        app:chipBackgroundColor="@color/category_food"
+                        app:chipIcon="@drawable/ic_food"
+                        app:chipIconVisible="true" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTransport"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Transport"
+                        android:textColor="@android:color/white"
+                        app:chipBackgroundColor="@color/category_transport"
+                        app:chipIcon="@drawable/ic_transport"
+                        app:chipIconVisible="true" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipShopping"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shopping"
+                        android:textColor="@android:color/white"
+                        app:chipBackgroundColor="@color/category_shopping"
+                        app:chipIcon="@drawable/ic_shopping"
+                        app:chipIconVisible="true" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipBills"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bills"
+                        android:textColor="@android:color/white"
+                        app:chipBackgroundColor="@color/category_bills"
+                        app:chipIcon="@drawable/ic_receipt"
+                        app:chipIconVisible="true" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipOther"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Other"
+                        android:textColor="@android:color/white"
+                        app:chipBackgroundColor="@color/category_other"
+                        app:chipIcon="@drawable/ic_more"
+                        app:chipIconVisible="true" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <!-- Expense Title -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilExpenseTitle"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:hint="Expense Title"
+                    app:startIconDrawable="@drawable/ic_title">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etExpenseTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxLength="50"
+                        android:singleLine="true" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Amount -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilAmount"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Amount"
+                    app:prefixText="$"
+                    app:startIconDrawable="@drawable/ic_money">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etAmount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal"
+                        android:singleLine="true" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Date -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilDate"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Date"
+                    app:startIconDrawable="@drawable/ic_calendar">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etDate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:inputType="none"
+                        android:singleLine="true" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Description -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilDescription"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Description (Optional)"
+                    app:startIconDrawable="@drawable/ic_description">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:maxLines="3"
+                        android:minLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Add Expense Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddExpense"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="24dp"
+                    android:text="Add Expense"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Recent Expenses -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:text="Recent Expenses"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvViewAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:fontFamily="sans-serif-medium"
+                android:text="View All"
+                android:textColor="@color/primary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Recent Expenses List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRecentExpenses"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:nestedScrollingEnabled="false"
+            android:orientation="vertical"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <!-- Empty State for Recent Expenses -->
+        <LinearLayout
+            android:id="@+id/layoutEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp">
+
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:alpha="0.6"
+                android:contentDescription="No expenses"
+                android:src="@drawable/ic_empty_expenses" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="sans-serif"
+                android:text="No recent expenses"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="sans-serif"
+                android:text="Add your first expense above"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- AI Assistant FAB -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabAssistant"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="16dp"
+            android:src="@drawable/ic_ai"
+            app:backgroundTint="@color/primary"
+            app:tint="@android:color/white" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

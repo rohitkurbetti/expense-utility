@@ -39,4 +39,62 @@
     <color name="warning_orange">#FF9800</color>
     <color name="error_red">#F44336</color>
 
+
+    <!--    <color name="primary">#6200EE</color>-->
+    <!--    <color name="primary_dark">#3700B3</color>-->
+    <!--    <color name="primary_light">#F3E5F5</color>-->
+    <color name="accent">#03DAC5</color>
+    <color name="background">#F5F5F5</color>
+    <color name="gray">#808080</color>
+    <color name="dark_gray">#424242</color>
+    <color name="light_gray">#E0E0E0</color>
+    <color name="green">#4CAF50</color>
+    <color name="red">#F44336</color>
+    <color name="selected_item">#E8F5E8</color>
+
+
+    <!-- Primary Colors (Material Design 3) -->
+    <color name="primary">#6750A4</color>
+    <color name="primary_dark">#4F378B</color>
+    <color name="primary_light">#EADDFF</color>
+
+    <!-- Secondary Colors -->
+    <color name="secondary">#625B71</color>
+    <color name="secondary_dark">#4A4458</color>
+
+    <!-- Surface Colors -->
+    <color name="surface">#FEF7FF</color>
+    <color name="surface_variant">#E7E0EC</color>
+    <color name="surface_dark">#1C1B1F</color>
+
+    <!-- Status Colors -->
+    <color name="success">#198754</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#DC3545</color>
+
+    <!-- Text Colors -->
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_surface">#1C1B1F</color>
+    <color name="on_surface_variant">#49454F</color>
+
+    <!-- Outline -->
+    <color name="outline">#79747E</color>
+
+    <!-- Original colors to keep -->
+    <!--    <color name="bluePrimary">#2196F3</color>-->
+    <color name="cardview_light_background">#F5F5F5</color>
+
+    <!-- Category Colors -->
+    <color name="category_food">#EF4444</color>
+    <color name="category_transport">#3B82F6</color>
+    <color name="category_shopping">#8B5CF6</color>
+    <color name="category_bills">#10B981</color>
+    <color name="category_other">#6B7280</color>
+
+    <color name="purple_50">#F3E5F5</color>>
+    <color name="green_700">#388E3C</color>
+    <color name="gray_200">#FFEEEEEE</color>
+    <color name="gray_500">#FF9E9E9E</color>
+
+
 </resources>

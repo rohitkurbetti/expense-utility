@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:orientation="vertical"
+    android:padding="18dp">
+
+    <TextView
+        android:id="@+id/tvSubName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sub Item"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Description"
+        android:textColor="#757575"
+        android:textSize="14sp" />
+
+</LinearLayout>

@@ -34,6 +34,7 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/spinnerYearTV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -59,6 +60,7 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/spinnerMonthTV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -71,6 +73,35 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/periodLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <CheckBox
+            android:id="@+id/periodCheckBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Period" />
+
+        <TextView
+            android:id="@+id/selFromDateTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:text="Select From Date" />
+
+        <TextView
+            android:id="@+id/selToDateTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:text="Select To Date" />
+
     </LinearLayout>
 
     <!-- Buttons -->

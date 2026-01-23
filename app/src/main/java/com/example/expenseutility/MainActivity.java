@@ -21,10 +21,13 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -53,6 +56,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.expenseutility.database.BudgetHelper;
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.ActivityMainBinding;
 import com.example.expenseutility.dto.Transaction;
@@ -63,6 +67,7 @@ import com.example.expenseutility.entityadapter.TransactionAdapter;
 import com.example.expenseutility.notification.DismissNotificationReceiver;
 import com.example.expenseutility.notification.NotificationReceiver;
 import com.example.expenseutility.utility.SmsNotificationUtils;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -121,6 +126,51 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private DatabaseHelper db;
     private List<Transaction> transactionList;
+
+    public void reCalculateDailyLimit(String fromOnResume) {
+        FirstFragment.showDailyLimitPB();
+        new Thread(() -> {
+
+            try {
+                long startTime = System.nanoTime();
+
+                DatabaseHelper databaseHelper = DatabaseHelper.getInstance(this);
+                BudgetHelper budgetHelper = BudgetHelper.getInstance(this);
+                int monthExpenses = (int) databaseHelper.getTotalExpenseForCurrentMonth();
+
+                int year = Calendar.getInstance().get(Calendar.YEAR);
+                int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+                int budget = budgetHelper.getBudget(year, month);
+
+                int remainingBalance = budget - monthExpenses;
+
+                Log.i("budget", "" + budget);
+                Log.i("monthExpenses", "" + monthExpenses);
+                Log.i("remainingBalance", "" + remainingBalance);
+
+                int remDays = BudgetActivity.getDaysRemainingInMonth();
+                Log.i("remainingDays", "" + remDays);
+
+                int dailyLimit = remainingBalance / remDays;
+
+                Log.i("final", "\u20B9" + dailyLimit);
+
+                // Update UI on the main thread
+                runOnUiThread(() -> {
+                    FirstFragment.updateLimitText(String.valueOf(dailyLimit));
+//                    Toast.makeText(this, "Ctx " + this.getApplicationContext().getPackageName(), Toast.LENGTH_SHORT).show();
+                });
+
+                long endTime = System.nanoTime();
+                long durationNano = endTime - startTime;
+                double durationMs = durationNano / 1_000_000.0;
+                Log.d("Performance", fromOnResume + " Method execution time: " + durationMs + " ms");
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void requestSmsPermission() {
@@ -341,7 +391,6 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Processing high priority: " + data, Toast.LENGTH_LONG).show();
     }
 
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -496,7 +545,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @RequiresApi(api = Build.VERSION_CODES.R)
     private void checkManageStoragePermission() {
         if (!Environment.isExternalStorageManager()) {
@@ -536,6 +584,12 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        reCalculateDailyLimit("from onResume");
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -571,6 +625,18 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.report) {
             Intent intent = new Intent(MainActivity.this, ReportActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        if (id == R.id.dataActivity) {
+            Intent intent = new Intent(MainActivity.this, ListDataActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        if (id == R.id.nestedViewActivity) {
+            Intent intent = new Intent(MainActivity.this, NestedViewActivity.class);
             startActivity(intent);
             return true;
         }
@@ -667,9 +733,291 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.criticalFireBaseImport) {
+            processCriticalFirebaseImport();
+            return true;
+        }
+
+        if (id == R.id.newUI) {
+            Intent intent = new Intent(this, NewUI.class);
+            startActivity(intent);
+            return true;
+        }
+
+        if (id == R.id.budget) {
+            Intent intent = new Intent(this, BudgetActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        if (id == R.id.statementImport) {
+            Intent intent = new Intent(this, StatementImport.class);
+            startActivity(intent);
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
+
+    private void processCriticalFirebaseImport() {
+        // First, show confirmation dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Confirm Import");
+        builder.setMessage("Do you want to import data from Firebase? This process cannot be undone.");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // User clicked Yes, proceed with import
+                startFirebaseImportProcess();
+            }
+
+            private void startFirebaseImportProcess() {
+                // Check internet connectivity first
+                if (!isNetworkAvailable()) {
+                    showSnackbar("No internet connection available");
+                    return;
+                }
+
+                ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                progressDialog.setTitle("Restoring Data");
+                progressDialog.setMessage("Please wait...");
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL + "/" + "expenses");
+
+                databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    private int totalRecords = 0;
+                    private int processedRecords = 0;
+                    private int importedRecords = 0; // Track only newly imported records
+
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        // First, count all records
+                        for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                            for (DataSnapshot d1 : dataSnapshot.getChildren()) {
+                                for (DataSnapshot d2 : d1.getChildren()) {
+                                    for (DataSnapshot d3 : d2.getChildren()) {
+                                        totalRecords++;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (totalRecords == 0) {
+                            progressDialog.dismiss();
+                            showSnackbar("No data found to import");
+                            return;
+                        }
+
+                        progressDialog.setMax(totalRecords);
+
+                        // Process with small delays to allow UI updates
+                        processWithDelay(snapshot, progressDialog);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        progressDialog.dismiss();
+
+                        // Check if error is due to network issues
+                        if (error.getCode() == DatabaseError.DISCONNECTED ||
+                                error.getCode() == DatabaseError.NETWORK_ERROR) {
+                            showSnackbar("Import failed: " + error.getMessage());
+                        } else {
+                            showSnackbar("Import failed: " + error.getMessage());
+                        }
+                    }
+
+                    private void processWithDelay(final DataSnapshot snapshot, final ProgressDialog dialog) {
+                        final Handler handler = new Handler();
+
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                                    for (DataSnapshot d1 : dataSnapshot.getChildren()) {
+                                        for (DataSnapshot d2 : d1.getChildren()) {
+                                            for (DataSnapshot d3 : d2.getChildren()) {
+                                                // Check if we lost internet during processing
+                                                if (!isNetworkAvailable()) {
+                                                    handler.post(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            dialog.dismiss();
+                                                            showSnackbar("Internet connection lost during import");
+                                                        }
+                                                    });
+                                                    return;
+                                                }
+
+                                                // Process record...
+                                                ExpenseItem expense = d3.getValue(ExpenseItem.class);
+
+                                                String expCategory = expense.getExpenseCategory();
+                                                String expPart = expense.getExpenseParticulars();
+                                                String expAmt = String.valueOf(expense.getExpenseAmount());
+                                                String expDateTime = expense.getExpenseDateTime();
+                                                String expDate = expense.getExpenseDate();
+                                                String encodedPartDetails = expense.getPartDetails();
+                                                boolean isHomeExpense = expense.isHomeExpense();
+
+                                                // Check if record already exists
+                                                boolean exists = db.checkIfExists(expCategory, expAmt, expDateTime, expDate);
+
+                                                if (!exists) {
+                                                    try {
+                                                        db.insertExpense(expCategory, expPart, expAmt, expDateTime,
+                                                                expDate, null, null, null,
+                                                                encodedPartDetails, isHomeExpense);
+                                                        importedRecords++; // Only increment for newly imported records
+                                                    } catch (IllegalAccessException |
+                                                             NoSuchFieldException e) {
+                                                        Log.e("ImportError", "Error importing record", e);
+                                                    }
+                                                }
+
+                                                processedRecords++;
+
+                                                // Update UI on main thread - only update progress every 5 records
+                                                // or when percentage changes to reduce UI updates
+                                                if (processedRecords % 5 == 0 || processedRecords == totalRecords) {
+                                                    final int finalProcessed = processedRecords;
+                                                    final int finalImported = importedRecords;
+                                                    handler.post(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            dialog.setProgress(finalProcessed);
+                                                            int percentage = (int) (((float) finalProcessed / totalRecords) * 100);
+                                                            dialog.setMessage(percentage + "% complete\nImported: " + finalImported);
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        dialog.dismiss();
+
+                                        // Show appropriate message based on import results
+                                        // Keeping the EXACT same text content as your original Toast messages
+                                        if (importedRecords > 0) {
+                                            showSnackbar("Imported " + importedRecords + " new records out of " + totalRecords + " total");
+                                        } else {
+                                            showSnackbar("All " + totalRecords + " records already exist.\nNo new records imported.");
+                                        }
+                                    }
+                                });
+                            }
+                        }).start();
+                    }
+                });
+
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // User clicked No, do nothing
+                dialog.dismiss();
+            }
+        });
+        builder.setCancelable(false);
+        builder.show();
+    }
+
+    // Helper method to check network connectivity
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
+    }
+
+    // Helper method to show Snackbar with the same text as Toast
+    private void showSnackbar(String message) {
+        View rootView = findViewById(android.R.id.content);
+        if (rootView != null) {
+            // Use Snackbar instead of Toast, but keep the same message text
+            Snackbar snackbar = Snackbar.make(rootView, message, Snackbar.LENGTH_LONG);
+
+            // Only add retry action for network-related errors (keep your exact message text)
+            if (message.contains("No internet connection") ||
+                    message.contains("Internet connection lost") ||
+                    message.contains("Import failed")) {
+                snackbar.setAction("RETRY", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        processCriticalFirebaseImport();
+                    }
+                });
+            }
+
+            snackbar.show();
+        } else {
+            // Fallback to Toast if Snackbar can't be shown
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+//    private void processCriticalFirebaseImport() {
+//        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL + "/" + "expenses");
+//        databaseReference.addValueEventListener(new ValueEventListener() {
+//            private int rowsCount = 0;
+//
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+//                    for (DataSnapshot d1 : dataSnapshot.getChildren()) {
+//                        for (DataSnapshot d2 : d1.getChildren()) {
+//                            for (DataSnapshot d3 : d2.getChildren()) {
+//                                ExpenseItem expense = d3.getValue(ExpenseItem.class);
+//
+//                                String expCategory = expense.getExpenseCategory();
+//                                String expPart = expense.getExpenseParticulars();
+//                                String expAmt = String.valueOf(expense.getExpenseAmount());
+//                                String expDateTime = expense.getExpenseDateTime();
+//                                String expDate = expense.getExpenseDate();
+//                                String encodedPartDetails = expense.getPartDetails();
+//                                boolean isHomeExpense = expense.isHomeExpense();
+//
+//
+//                                if (!db.checkIfExists(expCategory, expAmt, expDateTime, expDate)) {
+//                                    try {
+//                                        db.insertExpense(expCategory, expPart, expAmt, expDateTime, expDate, null, null, null, encodedPartDetails, isHomeExpense);
+//                                        Log.i("Rows", "Restored rows " + rowsCount);
+//
+//                                        rowsCount++;
+//                                    } catch (IllegalAccessException | NoSuchFieldException e) {
+//                                        throw new RuntimeException(e);
+//                                    }
+//                                }
+//
+//                            }
+//                        }
+//                    }
+//                }
+//                Toast.makeText(MainActivity.this, "Restored records " + rowsCount, Toast.LENGTH_SHORT).show();
+//                Log.i("Rows", "Restored rows " + rowsCount);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//
+//            }
+//        });
+//
+//    }
 
 
     // 🔹 Split JSON into chunks (3000 chars each)
@@ -1327,6 +1675,7 @@ public class MainActivity extends AppCompatActivity {
                 String flnm = sqlRows.getString(6);
                 String encodedPartDetails = sqlRows.getString(8);
                 encodedPartDetails = encodedPartDetails.isBlank() ? "-" : encodedPartDetails;
+                encodedPartDetails = encodedPartDetails.trim();
                 boolean isHomeExpense = sqlRows.getInt(9) == 1;
 
 //                byte[] file = sqlRows.getBlob(7);
@@ -1354,6 +1703,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             //no sql rows returned
+            Toast.makeText(this, "No rows present in database", Toast.LENGTH_LONG).show();
         }
 
     }

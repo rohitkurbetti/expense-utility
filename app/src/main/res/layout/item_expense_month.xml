@@ -39,9 +39,10 @@
                 android:id="@+id/tvTotalExpense"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="$1,234.56"
-                android:textColor="@color/teal_700"
-                android:textSize="16sp" />
+                android:text="\u20B91,234.56"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 

@@ -1,5 +1,6 @@
 package com.example.expenseutility;
 
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -43,6 +45,9 @@ public class ReportActivity extends AppCompatActivity {
     private TextView statusTextView;
     private Button btnGenerateReport;
     private Button btnViewReport;
+
+    private DatePicker datePickerWidget;
+    private Calendar calendar;
     private Button btnShareReport;
     private File generatedPdfFile;
 
@@ -105,6 +110,12 @@ public class ReportActivity extends AppCompatActivity {
         Spinner spinnerMonth = dialog.findViewById(R.id.spinnerMonth);
         Button btnCancel = dialog.findViewById(R.id.btnCancel);
         Button btnConfirm = dialog.findViewById(R.id.btnConfirm);
+        CheckBox periodCheckBox = dialog.findViewById(R.id.periodCheckBox);
+        TextView fromDateTV = dialog.findViewById(R.id.selFromDateTV);
+        TextView toDateTV = dialog.findViewById(R.id.selToDateTV);
+        LinearLayout periodLayout = dialog.findViewById(R.id.periodLayout);
+        TextView spinnerYearTV = dialog.findViewById(R.id.spinnerYearTV);
+        TextView spinnerMonthTV = dialog.findViewById(R.id.spinnerMonthTV);
 
         // Prepare year list
         List<String> years = new ArrayList<>();
@@ -145,12 +156,44 @@ public class ReportActivity extends AppCompatActivity {
                     layoutMonth.setVisibility(View.GONE);
                     layoutYear.setAlpha(0.6f);
                     layoutMonth.setAlpha(0.6f);
+
+                    periodCheckBox.setChecked(Boolean.FALSE);
+                    fromDateTV.setText("Select From Date");
+                    toDateTV.setText("Select To Date");
+                    periodLayout.setVisibility(View.GONE);
+
                 } else {
                     // Enable date selection
                     layoutYear.setVisibility(View.VISIBLE);
                     layoutMonth.setVisibility(View.VISIBLE);
                     layoutYear.setAlpha(1.0f);
                     layoutMonth.setAlpha(1.0f);
+                    fromDateTV.setText("Select From Date");
+                    toDateTV.setText("Select To Date");
+                    periodLayout.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+        periodCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    cbAllData.setEnabled(false);
+                    layoutYear.setEnabled(false);
+                    layoutMonth.setEnabled(false);
+                    spinnerYear.setEnabled(false);
+                    spinnerMonth.setEnabled(false);
+                    spinnerYearTV.setEnabled(false);
+                    spinnerMonthTV.setEnabled(false);
+                } else {
+                    cbAllData.setEnabled(true);
+                    layoutYear.setEnabled(true);
+                    layoutMonth.setEnabled(true);
+                    spinnerYear.setEnabled(true);
+                    spinnerMonth.setEnabled(true);
+                    spinnerYearTV.setEnabled(true);
+                    spinnerMonthTV.setEnabled(true);
                 }
             }
         });
@@ -163,13 +206,40 @@ public class ReportActivity extends AppCompatActivity {
             }
         });
 
+
+        fromDateTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFromDatePickerDialog(fromDateTV);
+            }
+        });
+
+        toDateTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showToDatePickerDialog(toDateTV);
+            }
+        });
+
         btnConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (cbAllData.isChecked()) {
                     // Generate report for all data
-                    generateReport(null, null); // Pass null to indicate all data
+                    generateReport(null, null, null, null); // Pass null to indicate all data
                     Toast.makeText(ReportActivity.this, "Generating report for all data", Toast.LENGTH_SHORT).show();
+                } else if (periodCheckBox.isChecked()) {
+                    String fromDate = fromDateTV.getText().toString();
+                    String toDate = toDateTV.getText().toString();
+
+                    if (!fromDate.equalsIgnoreCase("Select from date") && !toDate.equalsIgnoreCase("Select to date")) {
+                        generateReport(null, null, fromDate, toDate);
+                    } else {
+                        Toast.makeText(ReportActivity.this, "Please select from and to dates", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+
                 } else {
                     // Generate report for selected month and year
                     int selectedYear = Integer.parseInt(spinnerYear.getSelectedItem().toString());
@@ -179,7 +249,7 @@ public class ReportActivity extends AppCompatActivity {
                     String message = "Generating report for " + months[selectedMonth] + " " + selectedYear;
                     Toast.makeText(ReportActivity.this, message, Toast.LENGTH_SHORT).show();
 
-                    generateReport(selectedYear + "", monthFormatted);
+                    generateReport(selectedYear + "", monthFormatted, null, null);
                 }
                 dialog.dismiss();
             }
@@ -187,6 +257,89 @@ public class ReportActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+    private void showFromDatePickerDialog(TextView tvSelectedDate) {
+        // Initialize calendar
+        Calendar calendar = Calendar.getInstance();
+
+
+        // Get current date
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        // Create DatePickerDialog
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        // Month is 0-based, so add 1 to display correctly
+
+                        String monthFormatted = String.format("%02d", month + 1);
+                        String dayOfMonthFormatted = String.format("%02d", dayOfMonth);
+
+
+                        String selectedDate = year + "-" + monthFormatted + "-" + dayOfMonthFormatted;
+
+                        // Update TextView with selected date
+                        tvSelectedDate.setText("" + selectedDate);
+
+                    }
+                },
+                year, month, day
+        );
+
+        // Set minimum and maximum dates (optional)
+        // datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+        // datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)); // 30 days from now
+
+        // Show the dialog
+        datePickerDialog.show();
+
+    }
+
+    private void showToDatePickerDialog(TextView tvSelectedDate) {
+        // Initialize calendar
+        Calendar calendar = Calendar.getInstance();
+
+
+        // Get current date
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        // Create DatePickerDialog
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        // Month is 0-based, so add 1 to display correctly
+
+                        String monthFormatted = String.format("%02d", month + 1);
+                        String dayOfMonthFormatted = String.format("%02d", dayOfMonth);
+
+
+                        String selectedDate = year + "-" + monthFormatted + "-" + dayOfMonthFormatted;
+
+                        // Update TextView with selected date
+                        tvSelectedDate.setText("" + selectedDate);
+
+                    }
+                },
+                year, month, day
+        );
+
+        // Set minimum and maximum dates (optional)
+        // datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+        // datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)); // 30 days from now
+
+        // Show the dialog
+        datePickerDialog.show();
+
+    }
+
 
     private List<ExpenseItem> getExpenseItems() {
         // Get expense items from intent or database
@@ -212,7 +365,7 @@ public class ReportActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                generateReport(selectedYear + "", monthFormatted);
+                generateReport(selectedYear + "", monthFormatted, null, null);
             } else {
                 Toast.makeText(this,
                         "Storage permission is required to save PDF",
@@ -221,16 +374,24 @@ public class ReportActivity extends AppCompatActivity {
         }
     }
 
-    private void generateReport(String selectedYear, String monthFormatted) {
+    private void generateReport(String selectedYear, String monthFormatted, String fromDate, String toDate) {
         String monthFilter = "";
+        List<ExpenseItem> expenseItems = new ArrayList<>();
         if (selectedYear != null && monthFormatted != null) {
             monthFilter = selectedYear + "-" + monthFormatted;
+            expenseItems = databaseHelper.getExpenseDataList(monthFilter);
+
+        } else if (fromDate != null && toDate != null) {
+            expenseItems = databaseHelper.getExpenseDataListRange(fromDate, toDate);
+        } else {
+            expenseItems = databaseHelper.getExpenseDataList(monthFilter);
         }
-        List<ExpenseItem> expenseItems = databaseHelper.getExpenseDataList(monthFilter);
         // Create filename with timestamp
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
         String fileName;
-        if (monthFilter.isEmpty()) {
+        if (fromDate != null && toDate != null) {
+            fileName = "ExpenseReport_" + fromDate + "_" + toDate;
+        } else if (monthFilter.isEmpty()) {
             fileName = "ExpenseReport_" + sdf.format(new Date());
         } else {
             fileName = "ExpenseReport_" + monthFilter + "_" + sdf.format(new Date());

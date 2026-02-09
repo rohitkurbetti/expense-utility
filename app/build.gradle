@@ -40,6 +40,8 @@ dependencies {
     implementation libs.constraintlayout
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
+    implementation "androidx.work:work-runtime:2.8.1"
+
 //    implementation 'org.tensorflow:tensorflow-lite:2.7.0'
 //    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     implementation libs.activity
@@ -84,6 +86,8 @@ dependencies {
     implementation "androidx.viewpager2:viewpager2:1.0.0"
     implementation 'com.tbuonomo:dotsindicator:4.3'   // for dots indicator
     implementation 'com.squareup.picasso:picasso:2.8'
+
+    implementation 'commons-io:commons-io:2.11.0'
 
 
     //QR Code

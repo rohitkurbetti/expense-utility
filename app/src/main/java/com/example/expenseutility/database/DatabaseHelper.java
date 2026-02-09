@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.example.expenseutility.dto.TxnIgnoreDto;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.Suggestion;
 
@@ -334,6 +335,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor != null) cursor.close();
         return exists;
     }
+
+    public List<TxnIgnoreDto> getAllIgnoredTransactions() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM txn_ignore", null);
+        List<TxnIgnoreDto> txnIgnoreDtoList = new ArrayList<>();
+
+        if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(0);
+                double amount = cursor.getDouble(1);
+                String dateTime = cursor.getString(2);
+
+                TxnIgnoreDto txnIgnoreDto = new TxnIgnoreDto();
+                txnIgnoreDto.setId(id);
+                txnIgnoreDto.setAmount(amount);
+                txnIgnoreDto.setDateTime(dateTime);
+
+                txnIgnoreDtoList.add(txnIgnoreDto);
+            }
+        }
+        db.close();
+        return txnIgnoreDtoList;
+    }
+
 
     public List<ExpenseItem> getMonthData(String month) {
 

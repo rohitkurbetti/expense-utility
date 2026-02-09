@@ -18,6 +18,7 @@
     <color name="yellow">#FFD24C</color>
     <color name="bluecolor">#1F9CFD</color>
     <color name="darkbluecolor">#47AEFF</color>
+    <color name="chip_background_color">#E0E0E0</color>
 
     <!-- Custom colors -->
     <color name="gray_300">#FFE0E0E0</color>
@@ -95,6 +96,12 @@
     <color name="green_700">#388E3C</color>
     <color name="gray_200">#FFEEEEEE</color>
     <color name="gray_500">#FF9E9E9E</color>
-
-
+    <color name="transport_color">#FF5722</color>
+    <color name="dinner_color">#E91E63</color>
+    <color name="lunch_color">#4CAF50</color>
+    <color name="office_color">#3F51B5</color>
+    <color name="default_color">#9C27B0</color>
+    <color name="control_highlight_color">#1F000000</color>  <!-- Semi-transparent black -->
+    <color name="design_default_color_primary">#6200EE</color>
+    <color name="design_default_color_primary_dark">#3700B3</color>
 </resources>

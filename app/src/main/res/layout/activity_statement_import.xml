@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:padding="16dp"
     tools:context=".StatementImport">
 
     <TextView
@@ -31,6 +32,38 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:visibility="gone" />
+
+    <!-- Progress Section - Fixed: Removed visibility="gone" from here -->
+    <LinearLayout
+        android:id="@+id/progress_section"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="8dp"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="0"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_progress_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Processing..."
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -126,6 +159,20 @@
         android:text="Total Debit: 0.00"
         android:textSize="14sp"
         android:textStyle="bold"
+        android:visibility="gone" />
+
+    <!-- Insertion Summary -->
+    <TextView
+        android:id="@+id/tv_insertion_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        android:maxLines="10"
+        android:padding="12dp"
+        android:scrollbars="vertical"
+        android:text=""
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="12sp"
         android:visibility="gone" />
 
     <Button

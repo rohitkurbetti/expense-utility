@@ -4,6 +4,14 @@
     tools:context="com.example.expenseutility.MainActivity">
 
     <item
+        android:id="@+id/action_tasks_list"
+        android:icon="@drawable/list_svgrepo_com"
+        android:title="Task List"
+        app:actionLayout="@layout/notification_badge1"
+        app:showAsAction="always" />
+
+
+    <item
         android:id="@+id/action_notifications"
         android:icon="@drawable/messages_communication_svgrepo_com"
         android:title="Notifications"
@@ -146,10 +154,10 @@
         android:title="Critical Firebase Import" />
 
     <item
-        android:visible="false"
         android:id="@+id/newUI"
         android:orderInCategory="100"
-        android:title="newUI" />
+        android:title="newUI"
+        android:visible="false" />
 
     <item
         android:id="@+id/budget"
@@ -161,5 +169,14 @@
         android:orderInCategory="100"
         android:title="Statement Parser" />
 
+    <item
+        android:id="@+id/action_schedule_backup"
+        android:title="Schedule Daily Backup"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_cancel_backup"
+        android:title="Cancel Daily Backup"
+        app:showAsAction="never" />
 
 </menu>

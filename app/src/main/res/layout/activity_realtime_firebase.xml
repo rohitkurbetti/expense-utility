@@ -22,18 +22,66 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
+            android:text="Final total"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:text="Final total" />
+            android:textStyle="bold" />
 
         <TextView
-            android:layout_marginTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/cardview_dark_background"
+            android:layout_marginTop="8dp"
             android:layout_weight="1"
+            android:background="@color/cardview_dark_background"
 
             />
+
+        <!-- Year Progress Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="2dp">
+
+                <TextView
+                    android:id="@+id/yearProgressText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Day 4/365"
+                    android:textColor="#666666"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/yearProgressPercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="1.09%"
+                    android:textColor="#4CAF50"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Thin Progress Bar -->
+            <ProgressBar
+                android:id="@+id/yearProgressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_marginTop="1dp"
+                android:max="100"
+                android:progress="1"
+                android:progressDrawable="@drawable/progress_bar_background_thin" />
+        </LinearLayout>
 
 
     </LinearLayout>
@@ -42,13 +90,13 @@
         android:id="@+id/spinnerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="5dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/finalLinearLayout"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerview"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/recyclerview">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/finalLinearLayout">
 
         <TextView
             android:layout_width="wrap_content"
@@ -61,12 +109,12 @@
             android:textStyle="bold" />
 
         <androidx.appcompat.widget.AppCompatSpinner
-            android:layout_weight=".4"
             android:id="@+id/yearSpinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_margin="10dp"
+            android:layout_weight=".4"
             android:gravity="center_vertical"
             android:spinnerMode="dropdown"
             android:textAlignment="gravity"
@@ -76,21 +124,18 @@
 
 
         <TextView
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:layout_weight="1"
             android:id="@+id/yearTotalTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Total"
-            android:textStyle="bold"
-            android:textSize="18sp"
+            android:layout_gravity="center"
             android:layout_margin="10dp"
-        />
-
+            android:layout_weight="0.6"
+            android:gravity="center"
+            android:text="Total"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
-
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview"
@@ -100,7 +145,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spinnerLayout" />
-
 
     <ImageView
         android:id="@+id/errorImageView"
@@ -119,10 +163,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="18sp"
         android:text="No data found on cloud"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="#69000000"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/errorImageView"
         app:layout_constraintEnd_toEndOf="@+id/errorImageView"
         app:layout_constraintStart_toStartOf="@+id/errorImageView"

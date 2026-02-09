@@ -3,7 +3,10 @@ package com.example.expenseutility.entityadapter;
 import androidx.annotation.Nullable;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 
 public class ExpenseItem implements Serializable {
 
@@ -193,6 +196,21 @@ public class ExpenseItem implements Serializable {
         this.imageDrawableId = imageDrawableId;
     }
 
+    public String getFormattedDate() {
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat outputFormat = new SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault());
+            Date date = inputFormat.parse(expenseDate);
+            return outputFormat.format(date);
+        } catch (Exception e) {
+            return expenseDate;
+        }
+    }
+
+    public String getDatePart() {
+        return expenseDate; // Already in yyyy-MM-dd format
+    }
+
     @Override
     public String toString() {
         return "ExpenseItem{" +
@@ -216,5 +234,16 @@ public class ExpenseItem implements Serializable {
     @Override
     public boolean equals(@Nullable Object obj) {
         return super.equals(obj);
+    }
+
+    public String getFormattedDisplayDate() {
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+            Date date = inputFormat.parse(expenseDate);
+            return outputFormat.format(date);
+        } catch (Exception e) {
+            return expenseDate;
+        }
     }
 }

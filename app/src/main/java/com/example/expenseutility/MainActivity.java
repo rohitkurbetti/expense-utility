@@ -56,14 +56,18 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.expenseutility.constants.ExpenseConstants;
 import com.example.expenseutility.database.BudgetHelper;
 import com.example.expenseutility.database.DatabaseHelper;
+import com.example.expenseutility.database.TaskDatabaseHelper;
 import com.example.expenseutility.databinding.ActivityMainBinding;
 import com.example.expenseutility.dto.Transaction;
+import com.example.expenseutility.dto.TxnIgnoreDto;
 import com.example.expenseutility.emailutility.EmailSender;
 import com.example.expenseutility.emailutility.NotificationUtils;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.TransactionAdapter;
+import com.example.expenseutility.notification.BackupTaskReceiver;
 import com.example.expenseutility.notification.DismissNotificationReceiver;
 import com.example.expenseutility.notification.NotificationReceiver;
 import com.example.expenseutility.utility.SmsNotificationUtils;
@@ -106,10 +110,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity {
-
+    private static final int BACKUP_REQUEST_CODE = 9999;
+    private static final String BACKUP_ALARM_CHANNEL_ID = "backup_alarm_channel";
     private static final int REQUEST_MANAGE_STORAGE = 123;
     private static final int REQUEST_WRITE_STORAGE = 112;
     private static final int REQUEST_CODE_NOTIFICATION = 2001;
@@ -126,6 +132,10 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private DatabaseHelper db;
     private List<Transaction> transactionList;
+    private TaskDatabaseHelper taskDbHelper;
+    private MenuItem tasksMenuItem;
+    private TextView badgeTextView;
+    private View badgeActionView;
 
     public void reCalculateDailyLimit(String fromOnResume) {
         FirstFragment.showDailyLimitPB();
@@ -149,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("remainingBalance", "" + remainingBalance);
 
                 int remDays = BudgetActivity.getDaysRemainingInMonth();
+                remDays = remDays == 0 ? 1 : remDays;
                 Log.i("remainingDays", "" + remDays);
 
                 int dailyLimit = remainingBalance / remDays;
@@ -401,6 +412,10 @@ public class MainActivity extends AppCompatActivity {
 //        handleIncomingIntent(getIntent());
         sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         db = new DatabaseHelper(this);
+
+        // Initialize database helper
+        taskDbHelper = new TaskDatabaseHelper(this);
+
         // Initialize Firebase Database
         database = FirebaseDatabase.getInstance().getReference();
 
@@ -564,6 +579,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -581,6 +597,21 @@ public class MainActivity extends AppCompatActivity {
             badge.setVisibility(View.GONE);
         }
 
+        tasksMenuItem = menu.findItem(R.id.action_tasks_list);
+        // Get the custom action view
+        if (tasksMenuItem != null && tasksMenuItem.getActionView() != null) {
+            badgeActionView = tasksMenuItem.getActionView();
+
+            // Set click listener on the entire action view
+            badgeActionView.setOnClickListener(v -> {
+                onOptionsItemSelected(tasksMenuItem);
+            });
+
+            // Get the badge TextView
+            badgeTextView = badgeActionView.findViewById(R.id.badge);
+            updateTaskCountBadge();
+        }
+
         return true;
     }
 
@@ -588,6 +619,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 //        reCalculateDailyLimit("from onResume");
+
+        updateTaskCountBadge();
+
+    }
+
+    private void updateTaskCountBadge() {
+        if (badgeTextView == null) {
+            return;
+        }
+
+        TaskDatabaseHelper dbHelper = new TaskDatabaseHelper(this);
+        // We can get the count by querying the database for all tasks, but that's inefficient.
+        // Instead, we should have a method in TaskDatabaseHelper to get the count.
+
+        // Let's assume we add a method in TaskDatabaseHelper to get the task count.
+        int taskCount = dbHelper.getTaskCount();
+
+        if (taskCount > 0) {
+            badgeTextView.setText(String.valueOf(taskCount));
+            badgeTextView.setVisibility(View.VISIBLE);
+        } else {
+            badgeTextView.setVisibility(View.GONE);
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -617,6 +671,13 @@ public class MainActivity extends AppCompatActivity {
             dialog.show();
             return true;
         }
+
+        if (id == R.id.action_tasks_list) {
+            Intent intent = new Intent(MainActivity.this, TaskListActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
 
         if (id == R.id.action_setGlobalIncome) {
             setGlobalIncome();
@@ -756,6 +817,19 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.action_schedule_backup) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                scheduleDailyBackup();
+            } else {
+                Toast.makeText(this, "Requires Android 8.0 or higher", Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        }
+
+        if (id == R.id.action_cancel_backup) {
+            cancelDailyBackup();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -1285,7 +1359,7 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void sendBackupCsvEmail() {
         File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        String csvFileName = "BackupExpensesData.csv";
+        String csvFileName = ExpenseConstants.BACKUP_EXPENSES_DATA_EXPORT_FILENAME;
         File csvFile = new File(downloadsDir, csvFileName);
 
         LocalDateTime localDateTime = LocalDateTime.now();
@@ -1305,7 +1379,7 @@ public class MainActivity extends AppCompatActivity {
         File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
         // Specify the name of the CSV file
-        String csvFileName = "BackupExpensesData.csv";
+        String csvFileName = ExpenseConstants.BACKUP_EXPENSES_DATA_EXPORT_FILENAME;
         File csvFile = new File(downloadsDir, csvFileName);
 
         if (!csvFile.exists()) {
@@ -1706,6 +1780,31 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "No rows present in database", Toast.LENGTH_LONG).show();
         }
 
+        List<TxnIgnoreDto> txnIgnoreDtoList = db.getAllIgnoredTransactions();
+
+        if (!txnIgnoreDtoList.isEmpty()) {
+
+            String fileName = ExpenseConstants.BACKUP_TXN_IGNORE_EXPORT_FILENAME;
+            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File csvFile = new File(downloadsDir, fileName);
+
+            FileOutputStream fileOutputStream = new FileOutputStream(csvFile);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+
+            outputStreamWriter.write("Id,Amount,DateTime\n");
+
+            txnIgnoreDtoList.forEach(txnIgnoreRow -> {
+                String row = txnIgnoreRow.getId() + "," + txnIgnoreRow.getAmount() + "," + txnIgnoreRow.getDateTime() + "\n";
+                try {
+                    outputStreamWriter.write(row);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            outputStreamWriter.close();
+            fileOutputStream.close();
+            Toast.makeText(this, "Backup Txn Ignore is completed !", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showSummaryPopup(Map<String, Double> categorySummary, double totalAmount, List<ExpenseItem> expenses) {
@@ -1821,6 +1920,7 @@ public class MainActivity extends AppCompatActivity {
         DatabaseHelper db = new DatabaseHelper(MainActivity.this);
         db.deleteAllData();
         Toast.makeText(this, "All data deleted !", Toast.LENGTH_SHORT).show();
+        db.close();
     }
 
     @Override
@@ -1829,4 +1929,119 @@ public class MainActivity extends AppCompatActivity {
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void scheduleDailyBackup() {
+        // Create notification channel for backup alarms
+        createBackupNotificationChannel();
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, BackupTaskReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                BACKUP_REQUEST_CODE,
+                intent,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ?
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE :
+                        PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        // Cancel any existing alarm
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+        }
+
+        // Set time to 10:00 PM IST (16:30 UTC = 22:00 IST)
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata")); // IST timezone
+
+        // Set to 10:00 PM
+        calendar.set(Calendar.HOUR_OF_DAY, 22);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        // If it's already past 10 PM today, schedule for tomorrow
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        // Set the alarm
+        if (alarmManager != null) {
+            // Use setExactAndAllowWhileIdle for precise timing (Android 6.0+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.getTimeInMillis(),
+                        pendingIntent
+                );
+            } else {
+                alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.getTimeInMillis(),
+                        pendingIntent
+                );
+            }
+
+            // Also set a repeating alarm for subsequent days
+            alarmManager.setRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.getTimeInMillis(),
+                    AlarmManager.INTERVAL_DAY,
+                    pendingIntent
+            );
+
+            Log.i("BackupScheduler", "Daily backup scheduled for: " + calendar.getTime());
+            Toast.makeText(this, "Daily backup scheduled at 10 PM IST", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void createBackupNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Backup Alarms";
+            String description = "Notifications for automated backup tasks";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+
+            NotificationChannel channel = new NotificationChannel(
+                    BACKUP_ALARM_CHANNEL_ID,
+                    name,
+                    importance
+            );
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void cancelDailyBackup() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, BackupTaskReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                BACKUP_REQUEST_CODE,
+                intent,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ?
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE :
+                        PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+            pendingIntent.cancel();
+            Log.i("BackupScheduler", "Daily backup cancelled");
+            Toast.makeText(this, "Daily backup cancelled", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Add a method to trigger backup immediately (for testing)
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void triggerBackupNow() {
+        Intent intent = new Intent(this, BackupTaskReceiver.class);
+        sendBroadcast(intent);
+        Toast.makeText(this, "Backup triggered manually", Toast.LENGTH_SHORT).show();
+    }
+
 }

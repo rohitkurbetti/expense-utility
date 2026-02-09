@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -41,9 +43,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RealtimeFirebaseActivity extends AppCompatActivity {
 
     public static Map<String, List<ExpenseItem>> map = new HashMap<>();
-    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL+"/"+"expenses");
+    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL + "/" + "expenses");
     ProgressDialog progressDialog;
-    TextView yearTotalTextView,finalTotalTextView;
+    TextView yearTotalTextView, finalTotalTextView;
     List<ExpenseItem> tempList = new ArrayList<>();
     private RecyclerView recyclerView;
     private TextView errorHelperTextView;
@@ -52,6 +54,11 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
     private CopyOnWriteArrayList<MainItem> mainItemList;
     private AppCompatSpinner yearSpinner;
     private List<ExpenseItem> expenseList = new ArrayList<>();
+
+    // Year progress views
+    private TextView yearProgressText;
+    private TextView yearProgressPercent;
+    private ProgressBar yearProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,13 +71,19 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
         errorImageView = findViewById(R.id.errorImageView);
         yearTotalTextView = findViewById(R.id.yearTotalTextView);
         finalTotalTextView = findViewById(R.id.finalTotalTextView);
+
+        // Initialize year progress views
+        yearProgressText = findViewById(R.id.yearProgressText);
+        yearProgressPercent = findViewById(R.id.yearProgressPercent);
+        yearProgressBar = findViewById(R.id.yearProgressBar);
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Populate main item list with sample data
         mainItemList = new CopyOnWriteArrayList<>();
         loadSpinner(yearSpinner);
 
-//        fetchFromFirebase(map);
+        // Initialize year progress
+        updateYearProgress();
 
         yearSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -78,9 +91,6 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
                 String selectedYear = parent.getItemAtPosition(position).toString();
                 mainItemList.clear();
                 fetchFromFirebase(map);
-
-
-
             }
 
             @Override
@@ -89,39 +99,56 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
             }
         });
 
-
-        // Set the adapter
         mainAdapter = new MainAdapter(mainItemList);
         recyclerView.setAdapter(mainAdapter);
+    }
 
+    private void updateYearProgress() {
+        Calendar calendar = Calendar.getInstance();
+        int currentDay = calendar.get(Calendar.DAY_OF_YEAR);
+        int totalDaysInYear = calendar.getActualMaximum(Calendar.DAY_OF_YEAR);
 
+        // Calculate percentage
+        double percentage = (currentDay * 100.0) / totalDaysInYear;
+        DecimalFormat df = new DecimalFormat("#.##");
+        String formattedPercentage = df.format(percentage);
 
+        // Update UI
+        yearProgressText.setText("Day " + currentDay + "/" + totalDaysInYear);
+        yearProgressPercent.setText(formattedPercentage + "%");
+        yearProgressBar.setProgress((int) Math.round(percentage));
+
+        // Optional: Change color based on progress percentage
+        updateProgressColor(percentage);
+    }
+
+    private void updateProgressColor(double percentage) {
+        int color;
+        if (percentage > 75) {
+            color = getResources().getColor(android.R.color.holo_red_dark);
+        } else if (percentage > 50) {
+            color = getResources().getColor(android.R.color.holo_orange_dark);
+        } else {
+            color = getResources().getColor(android.R.color.holo_green_dark);
+        }
+        yearProgressPercent.setTextColor(color);
     }
 
     private void loadSpinner(AppCompatSpinner yearSpinner) {
-        // Get the current year
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-
-        // Generate a list of years (e.g., from 1900 to current year)
         List<String> years = new ArrayList<>();
-        for (int year = 2019; year <= currentYear+5; year++) {
+        for (int year = 2019; year <= currentYear + 5; year++) {
             years.add(String.valueOf(year));
         }
 
-        // Create an ArrayAdapter for the Spinner
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_item,
                 years
         );
 
-        // Set the layout for dropdown items
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Attach the adapter to the Spinner
         yearSpinner.setAdapter(adapter);
-
-        // Optionally, set the current year as the selected item
         yearSpinner.setSelection(adapter.getPosition(String.valueOf(currentYear)));
     }
 
@@ -138,33 +165,34 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
                 progressDialog.dismiss();
                 Long expAmt = 0L;
                 Long expAmtMonth = 0L;
-                expenseList.clear(); // Clear previous list
+                expenseList.clear();
+
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    for(DataSnapshot d1 : dataSnapshot.getChildren()) {
+                    for (DataSnapshot d1 : dataSnapshot.getChildren()) {
                         List<NestedItem> nestedItems1 = new ArrayList<>();
-                        for(DataSnapshot d2 : d1.getChildren()) {
+                        for (DataSnapshot d2 : d1.getChildren()) {
                             key = d2.getKey();
-                            expAmt=0L;
+                            expAmt = 0L;
                             tempList.clear();
                             List<ExpenseItem> tList = new ArrayList<>();
-                            for(DataSnapshot d3 : d2.getChildren()) {
+                            for (DataSnapshot d3 : d2.getChildren()) {
                                 ExpenseItem expense = d3.getValue(ExpenseItem.class);
                                 expenseList.add(expense);
                                 expAmt += expense.getExpenseAmount();
                                 tList.add(expense);
                             }
-                            nestedItems1.add(new NestedItem(d2.getKey(), "\u20B9"+expAmt, String.format("(%.2f%%)", ((double) expAmt/(income/30))*100),expAmt));
+                            nestedItems1.add(new NestedItem(d2.getKey(), "\u20B9" + expAmt,
+                                    String.format("(%.2f%%)", ((double) expAmt / (income / 30)) * 100), expAmt));
                             expAmtMonth += expAmt;
                             map.put(key, tList);
-
-//                            Log.i("Key val " ,key+"  "+tempList);
-
                         }
-                        mainItemList.add(new MainItem(d1.getKey(), nestedItems1, String.format("\u20B9"+expAmtMonth+" (%.2f%%)", ((double) expAmtMonth/income)*100)));
+                        mainItemList.add(new MainItem(d1.getKey(), nestedItems1,
+                                String.format("\u20B9" + expAmtMonth + " (%.2f%%)", ((double) expAmtMonth / income) * 100)));
                         expAmtMonth = 0L;
                     }
                 }
 
+                // Calculate totals
                 AtomicInteger yearGrandTotal = new AtomicInteger(0);
                 mainItemList.forEach(i -> {
                     i.getNestedItemList().forEach(nestedItem -> {
@@ -172,27 +200,27 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
                     });
                 });
 
-                String formattedAmount =  Commons.getFormattedCurrency(yearGrandTotal.get());
+                String formattedAmount = Commons.getFormattedCurrency(yearGrandTotal.get());
+                finalTotalTextView.setText(String.valueOf("Final Total  " + formattedAmount));
 
-
-                finalTotalTextView.setText(String.valueOf("Final Total  "+formattedAmount));
-
+                // Filter by selected year
                 String spinnerMonth = yearSpinner.getSelectedItem().toString();
-                for (MainItem y: mainItemList) {
-                    if(!y.getTitle().contains(spinnerMonth)) {
+                for (MainItem y : mainItemList) {
+                    if (!y.getTitle().contains(spinnerMonth)) {
                         mainItemList.remove(y);
                     }
                 }
+
                 AtomicInteger yearTotal = new AtomicInteger();
                 mainItemList.forEach(i -> {
                     i.getNestedItemList().forEach(nestedItem -> {
                         yearTotal.addAndGet(Math.toIntExact(nestedItem.getSubItemExpenseTotalAmount()));
                     });
                 });
-                yearTotalTextView.setText("Total  \u20B9"+yearTotal);
+                yearTotalTextView.setText("Total  \u20B9" + yearTotal);
                 mainAdapter.notifyDataSetChanged();
 
-                if(mainItemList.isEmpty()) {
+                if (mainItemList.isEmpty()) {
                     errorHelperTextView.setText("No data available on cloud");
                     errorImageView.setVisibility(View.VISIBLE);
                     errorHelperTextView.setVisibility(View.VISIBLE);
@@ -200,7 +228,6 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
                     errorImageView.setVisibility(View.GONE);
                     errorHelperTextView.setVisibility(View.GONE);
                 }
-
             }
 
             @Override
@@ -210,5 +237,12 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Failed to load data.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Update progress when activity resumes
+        updateYearProgress();
     }
 }

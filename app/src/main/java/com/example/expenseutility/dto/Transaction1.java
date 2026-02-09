@@ -10,7 +10,7 @@ public class Transaction1 {
     private String tranDate;
     private String particulars;
     private String debit;
-    private String category; // New field
+    private String category;
     private String formattedDate;
     private boolean isChecked;
     private String parsedParticulars;
@@ -38,8 +38,14 @@ public class Transaction1 {
         }
     }
 
+    // Getters
     public int getSerialNo() {
         return serialNo;
+    }
+
+    // Setters
+    public void setSerialNo(int serialNo) {
+        this.serialNo = serialNo;
     }
 
     public String getTranDate() {
@@ -66,10 +72,8 @@ public class Transaction1 {
         return isChecked;
     }
 
-
     public void setChecked(boolean checked) {
         isChecked = checked;
-
     }
 
     public String getParsedParticulars() {
@@ -90,7 +94,7 @@ public class Transaction1 {
                 ", category='" + category + '\'' +
                 ", formattedDate='" + formattedDate + '\'' +
                 ", isChecked=" + isChecked +
+                ", parsedParticulars='" + parsedParticulars + '\'' +
                 '}';
     }
-
 }

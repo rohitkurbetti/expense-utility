@@ -3,6 +3,7 @@ package com.example.expenseutility;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +34,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class StatementImport extends AppCompatActivity {
@@ -47,6 +50,12 @@ public class StatementImport extends AppCompatActivity {
     private Button btnSelectFile;
     private CheckBox headerCheckBox;
     private TextView tvTotalDebit;
+    private ProgressBar progressBar;
+    private TextView tvProgressText;
+    private TextView tvInsertionSummary;
+    private View progressSection; // Add reference to parent layout
+
+    private InsertTransactionsTask insertTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +69,10 @@ public class StatementImport extends AppCompatActivity {
         btnSelectFile = findViewById(R.id.btn_select_file);
         headerCheckBox = findViewById(R.id.cb_select_all);
         tvTotalDebit = findViewById(R.id.tv_total_debit);
+        progressBar = findViewById(R.id.progress_bar);
+        tvProgressText = findViewById(R.id.tv_progress_text);
+        tvInsertionSummary = findViewById(R.id.tv_insertion_summary);
+        progressSection = findViewById(R.id.progress_section); // Get the parent layout
 
         transactionList = new ArrayList<>();
         adapter = new TransactionAdapter1(this, transactionList, headerCheckBox);
@@ -88,28 +101,44 @@ public class StatementImport extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-                
-                insertSelectedTransactions();
+                insertSelectedTransactionsInBackground();
             }
         });
 
-        // Initially hide insert button
+        // Initially hide insert button and progress views
         btnInsert.setVisibility(View.GONE);
         previewTitle.setVisibility(View.GONE);
         headerCheckBox.setVisibility(View.GONE);
         tvTotalDebit.setVisibility(View.GONE);
+        progressSection.setVisibility(View.GONE); // Hide the entire progress section
+        tvInsertionSummary.setVisibility(View.GONE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Cancel any running tasks
+        if (insertTask != null && !insertTask.isCancelled()) {
+            insertTask.cancel(true);
+        }
     }
 
     private void requestStoragePermission() {
-//        if (ContextCompat.checkSelfPermission(this,
-//                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//
-//            ActivityCompat.requestPermissions(this,
-//                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-//                    PERMISSION_REQUEST_STORAGE);
-//        } else {
-        openFilePicker();
-//        }
+        // For Android 11+, use new permission model
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            openFilePicker();
+        } else {
+            openFilePicker();
+        }
+    }
+
+    private void openFilePicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("text/*"); // For CSV/text files
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        String[] mimeTypes = {"text/csv", "text/comma-separated-values", "text/plain"};
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        startActivityForResult(Intent.createChooser(intent, "Select CSV File"), PICK_CSV_FILE);
     }
 
     @Override
@@ -124,13 +153,6 @@ public class StatementImport extends AppCompatActivity {
                 Toast.makeText(this, "Permission denied to read storage", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    private void openFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("text/*"); // For CSV/text files
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(Intent.createChooser(intent, "Select CSV File"), PICK_CSV_FILE);
     }
 
     @Override
@@ -154,7 +176,6 @@ public class StatementImport extends AppCompatActivity {
             boolean isFirstLine = true;
             transactionList.clear();
             int serialNo = 1;
-            double totalDebit = 0.0;
 
             while ((line = reader.readLine()) != null) {
                 if (isFirstLine) {
@@ -179,33 +200,15 @@ public class StatementImport extends AppCompatActivity {
 
                         String parsedParticulars = TransactionParser.parseTransactions(particulars);
 
-                        totalDebit += debitAmount;
                         // Create transaction with category
-                        Transaction1 transaction = new Transaction1(serialNo, date, particulars, String.valueOf(debitAmount.intValue()), category, parsedParticulars);
+                        Transaction1 transaction = new Transaction1(serialNo, date, particulars,
+                                String.valueOf(debitAmount.intValue()), category, parsedParticulars);
                         transactionList.add(transaction);
                         serialNo++;
                     } catch (NumberFormatException e) {
                         // Skip invalid amounts
+                        Log.e("CSV Parse", "Invalid debit amount: " + debit);
                     }
-
-                } else if (parts.length >= 3) {
-//                    // Old format without Category
-//                    String date = parts[0].trim();
-//                    String particulars = parts[1].trim();
-//                    String debit = parts[2].trim();
-//
-//                    // Calculate total
-//                    try {
-//                        double debitAmount = Double.parseDouble(debit);
-//                        totalDebit += debitAmount;
-//                    } catch (NumberFormatException e) {
-//                        // Skip invalid amounts
-//                    }
-//
-//                    // Create transaction with default category
-//                    Transaction1 transaction = new Transaction1(serialNo, date, particulars, debit, "");
-//                    transactionList.add(transaction);
-//                    serialNo++;
                 }
             }
 
@@ -226,7 +229,7 @@ public class StatementImport extends AppCompatActivity {
             tvTotalDebit.setVisibility(View.VISIBLE);
 
             // Update total debit display
-            updateTotalDebitDisplay(totalDebit);
+            updateTotalDebitDisplay();
 
             Toast.makeText(this, "Parsed " + transactionList.size() + " transactions",
                     Toast.LENGTH_SHORT).show();
@@ -241,104 +244,312 @@ public class StatementImport extends AppCompatActivity {
     /**
      * Update the total debit display with formatted amount
      */
-    private void updateTotalDebitDisplay(double totalDebit) {
+    private void updateTotalDebitDisplay() {
+        double totalDebit = 0.0;
+        for (Transaction1 transaction : transactionList) {
+            try {
+                totalDebit += Double.parseDouble(transaction.getDebit());
+            } catch (NumberFormatException e) {
+                // Skip invalid amounts
+            }
+        }
+
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         String formattedTotal = decimalFormat.format(totalDebit);
         tvTotalDebit.setText("Total Debit: " + formattedTotal);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void insertSelectedTransactions() {
+    private void insertSelectedTransactionsInBackground() {
+        // Get selected transactions
         List<Transaction1> selectedTransactions = new ArrayList<>();
-        Map<String, Double> categoryTotals = new HashMap<>();
-        double selectedTotalDebit = 0.0;
-
-        for (int i = 1; i <= 12; i++) {
-
-            String month1 = "2024-" + String.format("%02d", i);
-            double sum = transactionList.stream()
-                    .filter(t -> t.getFormattedDate() != null && t.getFormattedDate().startsWith(month1))
-                    .filter(t -> t.getDebit() != null && !t.getDebit().isEmpty())
-                    .mapToDouble(t -> {
-                        try {
-                            return Double.parseDouble(t.getDebit());
-                        } catch (NumberFormatException e) {
-                            return 0.0; // Return 0 for invalid values
-                        }
-                    })
-                    .sum();
-            Log.i("SUM >>>>> " + month1, "" + sum);
-        }
-
         for (Transaction1 transaction : transactionList) {
             if (transaction.isChecked()) {
                 selectedTransactions.add(transaction);
+            }
+        }
 
-                // Calculate totals
+        if (selectedTransactions.isEmpty()) {
+            Toast.makeText(this, "No transactions selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Start AsyncTask for background processing
+        insertTask = new InsertTransactionsTask();
+        insertTask.execute(selectedTransactions);
+    }
+
+    private void refreshTransactionList() {
+        // Remove successfully inserted transactions from the list
+        List<Transaction1> toRemove = new ArrayList<>();
+        for (Transaction1 transaction : transactionList) {
+            if (transaction.isChecked()) {
+                toRemove.add(transaction);
+            }
+        }
+        transactionList.removeAll(toRemove);
+
+        // Update serial numbers using the new setter
+        for (int i = 0; i < transactionList.size(); i++) {
+            transactionList.get(i).setSerialNo(i + 1);
+        }
+
+        // Update adapter
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+
+        // Update total debit
+        updateTotalDebitDisplay();
+
+        // If no transactions left, hide UI elements
+        if (transactionList.isEmpty()) {
+            previewTitle.setVisibility(View.GONE);
+            btnInsert.setVisibility(View.GONE);
+            headerCheckBox.setVisibility(View.GONE);
+            tvTotalDebit.setVisibility(View.GONE);
+            progressSection.setVisibility(View.GONE); // Hide progress section
+            Toast.makeText(this, "All transactions processed!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * AsyncTask for background processing of transactions
+     */
+    private class InsertTransactionsTask extends AsyncTask<List<Transaction1>, InsertProgress, InsertResult> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Show progress UI - set the entire progress section visible
+            btnInsert.setEnabled(false);
+            btnInsert.setText("Processing...");
+            progressSection.setVisibility(View.VISIBLE); // Show parent layout
+            progressBar.setVisibility(View.VISIBLE);
+            tvProgressText.setVisibility(View.VISIBLE);
+            tvInsertionSummary.setVisibility(View.VISIBLE);
+            tvInsertionSummary.setText("Starting transaction insertion...");
+            progressBar.setMax(0); // Will be set when we know the count
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        protected InsertResult doInBackground(List<Transaction1>... params) {
+            List<Transaction1> selectedTransactions = params[0];
+            InsertResult result = new InsertResult();
+            result.totalTransactions = selectedTransactions.size();
+
+            // Publish initial progress
+            InsertProgress progress = new InsertProgress();
+            progress.current = 0;
+            progress.total = result.totalTransactions;
+            progress.message = "Starting...";
+            publishProgress(progress);
+
+            for (int i = 0; i < selectedTransactions.size(); i++) {
+                // Check if task is cancelled
+                if (isCancelled()) {
+                    result.cancelled = true;
+                    break;
+                }
+
+                Transaction1 transaction = selectedTransactions.get(i);
+
+                // Update progress
+                progress.current = i + 1;
+                progress.total = result.totalTransactions;
+                progress.message = "Processing: " + transaction.getParticulars();
+                publishProgress(progress);
+
                 try {
+                    // Calculate total amount
                     double debitAmount = Double.parseDouble(transaction.getDebit());
-                    selectedTotalDebit += debitAmount;
 
-                    // Update category totals
-                    String category = transaction.getCategory();
-                    categoryTotals.put(category,
-                            categoryTotals.getOrDefault(category, 0.0) + debitAmount);
+                    DatabaseHelper db = DatabaseHelper.getInstance(StatementImport.this);
 
-                    DatabaseHelper db = DatabaseHelper.getInstance(this);
+                    // Check if transaction already exists
+                    if (db.checkifExistsFromStatement(transaction.getCategory(),
+                            transaction.getParticulars(),
+                            transaction.getDebit(),
+                            transaction.getFormattedDate())) {
+                        result.duplicateCount++;
 
+                        // Update progress for duplicate
+                        progress.message = "Duplicate: " + transaction.getParticulars();
+                        publishProgress(progress);
 
-                    if (db.checkifExistsFromStatement(transaction.getCategory(), transaction.getParticulars(),
-                            transaction.getDebit(), transaction.getFormattedDate())) {
-                        Log.i("present ", "y");
+                        Log.i("TRANSACTION", "Duplicate: " + transaction);
                     } else {
-                        Log.i("present ", "n");
-                        boolean res = db.insertExpense(transaction.getCategory(), transaction.getParticulars(), transaction.getDebit(),
-                                null, transaction.getFormattedDate(), null, null, null, null, false);
-                        if (res) {
-                            Log.i("INSERT", "inserted " + transaction);
+                        // Insert new transaction
+                        boolean insertSuccess = db.insertExpense(
+                                transaction.getCategory(),
+                                transaction.getParticulars(),
+                                transaction.getDebit(),
+                                null,
+                                transaction.getFormattedDate(),
+                                null, null, null, null, false);
+
+                        if (insertSuccess) {
+                            result.successCount++;
+                            result.totalAmount += debitAmount;
+
+                            // Update category totals
+                            String category = transaction.getCategory();
+                            result.categoryTotals.put(category,
+                                    result.categoryTotals.getOrDefault(category, 0.0) + debitAmount);
+
+                            // Update Firebase in background
                             try {
-                                FirstFragment.saveToFirebase(transaction.getCategory(), transaction.getParticulars(), transaction.getDebit(),
-                                        null, transaction.getFormattedDate(), null, null, null, false);
+                                FirstFragment.saveToFirebase(
+                                        transaction.getCategory(),
+                                        transaction.getParticulars(),
+                                        transaction.getDebit(),
+                                        null,
+                                        transaction.getFormattedDate(),
+                                        null, null, null, false);
                             } catch (ParseException e) {
-                                throw new RuntimeException(e);
+                                Log.e("FIREBASE", "Error saving to Firebase", e);
                             }
+
+                            // Update progress for success
+                            progress.message = "Inserted: " + transaction.getParticulars();
+                            publishProgress(progress);
+
+                            Log.i("INSERT", "Success: " + transaction);
                         } else {
-                            Log.i("INSERT", "inserted failed" + transaction);
+                            result.failedCount++;
+
+                            // Update progress for failure
+                            progress.message = "Failed: " + transaction.getParticulars();
+                            publishProgress(progress);
+
+                            Log.i("INSERT", "Failed: " + transaction);
                         }
                     }
 
+                    // Optional: Small delay to show progress clearly
+//                    Thread.sleep(10);
 
-                } catch (NumberFormatException | IllegalAccessException | NoSuchFieldException e) {
-                    // Skip invalid amounts
+                } catch (Exception e) {
+                    result.failedCount++;
+                    Log.e("PROCESSING", "Error processing transaction: " + transaction, e);
+                }
+            }
+
+            return result;
+        }
+
+        @Override
+        protected void onProgressUpdate(InsertProgress... values) {
+            super.onProgressUpdate(values);
+            InsertProgress progress = values[0];
+
+            // Update progress bar
+            progressBar.setMax(progress.total);
+            progressBar.setProgress(progress.current);
+
+            // Calculate percentage
+            int percentage = 0;
+            if (progress.total > 0) {
+                percentage = (progress.current * 100) / progress.total;
+            }
+
+            // Update progress text with both count and percentage
+            tvProgressText.setText(String.format(Locale.getDefault(),
+                    "Processing %d of %d (%d%%)", progress.current, progress.total, percentage));
+
+            // Update summary with current activity
+            tvInsertionSummary.setText(progress.message);
+        }
+
+        @Override
+        protected void onPostExecute(InsertResult result) {
+            super.onPostExecute(result);
+
+            // Hide progress bar and text, but keep the section visible for summary
+            progressBar.setVisibility(View.GONE);
+            tvProgressText.setVisibility(View.GONE);
+
+            // Re-enable insert button
+            btnInsert.setEnabled(true);
+            btnInsert.setText("Insert Transactions");
+
+            // Show detailed summary
+            if (result.cancelled) {
+                tvInsertionSummary.setText("Processing cancelled by user.");
+                Toast.makeText(StatementImport.this, "Processing cancelled", Toast.LENGTH_SHORT).show();
+            } else {
+                showInsertionSummary(result);
+
+                // Refresh the transaction list to remove processed items
+                if (result.successCount > 0) {
+                    refreshTransactionList();
                 }
             }
         }
 
-        // Here you would typically insert into database
-        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
-        String message = "Inserting " + selectedTransactions.size() + " transactions:\n";
-        message += "Total Amount: " + decimalFormat.format(selectedTotalDebit) + "\n\n";
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            btnInsert.setEnabled(true);
+            btnInsert.setText("Insert Transactions");
+            progressSection.setVisibility(View.GONE); // Hide entire section
+            tvInsertionSummary.setText("Processing cancelled.");
+        }
 
-        // Add category breakdown if available
-        if (!categoryTotals.isEmpty()) {
-            message += "Category Breakdown:\n";
-            for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
-                message += "- " + entry.getKey() + ": " + decimalFormat.format(entry.getValue()) + "\n";
+        private void showInsertionSummary(InsertResult result) {
+            DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
+            StringBuilder summary = new StringBuilder();
+
+            summary.append("✓ Processing Complete!\n\n");
+            summary.append("Successful: ").append(result.successCount).append("\n");
+            summary.append("Failed: ").append(result.failedCount).append("\n");
+            summary.append("Duplicates: ").append(result.duplicateCount).append("\n");
+            summary.append("Total Amount: ").append(decimalFormat.format(result.totalAmount)).append("\n");
+
+            // Add category breakdown if available
+            if (!result.categoryTotals.isEmpty()) {
+                summary.append("\nCategory Breakdown:\n");
+                for (Map.Entry<String, Double> entry : result.categoryTotals.entrySet()) {
+                    String category = entry.getKey();
+                    if (category == null || category.isEmpty()) {
+                        category = "Uncategorized";
+                    }
+                    summary.append("• ").append(category).append(": ")
+                            .append(decimalFormat.format(entry.getValue())).append("\n");
+                }
             }
-            message += "\n";
-        }
 
-        message += "Sample Transactions:\n";
-        for (int i = 0; i < Math.min(selectedTransactions.size(), 3); i++) {
-            Transaction1 t = selectedTransactions.get(i);
-            message += t.getSerialNo() + ". " + t.getFormattedDate() + " - " +
-                    t.getDebit() + " (" + t.getCategory() + ")\n";
-        }
+            tvInsertionSummary.setText(summary.toString());
 
-        if (selectedTransactions.size() > 3) {
-            message += "... and " + (selectedTransactions.size() - 3) + " more";
+            // Show toast with basic info
+            String toastMessage = "Inserted " + result.successCount + " transactions";
+            if (result.failedCount > 0) {
+                toastMessage += " (" + result.failedCount + " failed)";
+            }
+            Toast.makeText(StatementImport.this, toastMessage, Toast.LENGTH_LONG).show();
         }
+    }
 
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    /**
+     * Class to hold progress update information
+     */
+    private class InsertProgress {
+        int current;
+        int total;
+        String message;
+    }
+
+    /**
+     * Class to hold insertion result
+     */
+    private class InsertResult {
+        int totalTransactions = 0;
+        int successCount = 0;
+        int failedCount = 0;
+        int duplicateCount = 0;
+        double totalAmount = 0.0;
+        boolean cancelled = false;
+        Map<String, Double> categoryTotals = new HashMap<>();
     }
 }

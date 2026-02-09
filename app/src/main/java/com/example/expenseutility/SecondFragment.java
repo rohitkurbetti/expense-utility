@@ -482,6 +482,14 @@ public class SecondFragment extends Fragment {
             }
         });
 
+        binding.noteActivityBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), NoteActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 
     private void populateTable1() throws NoSuchFieldException, IllegalAccessException {

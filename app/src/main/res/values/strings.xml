@@ -7,7 +7,8 @@
     <string name="second_fragment_label">Expense Details</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
+    <string name="note_title_hint">Note Title</string>
+    <string name="note_content_hint">Type your note here...</string>
     <string-array name="theme_options">
         <item>Red</item>
         <item>Blue</item>

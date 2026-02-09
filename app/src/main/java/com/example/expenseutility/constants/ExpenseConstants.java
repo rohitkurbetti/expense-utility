@@ -11,6 +11,8 @@ import java.util.Map;
 public class ExpenseConstants {
 
     public static final float ANN_INCOME = 86000.0f;
+    public static final String BACKUP_TXN_IGNORE_EXPORT_FILENAME = "BackupTxnIgnoreData.csv";
+    public static final String BACKUP_EXPENSES_DATA_EXPORT_FILENAME = "BackupExpensesData.csv";
     public static final String[] EXPENSE_CATEGORY_CHIPS = {
             "Today's expenses",
             "Housing Expenses",

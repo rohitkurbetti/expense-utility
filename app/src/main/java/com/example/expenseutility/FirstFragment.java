@@ -570,21 +570,21 @@ public class FirstFragment extends Fragment {
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
 
         // Initialize TextToSpeech
-        textToSpeech = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    int result = textToSpeech.setLanguage(Locale.getDefault());
-                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Toast.makeText(getContext(), "Language not supported", Toast.LENGTH_SHORT).show();
-                    } else {
-                        setVoice(); // Set the desired voice
-                        textToSpeech.setPitch(1.0f);  // Set pitch, 1.0 is normal
-                        textToSpeech.setSpeechRate(0.7f);  // Set speech rate, 1.0 is normal
-                    }
-                }
-            }
-        });
+//        textToSpeech = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+//            @Override
+//            public void onInit(int status) {
+//                if (status == TextToSpeech.SUCCESS) {
+//                    int result = textToSpeech.setLanguage(Locale.getDefault());
+//                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+//                        Toast.makeText(getContext(), "Language not supported", Toast.LENGTH_SHORT).show();
+//                    } else {
+//                        setVoice(); // Set the desired voice
+//                        textToSpeech.setPitch(1.0f);  // Set pitch, 1.0 is normal
+//                        textToSpeech.setSpeechRate(0.7f);  // Set speech rate, 1.0 is normal
+//                    }
+//                }
+//            }
+//        });
 
         // Check for Audio recording permission
         if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.RECORD_AUDIO)

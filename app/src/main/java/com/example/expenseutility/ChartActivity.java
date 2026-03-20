@@ -22,6 +22,7 @@ import com.anychart.charts.Pie;
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.databinding.ActivityCaptureBinding;
 import com.example.expenseutility.entityadapter.ExpenseItem;
+import com.example.expenseutility.utility.ThemeHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ public class ChartActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chart);
 

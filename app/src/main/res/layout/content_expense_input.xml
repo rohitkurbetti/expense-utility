@@ -24,11 +24,37 @@
                 android:layout_height="wrap_content"
                 android:text="Amount" />
 
-            <TextView
-                android:id="@+id/textAmount"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textAmount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/editAmount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Amount"
+                    android:inputType="numberDecimal"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/imageEditAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Edit Amount"
+                    android:padding="8dp"
+                    android:src="@android:drawable/ic_menu_edit" />
+
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
@@ -108,4 +134,3 @@
     </androidx.cardview.widget.CardView>
 
 </FrameLayout>
-

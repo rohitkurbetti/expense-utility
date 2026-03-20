@@ -1,8 +1,6 @@
 package com.example.expenseutility;
 
 import static com.example.expenseutility.constants.ExpenseConstants.ANN_INCOME;
-
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +23,8 @@ import com.example.expenseutility.firebaseview.MainAdapter;
 import com.example.expenseutility.firebaseview.MainItem;
 import com.example.expenseutility.firebaseview.NestedItem;
 import com.example.expenseutility.utility.Commons;
+import com.example.expenseutility.utility.ThemeHelper;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -44,7 +44,7 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
 
     public static Map<String, List<ExpenseItem>> map = new HashMap<>();
     DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(Build.MODEL + "/" + "expenses");
-    ProgressDialog progressDialog;
+    LinearProgressIndicator loadingProgressBar;
     TextView yearTotalTextView, finalTotalTextView;
     List<ExpenseItem> tempList = new ArrayList<>();
     private RecyclerView recyclerView;
@@ -62,10 +62,11 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_realtime_firebase);
         yearSpinner = findViewById(R.id.yearSpinner);
-        progressDialog = new ProgressDialog(this);
+        loadingProgressBar = findViewById(R.id.loadingProgressBar);
         recyclerView = findViewById(R.id.recyclerview);
         errorHelperTextView = findViewById(R.id.errorHelperTextView);
         errorImageView = findViewById(R.id.errorImageView);
@@ -153,8 +154,7 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
     }
 
     private void fetchFromFirebase(Map<String, List<ExpenseItem>> map) {
-        progressDialog.setMessage("Fetching from cloud database");
-        progressDialog.show();
+        loadingProgressBar.setVisibility(View.VISIBLE);
         float income = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getFloat("monthlyIncome", ANN_INCOME);
 
         databaseReference.addValueEventListener(new ValueEventListener() {
@@ -162,7 +162,7 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
 
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                progressDialog.dismiss();
+                loadingProgressBar.setVisibility(View.GONE);
                 Long expAmt = 0L;
                 Long expAmtMonth = 0L;
                 expenseList.clear();
@@ -232,8 +232,7 @@ public class RealtimeFirebaseActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                progressDialog.setMessage("Firebase load failed");
-                progressDialog.dismiss();
+                loadingProgressBar.setVisibility(View.GONE);
                 Toast.makeText(getApplicationContext(), "Failed to load data.", Toast.LENGTH_SHORT).show();
             }
         });

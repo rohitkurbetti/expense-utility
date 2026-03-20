@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp"
-    app:cardUseCompatPadding="true">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,6 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -27,21 +30,25 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Task Title"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/tvPriority"
-                style="@style/TextAppearance.Material3.ActionBar.Subtitle"
+                style="@style/Widget.Material3.Button.TextButton.Icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:clickable="true"
-                android:focusable="true"
-                android:text="See Images"
-                android:textColor="?attr/colorSecondary"
-                android:textSize="13sp" />
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="Files"
+                android:textColor="?attr/colorPrimary"
+                app:icon="@drawable/baseline_attach_email_24"
+                app:iconTint="?attr/colorPrimary" />
         </LinearLayout>
 
         <!-- Description -->
@@ -49,16 +56,18 @@
             android:id="@+id/tvDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="16dp"
+            android:ellipsize="end"
+            android:maxLines="3"
             android:text="Task description goes here..."
-            android:textColor="@color/outline"
-            android:textSize="14sp" />
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <!-- Details Row 1 -->
+        <!-- Details Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -67,47 +76,43 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:drawableStart="@drawable/ic_calendar"
-                android:drawablePadding="4dp"
-                android:gravity="start|center"
+                android:drawablePadding="8dp"
+                android:gravity="center_vertical"
                 android:text="Due: 2024-01-31"
-                android:textColor="#FF5722"
-                android:textSize="12sp" />
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorError"
+                app:drawableTint="?attr/colorError" />
 
             <TextView
                 android:id="@+id/tvAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_money"
-                android:drawablePadding="4dp"
+                android:layout_marginEnd="12dp"
                 android:text="$100.50"
-                android:textColor="#4CAF50"
-                android:textSize="14sp"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorTertiary"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <TextView
+            <com.google.android.material.chip.Chip
                 android:id="@+id/task_category"
+                style="@style/Widget.Material3.Chip.Assist"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:background="@drawable/category_chip"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="2dp"
+                android:clickable="false"
+                android:minHeight="32dp"
                 android:text="Work"
-                android:textColor="?attr/colorOutline"
-                android:textSize="12sp" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                app:chipMinHeight="32dp" />
 
         </LinearLayout>
 
-        <!-- Details Row 2 -->
+        <!-- Metadata Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="#F9F9F9"
             android:orientation="horizontal"
-            android:padding="8dp"
-            android:paddingTop="8dp"
             android:visibility="gone">
 
             <TextView
@@ -117,35 +122,32 @@
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="From: SourceApp"
-                android:textColor="#666666"
-                android:textSize="11sp" />
+                android:text="Source"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#E3F2FD"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="2dp"
-                android:text="Status: Pending"
-                android:textColor="#2196F3"
-                android:textSize="11sp" />
+                android:layout_marginEnd="8dp"
+                android:text="Status"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+
+            <TextView
+
+                android:id="@+id/tvTimestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Date"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
 
-        <!-- Timestamp -->
-        <TextView
-            android:id="@+id/tvTimestamp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="end"
-            android:text="31 Jan 2024 14:30"
-            android:textColor="#999999"
-            android:textSize="10sp"
-            android:visibility="gone" />
-
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

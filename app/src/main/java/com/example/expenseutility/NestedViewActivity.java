@@ -25,6 +25,7 @@ import com.example.expenseutility.entityadapter.CategoryAdapter1;
 import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.MonthAdapter;
 import com.example.expenseutility.entityadapter.YearAdapter;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.android.material.card.MaterialCardView;
 
 import java.text.NumberFormat;
@@ -58,6 +59,7 @@ public class NestedViewActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nested_view);
 

@@ -122,7 +122,7 @@
         android:icon="@drawable/displaysettings"
         android:orderInCategory="100"
         android:title="Settings"
-        android:visible="false"
+        android:visible="true"
         app:showAsAction="never" />
 
     <item
@@ -177,6 +177,11 @@
     <item
         android:id="@+id/action_cancel_backup"
         android:title="Cancel Daily Backup"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/file_cleanup"
+        android:title="Clean Files"
         app:showAsAction="never" />
 
 </menu>

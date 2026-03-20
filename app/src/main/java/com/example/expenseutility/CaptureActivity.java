@@ -21,6 +21,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 
 import com.example.expenseutility.databinding.ActivityCaptureBinding;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -47,6 +48,7 @@ public class CaptureActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_capture);
 

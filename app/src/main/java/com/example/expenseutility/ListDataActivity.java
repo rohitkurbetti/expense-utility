@@ -19,6 +19,7 @@ import com.example.expenseutility.dto.MainItem1;
 import com.example.expenseutility.dto.SubItem1;
 import com.example.expenseutility.entityadapter.MainAdapter1;
 import com.example.expenseutility.entityadapter.SubAdapter1;
+import com.example.expenseutility.utility.ThemeHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +43,7 @@ public class ListDataActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_data);
 

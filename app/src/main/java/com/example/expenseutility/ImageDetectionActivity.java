@@ -31,6 +31,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.tensorflow.lite.Interpreter;
@@ -55,6 +56,7 @@ public class ImageDetectionActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_detection);
 

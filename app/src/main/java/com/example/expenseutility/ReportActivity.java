@@ -23,6 +23,7 @@ import androidx.core.content.FileProvider;
 
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.entityadapter.ExpenseItem;
+import com.example.expenseutility.utility.ThemeHelper;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -56,6 +57,7 @@ public class ReportActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
 

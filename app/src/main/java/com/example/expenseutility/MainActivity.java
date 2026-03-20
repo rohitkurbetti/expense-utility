@@ -71,6 +71,7 @@ import com.example.expenseutility.notification.BackupTaskReceiver;
 import com.example.expenseutility.notification.DismissNotificationReceiver;
 import com.example.expenseutility.notification.NotificationReceiver;
 import com.example.expenseutility.utility.SmsNotificationUtils;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -110,6 +111,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
@@ -125,7 +127,10 @@ public class MainActivity extends AppCompatActivity {
     String[] themes = {
             "Red", "Blue", "Green", "GreenParrot", "Purple", "Orange",
             "Teal", "Pink", "Cyan", "Lime", "Brown",
-            "Mint", "Coral", "Steel", "Lavender", "Mustard"
+            "Mint", "Coral", "Steel", "Lavender", "Mustard",
+            "Indigo", "Olive", "Maroon", "Navy",
+            "Emerald", "Violet", "Crimson", "Charcoal", "Coffee",
+            "Plum", "Sapphire", "Magenta", "Pumpkin", "Ocean"
     };
     private AppBarConfiguration appBarConfiguration;
     private DatabaseReference database;
@@ -199,14 +204,19 @@ public class MainActivity extends AppCompatActivity {
     private void readExistingSms() {
 
         long currentTimeMillis = System.currentTimeMillis();
-        long threeDaysAgoMillis = currentTimeMillis - (3L * 24 * 60 * 60 * 1000); // 3 days in millis
+        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        int smsLookbackDays = prefs.getInt("smsLookbackDays", 3);
+        if (smsLookbackDays < 1) smsLookbackDays = 3;
+
+        long smsLookbackMillis = currentTimeMillis - ((long) smsLookbackDays * 24L * 60L * 60L * 1000L);
 
 
         Uri uriSms = Uri.parse("content://sms/inbox");
         String selection = "date >= ?";
-        String[] selectionArgs = {String.valueOf(threeDaysAgoMillis)};
+        String[] selectionArgs = {String.valueOf(smsLookbackMillis)};
         Cursor cursor = getContentResolver().query(uriSms, null, selection, selectionArgs, "date DESC");
 
+        TransactionQueue.getInstance(this).clear();
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 String body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
@@ -269,6 +279,8 @@ public class MainActivity extends AppCompatActivity {
                         boolean isExists = db.checkIfExistsMinPossibleParams((int) amount, dateTimeStr.toString(), dateStr);
 
                         if (!isExists) {
+                            TransactionQueue.getInstance(this).addMessage(body);
+
                             SmsNotificationUtils.showInputNotification(this, body, (int) notificationId);
                         }
                     }
@@ -280,6 +292,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
             cursor.close();
+            invalidateOptionsMenu();
 
 
         }
@@ -405,7 +418,7 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        applyUserTheme();  // Apply before setContentView
+        ThemeHelper.applyTheme(this);  // Apply before setContentView
         super.onCreate(savedInstanceState);
         requestSmsPermission();
 // Handle incoming intent
@@ -460,68 +473,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void applyUserTheme() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = prefs.getString("app_theme", "Theme.ExpenseUtility");
-
-        switch (theme) {
-            case "Default":
-                setTheme(R.style.Base_Theme_ExpenseUtility);
-                break;
-            case "Red":
-                setTheme(R.style.AppTheme_Red);
-                break;
-            case "Blue":
-                setTheme(R.style.AppTheme_Blue);
-                break;
-            case "Green":
-                setTheme(R.style.AppTheme_Green);
-                break;
-            case "GreenParrot":
-                setTheme(R.style.AppTheme_GreenParrot);
-                break;
-            case "Purple":
-                setTheme(R.style.AppTheme_Purple);
-                break;
-            case "Orange":
-                setTheme(R.style.AppTheme_Orange);
-                break;
-            case "Teal":
-                setTheme(R.style.AppTheme_Teal);
-                break;
-            case "Pink":
-                setTheme(R.style.AppTheme_Pink);
-                break;
-            case "Cyan":
-                setTheme(R.style.AppTheme_Cyan);
-                break;
-            case "Lime":
-                setTheme(R.style.AppTheme_Lime);
-                break;
-            case "Brown":
-                setTheme(R.style.AppTheme_Brown);
-                break;
-            case "Mint":
-                setTheme(R.style.AppTheme_Mint);
-                break;
-            case "Coral":
-                setTheme(R.style.AppTheme_Coral);
-                break;
-            case "Steel":
-                setTheme(R.style.AppTheme_Steel);
-                break;
-            case "Lavender":
-                setTheme(R.style.AppTheme_Lavender);
-                break;
-            case "Mustard":
-                setTheme(R.style.AppTheme_Mustard);
-                break;
-            default:
-                setTheme(R.style.Base_Theme_ExpenseUtility);
-                break;
-        }
-    }
-
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -535,6 +486,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
     private void createNotificationChannelBkgrndImport() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -588,6 +540,10 @@ public class MainActivity extends AppCompatActivity {
         MenuItem item = menu.findItem(R.id.action_notifications);
         View actionView = MenuItemCompat.getActionView(item);
         TextView badge = actionView.findViewById(R.id.badge_text_view);
+
+        Objects.requireNonNull(item.getActionView()).setOnClickListener(v -> {
+            readExistingSms();
+        });
 
         int count = TransactionQueue.getInstance(this).getCount();
         if (count > 0) {
@@ -669,6 +625,18 @@ public class MainActivity extends AppCompatActivity {
             builder.setCancelable(false);
             AlertDialog dialog = builder.create();
             dialog.show();
+            return true;
+        }
+
+        if (id == R.id.file_cleanup) {
+            Intent intent = new Intent(this, CleanActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        if (id == R.id.settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -1471,9 +1439,12 @@ public class MainActivity extends AppCompatActivity {
                     encodedPartDetails = tokens[6];
                 }
                 boolean isHomeExpense = Boolean.parseBoolean(tokens[7]);
+                boolean isAmountUpdated = Boolean.parseBoolean(tokens[8]);
+                String oldAmount = tokens[9];
 
                 if (!db.checkIfExists(expCategory, expAmt, expDateTime, expDate)) {
-                    db.insertExpense(expCategory, expPart, expAmt, expDateTime, expDate, null, null, null, encodedPartDetails, isHomeExpense);
+                    db.insertAmountUpdatedExpense(expCategory, expPart, expAmt, expDateTime, expDate, null, null, null,
+                            encodedPartDetails, isHomeExpense, isAmountUpdated, oldAmount);
                     rowsCount++;
                 }
 
@@ -1737,7 +1708,7 @@ public class MainActivity extends AppCompatActivity {
             FileOutputStream fileOutputStream = new FileOutputStream(csvFile);
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
 
-            outputStreamWriter.write("ID,ExpCat,Pert,Amt,DateTime,Date,Description,isForHome\n");
+            outputStreamWriter.write("ID,ExpCat,Pert,Amt,DateTime,Date,Description,isForHome,isAmountUpdated,oldAmount\n");
 
             while (sqlRows.moveToNext()) {
                 int id = sqlRows.getInt(0);
@@ -1751,13 +1722,15 @@ public class MainActivity extends AppCompatActivity {
                 encodedPartDetails = encodedPartDetails.isBlank() ? "-" : encodedPartDetails;
                 encodedPartDetails = encodedPartDetails.trim();
                 boolean isHomeExpense = sqlRows.getInt(9) == 1;
+                boolean isAmountUpdated = sqlRows.getInt(10) == 1;
+                int oldAmount = sqlRows.getInt(11);
 
 //                byte[] file = sqlRows.getBlob(7);
 //                String encodedString = "";
 //                if(file!=null) {
 //                    encodedString = Base64.getEncoder().encodeToString(file);
 //                }
-                String row = id + "," + expCat + "," + pert + "," + amt + "," + dtm + "," + dt + "," + encodedPartDetails + "," + isHomeExpense + "\n";
+                String row = id + "," + expCat + "," + pert + "," + amt + "," + dtm + "," + dt + "," + encodedPartDetails + "," + isHomeExpense + "," + isAmountUpdated + "," + oldAmount + "\n";
                 outputStreamWriter.write(row);
                 expenses.add(new ExpenseItem(id, pert, (long) amt, dtm, expCat, null, null, encodedPartDetails, isHomeExpense));
 

@@ -22,6 +22,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.example.expenseutility.database.BudgetHelper;
 import com.example.expenseutility.dto.Budget;
 import com.example.expenseutility.entityadapter.BudgetAdapter;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -71,7 +72,7 @@ public class BudgetActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        applyUserTheme();  // Apply before setContentView
+        ThemeHelper.applyTheme(this);  // Apply before setContentView
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_budget);
 
@@ -456,65 +457,4 @@ public class BudgetActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void applyUserTheme() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = prefs.getString("app_theme", "Theme.ExpenseUtility");
-
-        switch (theme) {
-            case "Default":
-                setTheme(R.style.Base_Theme_ExpenseUtility);
-                break;
-            case "Red":
-                setTheme(R.style.AppTheme_Red);
-                break;
-            case "Blue":
-                setTheme(R.style.AppTheme_Blue);
-                break;
-            case "Green":
-                setTheme(R.style.AppTheme_Green);
-                break;
-            case "GreenParrot":
-                setTheme(R.style.AppTheme_GreenParrot);
-                break;
-            case "Purple":
-                setTheme(R.style.AppTheme_Purple);
-                break;
-            case "Orange":
-                setTheme(R.style.AppTheme_Orange);
-                break;
-            case "Teal":
-                setTheme(R.style.AppTheme_Teal);
-                break;
-            case "Pink":
-                setTheme(R.style.AppTheme_Pink);
-                break;
-            case "Cyan":
-                setTheme(R.style.AppTheme_Cyan);
-                break;
-            case "Lime":
-                setTheme(R.style.AppTheme_Lime);
-                break;
-            case "Brown":
-                setTheme(R.style.AppTheme_Brown);
-                break;
-            case "Mint":
-                setTheme(R.style.AppTheme_Mint);
-                break;
-            case "Coral":
-                setTheme(R.style.AppTheme_Coral);
-                break;
-            case "Steel":
-                setTheme(R.style.AppTheme_Steel);
-                break;
-            case "Lavender":
-                setTheme(R.style.AppTheme_Lavender);
-                break;
-            case "Mustard":
-                setTheme(R.style.AppTheme_Mustard);
-                break;
-            default:
-                setTheme(R.style.Base_Theme_ExpenseUtility);
-                break;
-        }
-    }
 }

@@ -17,6 +17,7 @@ import com.example.expenseutility.databinding.ActivityMainBinding;
 import com.example.expenseutility.databinding.ActivityTravelBinding;
 import com.example.expenseutility.entityadapter.Location;
 import com.example.expenseutility.entityadapter.LocationAdapter;
+import com.example.expenseutility.utility.ThemeHelper;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,6 +37,7 @@ public class TravelActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         binding = ActivityTravelBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

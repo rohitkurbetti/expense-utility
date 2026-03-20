@@ -37,10 +37,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private List<Task> taskList;
     private SimpleDateFormat dateFormat;
 
-    private ListView listView;
-    private FileListAdapter adapter;
-    private List<FileHolder> fileList;
-
     public TaskAdapter(Context context, List<Task> taskList) {
         this.context = context;
         this.taskList = taskList;
@@ -87,66 +83,13 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
 
         holder.tvPriority.setOnClickListener(v -> {
-            // Create a ProgressBar for the dialog
-            ProgressBar progressBar = new ProgressBar(context);
-            progressBar.setIndeterminate(true);
-            int padding = 50;
-            progressBar.setPadding(padding, padding, padding, padding);
-
-            // Create and show the dialog with ProgressBar initially
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("Attached Files");
-            builder.setView(progressBar);
-            builder.setPositiveButton("Close", (dialog, which) -> dialog.dismiss());
-            AlertDialog dialog = builder.create();
-            dialog.show();
-
-            new Thread(() -> {
-                try {
-                    // Simulate loading
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                String filesJson = task.getAttachedFiles();
-                List<FileHolder> fileList = new ArrayList<>();
-
-                if (filesJson != null && !filesJson.isEmpty()) {
-                    try {
-                        JSONObject jsonObject = new JSONObject(filesJson);
-                        JSONArray fileNames = jsonObject.getJSONArray("file_names");
-                        JSONArray fileUris = jsonObject.getJSONArray("file_uris");
-
-                        for (int i = 0; i < fileNames.length(); i++) {
-                            String fileName = fileNames.getString(i);
-                            String fileUri = fileUris.getString(i);
-                            fileList.add(new FileHolder(fileName, fileUri));
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    // Replace ProgressBar with ListView if dialog is still showing
-                    if (dialog.isShowing()) {
-                        ListView listView = new ListView(context);
-                        FileListAdapter adapter = new FileListAdapter(context, fileList);
-                        listView.setAdapter(adapter);
-
-                        listView.setOnItemClickListener((parent, view, pos, id) -> {
-                            FileHolder selectedFile = fileList.get(pos);
-                            String fileName = selectedFile.getFileName();
-                            Uri fileUri = FileSearchHelper.findFileInStorage(context, fileName);
-                            FileSearchHelper.openFile(context, fileUri);
-                        });
-
-                        // Update the dialog content
-                        dialog.setContentView(listView);
-                    }
-                });
-            }).start();
+            if (context instanceof androidx.fragment.app.FragmentActivity) {
+                com.example.expenseutility.fragments.AttachedFilesBottomSheet bottomSheet =
+                        com.example.expenseutility.fragments.AttachedFilesBottomSheet.newInstance(task.getAttachedFiles());
+                bottomSheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(), "AttachedFilesBottomSheet");
+            } else {
+                Toast.makeText(context, "Cannot open file list: Context is not an Activity", Toast.LENGTH_SHORT).show();
+            }
         });
 
 

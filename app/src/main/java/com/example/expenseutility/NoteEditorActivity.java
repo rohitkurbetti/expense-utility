@@ -25,6 +25,7 @@ import com.example.expenseutility.dto.NoteContent;
 import com.example.expenseutility.dto.NoteDAO;
 import com.example.expenseutility.dto.NoteType;
 import com.example.expenseutility.utility.DragLayout;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -48,6 +49,7 @@ public class NoteEditorActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_editor);
 

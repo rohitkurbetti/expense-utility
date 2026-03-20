@@ -17,6 +17,7 @@ import com.example.expenseutility.constants.ExpenseConstants;
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.entityadapter.Suggestion;
 import com.example.expenseutility.entityadapter.SuggestionAdapter;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -41,6 +42,7 @@ public class SuggestionActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_suggestion);
 

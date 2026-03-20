@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.expenseutility.database.DatabaseHelper;
 import com.example.expenseutility.dto.Transaction1;
 import com.example.expenseutility.entityadapter.TransactionAdapter1;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.example.expenseutility.utility.TransactionParser;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -59,6 +60,7 @@ public class StatementImport extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statement_import);
 
@@ -326,6 +328,7 @@ public class StatementImport extends AppCompatActivity {
             btnInsert.setText("Processing...");
             progressSection.setVisibility(View.VISIBLE); // Show parent layout
             progressBar.setVisibility(View.VISIBLE);
+            progressBar.setIndeterminate(false); // Switch to determinate mode
             tvProgressText.setVisibility(View.VISIBLE);
             tvInsertionSummary.setVisibility(View.VISIBLE);
             tvInsertionSummary.setText("Starting transaction insertion...");

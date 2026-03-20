@@ -27,6 +27,7 @@ import com.example.expenseutility.entityadapter.ExpenseItem;
 import com.example.expenseutility.entityadapter.Expenses;
 import com.example.expenseutility.entityadapter.FirebaseExpenseAdapter;
 import com.example.expenseutility.utility.SpinnerItem;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,6 +48,7 @@ public class FirebaseList extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_firebase_list);
 

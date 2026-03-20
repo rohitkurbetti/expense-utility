@@ -21,7 +21,9 @@
             android:background="?attr/colorPrimary"
             app:navigationIcon="@drawable/ic_arrow_back"
             app:subtitle="Manage your monthly budgets"
-            app:title="Budget Manager" />
+            app:subtitleTextColor="?attr/colorOnPrimarySurface"
+            app:title="Budget Manager"
+            app:titleTextColor="?attr/colorOnPrimarySurface" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

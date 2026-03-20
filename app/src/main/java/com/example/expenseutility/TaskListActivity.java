@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.expenseutility.database.TaskDatabaseHelper;
 import com.example.expenseutility.dto.Task;
 import com.example.expenseutility.entityadapter.TaskAdapter;
+import com.example.expenseutility.utility.ThemeHelper;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
@@ -45,8 +46,8 @@ public class TaskListActivity extends AppCompatActivity {
     private ChipGroup chipGroupCategories;
     private Button btnClearFilters, btnClearAll;
     private Button btnStartDate, btnEndDate, btnClearDateFilter;
-    private ImageView btnToggleFilters;
-    private LinearLayout filterSection;
+    private com.google.android.material.button.MaterialButton btnToggleFilters;
+    private View filterSection;
     private TaskDatabaseHelper dbHelper;
     private TaskAdapter adapter;
 
@@ -68,7 +69,7 @@ public class TaskListActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        applyUserTheme();  // Apply before setContentView
+        ThemeHelper.applyTheme(this);  // Apply before setContentView
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_list);
 
@@ -106,67 +107,7 @@ public class TaskListActivity extends AppCompatActivity {
         loadTasks();
     }
 
-    private void applyUserTheme() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = prefs.getString("app_theme", "Theme.ExpenseUtility");
 
-        switch (theme) {
-            case "Default":
-                setTheme(R.style.Base_Theme_ExpenseUtility);
-                break;
-            case "Red":
-                setTheme(R.style.AppTheme_Red);
-                break;
-            case "Blue":
-                setTheme(R.style.AppTheme_Blue);
-                break;
-            case "Green":
-                setTheme(R.style.AppTheme_Green);
-                break;
-            case "GreenParrot":
-                setTheme(R.style.AppTheme_GreenParrot);
-                break;
-            case "Purple":
-                setTheme(R.style.AppTheme_Purple);
-                break;
-            case "Orange":
-                setTheme(R.style.AppTheme_Orange);
-                break;
-            case "Teal":
-                setTheme(R.style.AppTheme_Teal);
-                break;
-            case "Pink":
-                setTheme(R.style.AppTheme_Pink);
-                break;
-            case "Cyan":
-                setTheme(R.style.AppTheme_Cyan);
-                break;
-            case "Lime":
-                setTheme(R.style.AppTheme_Lime);
-                break;
-            case "Brown":
-                setTheme(R.style.AppTheme_Brown);
-                break;
-            case "Mint":
-                setTheme(R.style.AppTheme_Mint);
-                break;
-            case "Coral":
-                setTheme(R.style.AppTheme_Coral);
-                break;
-            case "Steel":
-                setTheme(R.style.AppTheme_Steel);
-                break;
-            case "Lavender":
-                setTheme(R.style.AppTheme_Lavender);
-                break;
-            case "Mustard":
-                setTheme(R.style.AppTheme_Mustard);
-                break;
-            default:
-                setTheme(R.style.Base_Theme_ExpenseUtility);
-                break;
-        }
-    }
 
     private void setupToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -232,11 +173,11 @@ public class TaskListActivity extends AppCompatActivity {
 
         if (isFilterSectionVisible) {
             filterSection.setVisibility(View.VISIBLE);
-            btnToggleFilters.setImageResource(R.drawable.ic_filter_list_filled);
+            btnToggleFilters.setIconResource(R.drawable.ic_filter_list_filled);
             // Update filter icon if needed
         } else {
             filterSection.setVisibility(View.GONE);
-            btnToggleFilters.setImageResource(R.drawable.ic_filter_list);
+            btnToggleFilters.setIconResource(R.drawable.ic_filter_list);
             // Hide keyboard when collapsing filter section
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(etSearch.getWindowToken(), 0);

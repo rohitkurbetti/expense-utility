@@ -6,9 +6,11 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,8 +34,9 @@ import java.util.List;
 public class ExpenseInputActivity extends AppCompatActivity {
 
     Spinner spinnerCategory;
-    EditText particularsInput, particularsDetail;
+    EditText particularsInput, particularsDetail, editAmount;
     TextView amountView, dateTimeView;
+    ImageView imageEditAmount;
     CheckBox homeCheckBox;
     double amount;
     String dateTime;
@@ -48,6 +51,7 @@ public class ExpenseInputActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+//        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
 
         binding = ActivityExpenseInputBinding.inflate(getLayoutInflater());
@@ -57,6 +61,8 @@ public class ExpenseInputActivity extends AppCompatActivity {
         particularsInput = findViewById(R.id.editParticulars);
         particularsDetail = findViewById(R.id.editParticularsDetail);
         amountView = findViewById(R.id.textAmount);
+        editAmount = findViewById(R.id.editAmount);
+        imageEditAmount = findViewById(R.id.imageEditAmount);
         dateTimeView = findViewById(R.id.textDateTime);
         btnCancel = findViewById(R.id.btnCancel);
         homeCheckBox = findViewById(R.id.homeCheckBox);
@@ -70,7 +76,45 @@ public class ExpenseInputActivity extends AppCompatActivity {
         amountView.setText(String.valueOf(amount));
         dateTimeView.setText(dateTime);
 
+        imageEditAmount.setOnClickListener(v -> {
+            if (editAmount.getVisibility() == View.GONE) {
+                editAmount.setVisibility(View.VISIBLE);
+                amountView.setVisibility(View.GONE);
+                editAmount.setText(String.valueOf(amount));
+            } else {
+                String newAmountStr = editAmount.getText().toString();
+                if (!newAmountStr.isEmpty()) {
+                    try {
+                        amount = Double.parseDouble(newAmountStr);
+                        amountView.setText(newAmountStr);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this, "Invalid amount", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                editAmount.setVisibility(View.GONE);
+                amountView.setVisibility(View.VISIBLE);
+            }
+        });
+
         findViewById(R.id.btnSave).setOnClickListener(v -> {
+            boolean isAmountUpdated = false;
+            double oldAmount = getIntent().getDoubleExtra("amount", 0);
+            if (editAmount.getVisibility() == View.VISIBLE) {
+                String newAmountStr = editAmount.getText().toString();
+                if (!newAmountStr.isEmpty()) {
+                    try {
+                        amount = Double.parseDouble(newAmountStr);
+                        isAmountUpdated = true;
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this, "Invalid amount", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } else {
+                    oldAmount = Integer.parseInt(amountView.getText().toString());
+                }
+                ;
+            }
+
             SpinnerItem spItem = (SpinnerItem) spinnerCategory.getSelectedItem();
             String category = spItem.getText();
             String particulars = particularsInput.getText().toString();
@@ -108,7 +152,8 @@ public class ExpenseInputActivity extends AppCompatActivity {
             String encodedPartDetails = Commons.encryptString(partDetails);
             boolean isHomeExpense = homeCheckBox.isChecked();
             try {
-                boolean res = dbHelper.insertExpense(category, particulars, String.valueOf((int) amount), dateTimeStr.toString(), dateStr, null, null, null, encodedPartDetails, isHomeExpense);
+                boolean res = dbHelper.insertAmountUpdatedExpense(category, particulars, String.valueOf((int) amount), dateTimeStr.toString(), dateStr,
+                        null, null, null, encodedPartDetails, isHomeExpense, isAmountUpdated, String.valueOf(oldAmount));
                 Toast.makeText(this, "Saved to db", Toast.LENGTH_SHORT).show();
 
                 if (res) {

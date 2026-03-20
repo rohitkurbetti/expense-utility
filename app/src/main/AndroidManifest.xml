@@ -15,7 +15,6 @@
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
-
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission
         android:name="android.permission.SCHEDULE_EXACT_ALARM"
@@ -27,6 +26,7 @@
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
+
             <data android:mimeType="*/*" />
         </intent>
     </queries>
@@ -50,6 +50,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ExpenseUtility"
         tools:targetApi="31">
+        <activity
+            android:name=".ImagePreviewActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CleanActivity"
+            android:exported="false" />
         <activity
             android:name=".TaskListActivity"
             android:exported="false" />
@@ -158,7 +164,6 @@
                 <action android:name="com.example.expenseutility.RECEIVE_DATA" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".notification.BackupTaskReceiver"
             android:enabled="true"
@@ -170,7 +175,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
-
         <receiver android:name=".notification.NotificationReceiver" />
         <receiver android:name=".notification.DismissNotificationReceiver" />
         <receiver

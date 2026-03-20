@@ -41,6 +41,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String COLUMN_PART_DETAILS = "partDetails";
     private static final String COLUMN_HOME_EXPENSE = "isHomeExpense";
+    private static final String COLUMN_IS_AMOUNT_UPDATED = "isAmountUpdated";
+    private static final String COLUMN_OLD_AMOUNT = "oldAmount";
     private static DatabaseHelper instance;
 
     public DatabaseHelper(Context context) {
@@ -66,7 +68,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_FILE_NAME + " TEXT, " +
                 COLUMN_FILE + " blob, " +
                 COLUMN_PART_DETAILS + " TEXT, " +
-                COLUMN_HOME_EXPENSE + " BOOL " +
+                COLUMN_HOME_EXPENSE + " BOOL, " +
+                COLUMN_IS_AMOUNT_UPDATED + " BOOL, " +
+                COLUMN_OLD_AMOUNT + " BIGINT " +
                 " )";
         db.execSQL(createTable);
 
@@ -141,6 +145,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COLUMN_FILE, fileBytes);
         contentValues.put(COLUMN_PART_DETAILS, partDetails);
         contentValues.put(COLUMN_HOME_EXPENSE, isHomeExpense);
+        long result = 0;
+        if (id != null) {
+            //updation
+            contentValues.put(COLUMN_ID, id);
+            result = db.update(TABLE_NAME, contentValues, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
+        } else {
+            //insertion
+            result = db.insert(TABLE_NAME, null, contentValues);
+        }
+
+        db.close();
+        return result != -1;
+    }
+
+
+    public boolean insertAmountUpdatedExpense(String expenseCategory, String particulars, String amount, String dateTime, String date,
+                                              String fileName, byte[] fileBytes, Integer id, String partDetails, boolean isHomeExpense, boolean isAmountUpdated, String oldAmount) throws IllegalAccessException, NoSuchFieldException {
+        Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
+        field.setAccessible(true);
+        field.set(null, 100 * 1024 * 1024); //the 100MB is the new size
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_EXPENSE_CATEGORY, expenseCategory);
+        contentValues.put(COLUMN_PARTICULARS, particulars);
+        contentValues.put(COLUMN_AMOUNT, amount);
+        contentValues.put(COLUMN_DATE_TIME, dateTime);
+        contentValues.put(COLUMN_DATE, date);
+        contentValues.put(COLUMN_FILE_NAME, fileName);
+        contentValues.put(COLUMN_FILE, fileBytes);
+        contentValues.put(COLUMN_PART_DETAILS, partDetails);
+        contentValues.put(COLUMN_HOME_EXPENSE, isHomeExpense);
+        contentValues.put(COLUMN_IS_AMOUNT_UPDATED, isAmountUpdated);
+        contentValues.put(COLUMN_OLD_AMOUNT, oldAmount);
         long result = 0;
         if (id != null) {
             //updation
@@ -308,6 +345,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(expAmt), expDateTime, expDate});
         if (cursor.getCount() > 0) {
             isExists = true;
+        } else {
+            String updatedAmountQuery = "SELECT id from " + TABLE_NAME + " where " + " " + COLUMN_OLD_AMOUNT + "=? and "
+                    + COLUMN_DATE_TIME + " =? and " + COLUMN_DATE + " =? and " + COLUMN_IS_AMOUNT_UPDATED + "=? ";
+            Cursor updatedAmountCursor = db.rawQuery(updatedAmountQuery, new String[]{String.valueOf(expAmt), expDateTime, expDate, String.valueOf(1)});
+            if (updatedAmountCursor.getCount() > 0) {
+                isExists = true;
+            }
         }
         return isExists;
     }

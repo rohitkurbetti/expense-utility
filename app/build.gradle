@@ -73,8 +73,10 @@ dependencies {
     implementation 'org.apache.commons:commons-csv:1.10.0'
     implementation 'com.itextpdf:itextg:5.5.10'
 
-    implementation 'com.github.bumptech.glide:glide:4.13.2'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.13.2'
+    implementation 'com.github.bumptech.glide:glide:4.15.1'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
+
+    implementation 'com.github.chrisbanes:PhotoView:2.3.0'   // for zoomable ImageView
 
     implementation 'androidx.camera:camera-core:1.1.0'
     implementation 'androidx.camera:camera-camera2:1.1.0'

@@ -260,6 +260,146 @@
 
     </style>
 
+    <style name="AppTheme.Indigo" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/indigoPrimary</item>
+        <item name="colorPrimaryDark">@color/indigoPrimaryDark</item>
+        <item name="colorAccent">@color/indigoAccent</item>
+        <item name="colorSecondary">@color/indigoLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/indigoPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Olive" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/olivePrimary</item>
+        <item name="colorPrimaryDark">@color/olivePrimaryDark</item>
+        <item name="colorAccent">@color/oliveAccent</item>
+        <item name="colorSecondary">@color/oliveLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/olivePrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Maroon" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/maroonPrimary</item>
+        <item name="colorPrimaryDark">@color/maroonPrimaryDark</item>
+        <item name="colorAccent">@color/maroonAccent</item>
+        <item name="colorSecondary">@color/maroonLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/maroonPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Navy" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/navyPrimary</item>
+        <item name="colorPrimaryDark">@color/navyPrimaryDark</item>
+        <item name="colorAccent">@color/navyAccent</item>
+        <item name="colorSecondary">@color/navyLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/navyPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Emerald" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/emeraldPrimary</item>
+        <item name="colorPrimaryDark">@color/emeraldPrimaryDark</item>
+        <item name="colorAccent">@color/emeraldAccent</item>
+        <item name="colorSecondary">@color/emeraldLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/emeraldPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Violet" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/violetPrimary</item>
+        <item name="colorPrimaryDark">@color/violetPrimaryDark</item>
+        <item name="colorAccent">@color/violetAccent</item>
+        <item name="colorSecondary">@color/violetLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/violetPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Crimson" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/crimsonPrimary</item>
+        <item name="colorPrimaryDark">@color/crimsonPrimaryDark</item>
+        <item name="colorAccent">@color/crimsonAccent</item>
+        <item name="colorSecondary">@color/crimsonLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/crimsonPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Charcoal" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/charcoalPrimary</item>
+        <item name="colorPrimaryDark">@color/charcoalPrimaryDark</item>
+        <item name="colorAccent">@color/charcoalAccent</item>
+        <item name="colorSecondary">@color/charcoalLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/charcoalPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Coffee" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/coffeePrimary</item>
+        <item name="colorPrimaryDark">@color/coffeePrimaryDark</item>
+        <item name="colorAccent">@color/coffeeAccent</item>
+        <item name="colorSecondary">@color/coffeeLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/coffeePrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Plum" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/plumPrimary</item>
+        <item name="colorPrimaryDark">@color/plumPrimaryDark</item>
+        <item name="colorAccent">@color/plumAccent</item>
+        <item name="colorSecondary">@color/plumLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/plumPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Sapphire" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/sapphirePrimary</item>
+        <item name="colorPrimaryDark">@color/sapphirePrimaryDark</item>
+        <item name="colorAccent">@color/sapphireAccent</item>
+        <item name="colorSecondary">@color/sapphireLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/sapphirePrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Magenta" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/magentaPrimary</item>
+        <item name="colorPrimaryDark">@color/magentaPrimaryDark</item>
+        <item name="colorAccent">@color/magentaAccent</item>
+        <item name="colorSecondary">@color/magentaLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/magentaPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Pumpkin" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/pumpkinPrimary</item>
+        <item name="colorPrimaryDark">@color/pumpkinPrimaryDark</item>
+        <item name="colorAccent">@color/pumpkinAccent</item>
+        <item name="colorSecondary">@color/pumpkinLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/pumpkinPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <style name="AppTheme.Ocean" parent="Base.Theme.ExpenseUtility">
+        <item name="colorPrimary">@color/oceanPrimary</item>
+        <item name="colorPrimaryDark">@color/oceanPrimaryDark</item>
+        <item name="colorAccent">@color/oceanAccent</item>
+        <item name="colorSecondary">@color/oceanLight</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/oceanPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
 
     <style name="RoundedImageStyle">
         <item name="cornerFamily">rounded</item>
